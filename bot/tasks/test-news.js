@@ -33,6 +33,7 @@ const documentStub = new Proxy({}, {
   set: () => true,
 });
 
+let lastAskBody = null;
 async function fakeFetch(url, init) {
   const u = String(url);
   if (u.startsWith('data/')) {
@@ -40,6 +41,7 @@ async function fakeFetch(url, init) {
     return { ok: true, status: 200, json: async () => JSON.parse(body), text: async () => body };
   }
   if (u.startsWith('https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask')) {
+    try { lastAskBody = init && init.body ? JSON.parse(init.body) : null; } catch { lastAskBody = null; }
     return { ok: true, status: 200, json: async () => ({ answer: 'پاسخ تستی مربی' }), text: async () => JSON.stringify({ answer: 'پاسخ تستی مربی' }) };
   }
   if (u.startsWith('/api/heroes/')) {
@@ -61,6 +63,8 @@ const sandbox = {
   document: documentStub,
   localStorage: { getItem: () => null, setItem: () => {} },
   AbortController, URL, URLSearchParams,
+  // تلگرام WebApp جعلی — مینی‌اپ initData را با سؤال می‌فرستد
+  Telegram: { WebApp: { initData: 'test-init-data-123', ready() {}, expand() {} } },
 };
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
@@ -189,6 +193,8 @@ vm.runInContext(src, sandbox);
   const mashaHTML = elements.heroDetail.innerHTML;
   const checks9 = [
     ['مربی: جواب تستی برگشت', coachHTML.includes('پاسخ تستی مربی')],
+    ['مربی: initData در بدنهٔ POST هست', !!lastAskBody && lastAskBody.initData === 'test-init-data-123'],
+    ['مربی: سؤال در بدنهٔ POST هست', !!lastAskBody && lastAskBody.question === 'بهترین بیلد Miya چیست؟'],
     ['کانتر تیمی: Masha اول است', tcHTML.includes('Masha') && tcHTML.indexOf('Masha') < tcHTML.indexOf('۲.')],
     ['کانتر تیمی: پوشش ۲ از ۲', tcHTML.includes('کانتر ۲ تا از ۲ هیرو')],
     ['کانتر تیمی بدون نام منبع', !tcHTML.includes('Fandom') && !tcHTML.includes('mlbb.io') && !tcHTML.includes('Rone') && !tcHTML.includes('ویکی')],

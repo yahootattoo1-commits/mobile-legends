@@ -7,6 +7,7 @@
 import { createBot } from '../../src/bot.js';
 import sd from '../../src/staticData.js';
 import { askCoach } from '../../src/coach.js';
+import { validateInitData } from '../../src/webappAuth.js';
 import { telegramLib } from './patch-telegram.cjs';
 
 import { WorkerTelegram } from './telegram.js';
@@ -48,7 +49,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // مربی هوش مصنوعی برای مینی‌اپ — POST {question} -> {answer} (CORS باز)
+    // مربی هوش مصنوعی برای مینی‌اپ — POST {question, initData?} -> {answer} (CORS باز)
+    // کاربر فقط از initData معتبر تلگرام خوانده می‌شود؛ بدون آن یا با initData
+    // نامعتبر، درخواست ناشناس حساب می‌شود (سطل مشترک ۳ جوابه) — هرگز رد نمی‌شود
+    // و شناسهٔ بدون امضا در بدنه اعتماد نمی‌شود.
     if (url.pathname === '/api/ask') {
       if (request.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -59,7 +63,12 @@ export default {
         const question = typeof body?.question === 'string' ? body.question.trim() : '';
         if (!question) return Response.json({ error: 'question required' }, { status: 400, headers: CORS_HEADERS });
         await sd.ensureRemote(env.STATIC_BASE_URL || DEFAULT_STATIC_BASE).catch(() => {});
-        const answer = await askCoach(env, { kv: env.USERS }, question);
+        let userId = null;
+        if (env.BOT_TOKEN && typeof body?.initData === 'string' && body.initData) {
+          const checked = await validateInitData(body.initData, env.BOT_TOKEN);
+          if (checked.ok) userId = checked.userId;
+        }
+        const answer = await askCoach(env, { kv: env.USERS }, question, userId);
         return Response.json({ answer }, { headers: CORS_HEADERS });
       }
       return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS });

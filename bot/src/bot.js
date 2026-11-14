@@ -4,7 +4,7 @@ const { Telegraf, Markup } = require('telegraf');
 const { roneGet, ronePost, clearCache, normRankRecord, normCounterRecord, normBuildRecord, normStanding, equipNameMap } = require('./rone');
 const sd = require('./staticData');
 const { faNum, faInt, pct, esc, FOOTER, cleanText, truncate, ROLES, roleFa, laneFa } = require('./fa');
-const { askCoach } = require('./coach');
+const { askCoach, getCoachUsage, setCoachLimit, coachUserCapMsg } = require('./coach');
 
 function normName(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
@@ -464,8 +464,12 @@ function createBot(env, deps) {
     const q = ctx.message.text.replace(/^\/ask(@\S+)?\s*/i, '').trim();
     if (!q) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya برای لین گلد چیست؟</code>' + FOOTER);
     if (!coachAI) return ctx.replyWithHTML('مربی فقط روی ورکر فعال است.' + FOOTER);
+    const usage = await getCoachUsage(envOf('ADMIN_ID'), coachKV, ctx.from && ctx.from.id);
+    if (usage && !usage.unlimited && usage.used >= usage.limit) {
+      return ctx.replyWithHTML(esc(coachUserCapMsg(usage.limit)) + FOOTER);
+    }
     await ctx.replyWithHTML('🧠 مربی دارد فکر می‌کند…');
-    const ans = await askCoach({ AI: coachAI }, { kv: coachKV }, q);
+    const ans = await askCoach({ AI: coachAI, ADMIN_ID: envOf('ADMIN_ID') }, { kv: coachKV }, q, ctx.from && ctx.from.id);
     if (!ans) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya چیست؟</code>' + FOOTER);
     return ctx.replyWithHTML(esc(ans) + FOOTER);
   });
@@ -903,12 +907,64 @@ function createBot(env, deps) {
     await ctx.answerCbQuery();
     const users = await getUsers();
     const list = [...users.values()].sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || '')).slice(0, 10);
+    const usages = await Promise.all(list.map((u) => getCoachUsage(envOf('ADMIN_ID'), coachKV, u.id)));
     let t = `👥 <b>کاربران ربات — ${faNum(users.size)} نفر</b>\n`;
-    for (const u of list) {
-      t += `\n• ${esc(u.name || '—')}${u.username ? ` (@${esc(u.username)})` : ''} — ${faNum((u.firstSeen || '').slice(0, 10))}`;
+    for (let i = 0; i < list.length; i++) {
+      const u = list[i];
+      const usage = usages[i];
+      const usageLabel = usage.unlimited ? `نامحدود (${faNum(usage.used)})` : `${faNum(usage.used)} از ${faNum(usage.limit)}`;
+      t += `\n• ${esc(u.name || '—')}${u.username ? ` (@${esc(u.username)})` : ''} — ${faNum((u.firstSeen || '').slice(0, 10))} — 🧠 ${usageLabel}`;
     }
     if (!list.length) t += '\n\nهنوز کسی ربات را استارت نکرده است.';
-    return ctx.replyWithHTML(t + FOOTER);
+    const kb = Markup.inlineKeyboard([
+      ...list.map((u) => [Markup.button.callback(`🧠 ${String(u.name || u.id).slice(0, 22)}`, `coach:u:${u.id}`)]),
+      [Markup.button.callback('← پنل مدیریت', 'menu_admin')],
+    ]);
+    return ctx.replyWithHTML(t + FOOTER, kb);
+  });
+
+  // ---------- مربی: جزئیات کاربر + تغییر سقف روزانه (فقط مدیر) ----------
+  async function coachUserDetail(ctx, id) {
+    const users = await getUsers();
+    const u = users.get(String(id));
+    const usage = await getCoachUsage(envOf('ADMIN_ID'), coachKV, id);
+    const name = u?.name || 'کاربر';
+    const usedLine = usage.unlimited
+      ? `${faNum(usage.used)} جواب استفاده شده (نامحدود)`
+      : `${faNum(usage.used)} از ${faNum(usage.limit)} جواب استفاده شده`;
+    const limitLine = usage.unlimited ? 'نامحدود' : (!usage.hasOverride ? '۳ (پیش‌فرض)' : faNum(usage.limit));
+    const t = `🧠 <b>مربی — ${esc(name)}</b>\n\n🆔 شناسه: <code>${esc(id)}</code>\n📅 امروز: ${usedLine}\n🎚️ سقف روزانه: ${limitLine}`;
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback('۳ (پیش‌فرض)', `coach:set:${id}:default`), Markup.button.callback('۵', `coach:set:${id}:5`), Markup.button.callback('۱۰', `coach:set:${id}:10`)],
+      [Markup.button.callback('۲۰', `coach:set:${id}:20`), Markup.button.callback('♾️ نامحدود', `coach:set:${id}:inf`)],
+      [Markup.button.callback('← بازگشت به کاربران', 'admin_users')],
+    ]);
+    return ctx.replyWithHTML(t + FOOTER, kb);
+  }
+
+  bot.action(/^coach:u:(\d+)$/, async (ctx) => {
+    if (!requireAdmin(ctx)) return ctx.answerCbQuery();
+    await ctx.answerCbQuery();
+    return coachUserDetail(ctx, ctx.match[1]);
+  });
+
+  bot.action(/^coach:set:(\d+):(default|5|10|20|inf)$/, async (ctx) => {
+    if (!requireAdmin(ctx)) return ctx.answerCbQuery();
+    await ctx.answerCbQuery();
+    const id = ctx.match[1];
+    const val = ctx.match[2];
+    const users = await getUsers();
+    const name = users.get(String(id))?.name || 'کاربر';
+    if (val === 'default') {
+      await setCoachLimit(coachKV, id, null);
+      await ctx.replyWithHTML(`✅ سقف مربی برای «${esc(name)}» برگشت به پیش‌فرض (۳ جواب در روز).` + FOOTER);
+    } else {
+      const limit = val === 'inf' ? 'inf' : Number(val);
+      await setCoachLimit(coachKV, id, limit);
+      const label = limit === 'inf' ? 'نامحدود' : `${faNum(limit)} جواب در روز`;
+      await ctx.replyWithHTML(`✅ سقف مربی برای «${esc(name)}» شد ${label}.` + FOOTER);
+    }
+    return coachUserDetail(ctx, id);
   });
 
   bot.action('admin_refresh', async (ctx) => {

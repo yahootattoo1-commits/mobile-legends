@@ -8,7 +8,7 @@
 const RONE_BASE = 'https://arena.rone.dev/api';
 const STATIC_BASE = 'data/';
 const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
-const DATA_VERSION = '20261115-0303'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const DATA_VERSION = '20261115-0312'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 
@@ -936,7 +936,7 @@ async function sendCoach() {
   if (!q) { box.innerHTML = '<p class="hint">سؤالت را بنویس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟</p>'; return; }
   loading(box, '🧠 مربی دارد فکر می‌کند…');
   try {
-    const r = await fetchJson(COACH_API, { method: 'POST', body: { question: q } });
+    const r = await fetchJson(COACH_API, { method: 'POST', body: { question: q, initData: (tg && tg.initData) || '' } });
     if (!r.ok || !r.json || typeof r.json.answer !== 'string' || !r.json.answer) {
       throw new Error('مربی الان در دسترس نیست، کمی بعد دوباره بپرس');
     }

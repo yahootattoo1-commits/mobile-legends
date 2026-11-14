@@ -3,6 +3,7 @@
 // اجرا: node worker/test-worker.js  (از ریشهٔ mlbb-bot)
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -148,12 +149,73 @@ checks.push(['/api/ask: جواب فارسی (سیستم فارسی)', aiCalls.le
 const askOpt = await worker.fetch(new Request('https://worker.test/api/ask', { method: 'OPTIONS' }), env, {});
 checks.push(['/api/ask: OPTIONS 204 + CORS', askOpt.status === 204 && askOpt.headers.get('access-control-allow-origin') === '*']);
 
-// سقف روزانه: شمارنده را روی ۴۰۰ می‌گذاریم — مدل نباید صدا بخورد
-kvStore.set('coach:' + new Date().toISOString().slice(0, 10), '400');
+// ---------- /api/ask — سقف روزانهٔ هر کاربر (۳ جواب) + مدیر نامحدود ----------
+// initData معتبر برای کاربر ساختگی با توکن تستی (همان منطق امضای تلگرام)
+function makeInitData(userId) {
+  const user = JSON.stringify({ id: userId, first_name: 'Test', username: 'test' });
+  const fields = { auth_date: String(Math.floor(Date.now() / 1000)), query_id: 'TESTQUERY', user };
+  const check = Object.keys(fields).sort().map((k) => `${k}=${fields[k]}`).join('\n');
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(env.BOT_TOKEN).digest();
+  const hash = crypto.createHmac('sha256', secret).update(check).digest('hex');
+  return new URLSearchParams({ ...fields, hash }).toString();
+}
+const today = new Date().toISOString().slice(0, 10);
+const askAnswer = async (body) => (await (await postAsk(body)).json()).answer;
+const askUser = (uid, q = 'بهترین بیلد Miya چیست؟') => askAnswer({ question: q, initData: makeInitData(uid) });
+
+// کاربر عادی ۲۲۲: سه جواب می‌گیرد، چهارمی سقف است
+const ans222 = [];
+for (let i = 0; i < 3; i++) ans222.push(await askUser(222));
+const ask222cap = await askUser(222);
+checks.push(['/api/ask: کاربر ۲۲۲ سه جواب می‌گیرد', ans222.every((a) => a === 'پاسخ تستی مربی')]);
+checks.push(['/api/ask: کاربر ۲۲۲ شمارنده ۳ دارد', kvStore.get(`coach:user:222:${today}`) === '3']);
+checks.push(['/api/ask: جواب چهارم پیام سقف با عدد ۳ است', ask222cap.includes('سهم امروزت') && ask222cap.includes('(۳ جواب در روز)')]);
+checks.push(['/api/ask: جواب چهارم مدل را صدا نمی‌زند', aiCalls.length === 4]);
+
+// شناسهٔ بدون امضا در بدنه اعتماد نمی‌شود: initData برای ۸۸۸ ولی userId بدنه ۹۹۹
+const spoofAns = await askAnswer({ question: 'بهترین بیلد Miya چیست؟', initData: makeInitData(888), userId: 999 });
+checks.push(['/api/ask: شناسهٔ بدنه نادیده گرفته می‌شود (۸۸۸)', spoofAns === 'پاسخ تستی مربی' && kvStore.get(`coach:user:888:${today}`) === '1' && !kvStore.has(`coach:user:999:${today}`)]);
+
+// مدیر (ADMIN_ID تستی 999999999): پنج جواب، بدون سقف
+const ansAdmin = [];
+for (let i = 0; i < 5; i++) ansAdmin.push(await askUser(999999999));
+checks.push(['/api/ask: مدیر ۵ جواب بدون سقف می‌گیرد', ansAdmin.every((a) => a === 'پاسخ تستی مربی')]);
+checks.push(['/api/ask: مدیر شمارندهٔ خودش را هم دارد', kvStore.get(`coach:user:999999999:${today}`) === '5']);
+checks.push(['/api/ask: مدیر مدل را هر بار صدا می‌زند', aiCalls.length === 10]);
+
+// override عددی ۵ برای کاربر ۵۵۵: پنج جواب، ششمی سقف با عدد ۵
+kvStore.set('coach:limit:555', '5');
+const ans555 = [];
+for (let i = 0; i < 5; i++) ans555.push(await askUser(555));
+const ask555cap = await askUser(555);
+checks.push(['/api/ask: override عددی ۵ — پنج جواب می‌گیرد', ans555.every((a) => a === 'پاسخ تستی مربی')]);
+checks.push(['/api/ask: سقف override عددی ۵ نامیده می‌شود', ask555cap.includes('(۵ جواب در روز)')]);
+checks.push(['/api/ask: override ۵ — شمارنده ۵', kvStore.get(`coach:user:555:${today}`) === '5']);
+
+// override نامحدود برای کاربر ۷۷۷
+kvStore.set('coach:limit:777', 'inf');
+const ans777 = [];
+for (let i = 0; i < 4; i++) ans777.push(await askUser(777));
+checks.push(['/api/ask: override نامحدود — ۴ جواب بدون سقف', ans777.every((a) => a === 'پاسخ تستی مربی') && kvStore.get(`coach:user:777:${today}`) === '4']);
+
+// ناشناس (سطل مشترک ۳ جوابه): ask1 یک جواب گرفته بود؛ دو تای دیگر می‌گیرد، چهارمی سقف است
+const anonBad = await askAnswer({ question: 'بهترین بیلد Miya چیست؟', initData: makeInitData(222).replace(/hash=[0-9a-f]+/, 'hash=' + '0'.repeat(64)) });
+checks.push(['/api/ask: initData نامعتبر → ناشناس (جواب می‌گیرد)', anonBad === 'پاسخ تستی مربی']);
+const anonMiss = await askAnswer({ question: 'بهترین بیلد Miya چیست؟' });
+checks.push(['/api/ask: بدون initData → ناشناس (جواب می‌گیرد)', anonMiss === 'پاسخ تستی مربی']);
+const anonCap = await askAnswer({ question: 'بهترین بیلد Miya چیست؟' });
+checks.push(['/api/ask: ناشناس چهارم سقف ۳ می‌گیرد', anonCap.includes('سهم امروزت') && anonCap.includes('(۳ جواب در روز)')]);
+checks.push(['/api/ask: سطل ناشناس ۳ است', kvStore.get(`coach:anon:${today}`) === '3']);
+
+// سقف روزانه: شمارندهٔ سراسری را روی ۴۰۰ می‌گذاریم — مدل نباید صدا بخورد
+// (سطل ناشناس را صفر می‌کنیم تا سقف سراسری دیده شود؛ سطل ناشناس پر است)
+kvStore.set(`coach:anon:${today}`, '0');
+const callsBeforeCap = aiCalls.length;
+kvStore.set('coach:' + today, '400');
 const askCap = await postAsk({ question: 'بهترین بیلد Miya چیست؟' });
 const askCapJson = await askCap.json();
 checks.push(['/api/ask: سقف روزانه پیام ثابت می‌دهد', askCap.status === 200 && askCapJson.answer === 'سهم امروز مربی تمام شد، فردا دوباره بپرس']);
-checks.push(['/api/ask: سقف روزانه مدل را صدا نمی‌زند', aiCalls.length === 1]);
+checks.push(['/api/ask: سقف روزانه مدل را صدا نمی‌زند', aiCalls.length === callsBeforeCap]);
 
 const r3 = await postUpdate(msgUpd('/start'), 'wrong-secret');
 checks.push(['وبهوک با سکرت اشتباه: 403', r3.status === 403]);
