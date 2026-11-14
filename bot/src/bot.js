@@ -1,13 +1,10 @@
 // ربات تلگرام MLBB — Telegraf با polling
 // همهٔ متن‌ها فارسی و راست‌چین؛ فوتر منبع داده در همهٔ پاسخ‌ها
-const fs = require('fs');
-const path = require('path');
 const { Telegraf, Markup } = require('telegraf');
 const { roneGet, ronePost, clearCache, normRankRecord, normCounterRecord, normBuildRecord, normStanding, equipNameMap } = require('./rone');
 const sd = require('./staticData');
 const { faNum, faInt, pct, esc, FOOTER, cleanText, truncate, ROLES, roleFa, laneFa } = require('./fa');
 
-const MINIAPP_URL = process.env.MINIAPP_URL || '';
 const LANES = [
   { v: 'exp', fa: '🛡️ اکس‌پی (EXP)' },
   { v: 'mid', fa: '🔮 مید (Mid)' },
@@ -26,69 +23,67 @@ const MONTH_FA = ['ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه'
 function dateFa(iso) { const d = new Date(iso); if (isNaN(d.getTime())) return ''; return `${faNum(d.getUTCDate())} ${MONTH_FA[d.getUTCMonth()]} ${faNum(d.getUTCFullYear())}`; }
 function monthFa(m) { const [name, year] = String(m || '').split(' '); const i = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(name); return (i >= 0 ? MONTH_FA[i] : name) + (year ? ' ' + faNum(year) : ''); }
 
-// وضعیت موقت /player برای هر چت — JWT فقط در حافظهٔ همین پروسه نگه داشته می‌شود
-const playerSessions = new Map(); // chatId -> { step, gameId, zoneId, jwt }
 
-// ---------- مدیریت ربات ----------
-// شناسهٔ عددی مدیرها از ADMIN_ID (متغیر محیطی، با کاما جدا می‌شود).
-// روی این سرور از فایل admin.id خوانده می‌شود و هرگز در ریپوی عمومی نمی‌آید.
-const ADMIN_IDS = new Set((process.env.ADMIN_ID || '').split(',').map((s) => s.trim()).filter(Boolean));
-const isAdmin = (ctx) => !!ctx?.from && ADMIN_IDS.has(String(ctx.from.id));
-function requireAdmin(ctx) {
-  if (isAdmin(ctx)) return true;
-  ctx.replyWithHTML('⛔ این بخش فقط برای مدیر ربات است.' + FOOTER).catch(() => {});
-  return false;
+// ---------- استورها ----------
+// پیش‌فرض Node: کاربران در logs/users.json روی دیسک، سشن‌ها در حافظه.
+// روی Workers با deps جایگزین می‌شوند (KV) و این توابع هرگز صدا نمی‌خورند —
+// پس requireهای fs/path هم فقط داخل همین توابع‌اند و باندل Worker را آلوده نمی‌کنند.
+function nodeUserStore() {
+  let users = null; // Map — دیرلود، یک بار
+  return {
+    async loadAll() {
+      if (users) return users;
+      users = new Map();
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const arr = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'logs', 'users.json'), 'utf8'));
+        for (const u of (Array.isArray(arr) ? arr : [])) if (u?.id) users.set(String(u.id), u);
+      } catch { /* اولین اجرا — هنوز کاربری نیست */ }
+      return users;
+    },
+    async persist(map) {
+      users = map;
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const file = path.join(__dirname, '..', 'logs', 'users.json');
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, JSON.stringify([...map.values()], null, 1));
+      } catch { /* ذخیره نشد — شمارش در حافظه می‌ماند */ }
+    },
+  };
 }
-const BOOT_TIME = new Date();
-
-// کاربران ربات — برای شمارش و پیام همگانی؛ فقط در logs/users.json روی همین سرور نگه داشته می‌شود
-const USERS_FILE = path.join(__dirname, '..', 'logs', 'users.json');
-const users = new Map(); // id -> { id, name, username, firstSeen, lastSeen }
-function loadUsers() {
+function nodeSessionStore() {
+  const playerSessions = new Map(); // chatId -> { step, gameId, zoneId, jwt }
+  const adminBroadcasts = new Map(); // chatId -> { step, text } — پیش‌نویس پیام همگانی در انتظار تایید
+  const maps = { player: playerSessions, broadcast: adminBroadcasts };
+  return {
+    async get(kind, chatId) { return (maps[kind] && maps[kind].get(chatId)) || null; },
+    async set(kind, chatId, value) { if (maps[kind]) maps[kind].set(chatId, value); },
+    async delete(kind, chatId) { if (maps[kind]) maps[kind].delete(chatId); },
+    _playerSessions: playerSessions,
+    _adminBroadcasts: adminBroadcasts,
+  };
+}
+function nodeRecentLogs() {
   try {
-    const arr = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-    for (const u of (Array.isArray(arr) ? arr : [])) if (u?.id) users.set(String(u.id), u);
-  } catch { /* اولین اجرا — هنوز کاربری نیست */ }
+    const fs = require('fs');
+    const path = require('path');
+    return fs.readFileSync(path.join(__dirname, '..', 'logs', 'bot.log'), 'utf8').trim().split('\n').slice(-10);
+  } catch { return null; }
 }
-function saveUsers() {
+// عکس خوشامد Node: فایل assets/welcome.jpg (وگرنه logo.jpg) — اگر نبود، null
+function nodeWelcomePhoto() {
   try {
-    fs.mkdirSync(path.dirname(USERS_FILE), { recursive: true });
-    fs.writeFileSync(USERS_FILE, JSON.stringify([...users.values()], null, 1));
-  } catch { /* ذخیره نشد — شمارش در حافظه می‌ماند */ }
+    const fs = require('fs');
+    const path = require('path');
+    const p = [path.join(__dirname, '..', 'assets', 'welcome.jpg'), path.join(__dirname, '..', 'assets', 'logo.jpg')].find((x) => fs.existsSync(x));
+    return p ? { kind: 'file', path: p } : null;
+  } catch { return null; }
 }
-function trackUser(ctx) {
-  const from = ctx?.from;
-  if (!from) return;
-  const id = String(from.id);
-  const now = new Date().toISOString();
-  const prev = users.get(id);
-  if (!prev) {
-    users.set(id, { id, name: [from.first_name, from.last_name].filter(Boolean).join(' ') || '', username: from.username || '', firstSeen: now, lastSeen: now });
-    saveUsers();
-  } else {
-    prev.lastSeen = now;
-    if (from.username && prev.username !== from.username) { prev.username = from.username; saveUsers(); }
-  }
-}
-loadUsers();
-const adminBroadcasts = new Map(); // chatId -> { step, text } — پیش‌نویس پیام همگانی در انتظار تایید
+const defaultSessionStore = nodeSessionStore();
 
-function webAppButton() {
-  if (!MINIAPP_URL) return null;
-  return Markup.button.webApp('🎮 باز کردن مینی‌اپ', MINIAPP_URL);
-}
-
-function mainMenuKeyboard(isAdminUser = false) {
-  const rows = [
-    [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
-    [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
-    [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
-  ];
-  if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
-  const wa = webAppButton();
-  if (wa) rows.unshift([wa]);
-  return Markup.inlineKeyboard(rows);
-}
 
 async function getRankList(days = 7, size = 10) {
   // size=140 یکجا همهٔ هیروها را می‌دهد؛ اگر API قبول نکرد با ۱۰۰ برمی‌گردیم
@@ -121,7 +116,7 @@ function heroNotFoundText(query, suggestions) {
  // Telegraf باید از همان پروکسی رد شود — node-fetchِ Telegraf خودش
  // متغیرهای پروکسی را نمی‌خواند. در WispByte پروکسی نیست و agent خالی می‌ماند.
 function telegramProxyAgent() {
-  const proxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+  const proxy = (typeof process !== 'undefined' && process.env && (process.env.HTTPS_PROXY || process.env.https_proxy)) || '';
   if (!proxy) return undefined;
   try {
     const { HttpsProxyAgent } = require('hpagent');
@@ -131,15 +126,83 @@ function telegramProxyAgent() {
   }
 }
 
-function createBot() {
-  const token = process.env.BOT_TOKEN;
+// createBot(env, deps) — بدون آرگومان = رفتار امروز (process.env + fs)؛
+// روی Workers با env/debs صریح صدا می‌شود و هیچ ارجاعی به process یا fs ندارد.
+// env: { BOT_TOKEN, MINIAPP_URL, ADMIN_ID } — اولویت با env است، بعد process.env.
+// deps: { isWorker, userStore, sessionStore, recentLogs, welcomePhoto, telegramClient }
+//   userStore: { loadAll() -> Map, persist(map) } — Node: logs/users.json؛ Workers: KV کلید 'users'
+//   sessionStore: { get/set/delete(kind, chatId) } — kind: 'player' | 'broadcast'
+//   recentLogs: () -> { lines: [...] } | { note: '...' } | null
+//   welcomePhoto: { kind: 'file', path } | { kind: 'url', url } | null
+//   telegramClient: نمونهٔ Telegram سفارشی (روی Workers: WorkerTelegram با fetch سراسری)
+function createBot(env, deps) {
+  env = env || {};
+  deps = deps || {};
+  const envOf = (k) => (env[k] !== undefined && env[k] !== null && env[k] !== '' ? env[k] : (typeof process !== 'undefined' && process.env ? process.env[k] : undefined));
+  const token = envOf('BOT_TOKEN') || '';
   if (!token) {
     console.log('[bot] BOT_TOKEN تنظیم نشده — ربات راه‌اندازی نمی‌شود، فقط سرور وب بالا می‌آید.');
     return null;
   }
+  const miniappUrl = envOf('MINIAPP_URL') || '';
+  // شناسهٔ عددی مدیرها از ADMIN_ID (با کاما جدا می‌شود) — هرگز در ریپوی عمومی نمی‌آید.
+  const adminIds = new Set(String(envOf('ADMIN_ID') || '').split(',').map((s) => s.trim()).filter(Boolean));
+  const isWorker = !!deps.isWorker;
+  const userStore = deps.userStore || nodeUserStore();
+  const sessionStore = deps.sessionStore || defaultSessionStore;
+  const recentLogsFn = deps.recentLogs || (async () => ({ lines: nodeRecentLogs() }));
+  const welcomePhoto = deps.welcomePhoto !== undefined ? deps.welcomePhoto : nodeWelcomePhoto();
+  const bootTime = new Date();
   const agent = telegramProxyAgent();
   const bot = new Telegraf(token, agent ? { telegram: { agent, attachmentAgent: agent } } : {});
-  console.log('[bot] admin:', ADMIN_IDS.size > 0 ? 'configured' : 'not configured');
+  if (deps.telegramClient) bot.telegram = deps.telegramClient;
+  console.log('[bot] admin:', adminIds.size > 0 ? 'configured' : 'not configured');
+
+  const isAdmin = (ctx) => !!ctx?.from && adminIds.has(String(ctx.from.id));
+  function requireAdmin(ctx) {
+    if (isAdmin(ctx)) return true;
+    ctx.replyWithHTML('⛔ این بخش فقط برای مدیر ربات است.' + FOOTER).catch(() => {});
+    return false;
+  }
+
+  // کاربران ربات — برای شمارش و پیام همگانی
+  let usersCache = null;
+  async function getUsers() {
+    if (!usersCache) usersCache = await userStore.loadAll();
+    return usersCache;
+  }
+  async function trackUser(ctx) {
+    const from = ctx?.from;
+    if (!from) return;
+    const users = await getUsers();
+    const id = String(from.id);
+    const now = new Date().toISOString();
+    const prev = users.get(id);
+    if (!prev) {
+      users.set(id, { id, name: [from.first_name, from.last_name].filter(Boolean).join(' ') || '', username: from.username || '', firstSeen: now, lastSeen: now });
+      await userStore.persist(users);
+    } else {
+      prev.lastSeen = now;
+      if (from.username && prev.username !== from.username) { prev.username = from.username; await userStore.persist(users); }
+    }
+  }
+
+  function webAppButton() {
+    if (!miniappUrl) return null;
+    return Markup.button.webApp('🎮 باز کردن مینی‌اپ', miniappUrl);
+  }
+
+  function mainMenuKeyboard(isAdminUser = false) {
+    const rows = [
+      [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
+      [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
+      [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
+    ];
+    if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
+    const wa = webAppButton();
+    if (wa) rows.unshift([wa]);
+    return Markup.inlineKeyboard(rows);
+  }
 
   const helpText = `🤖 <b>راهنمای ربات MLBB</b>
 
@@ -169,21 +232,21 @@ function createBot() {
 🎮 مینی‌اپ فارسی هم از دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود.` + FOOTER;
 
   // ثبت هر کاربری که با ربات حرف می‌زند (برای شمارش و پیام همگانی)
-  bot.use((ctx, next) => { trackUser(ctx); return next(); });
+  bot.use(async (ctx, next) => { await trackUser(ctx); return next(); });
 
   bot.start(async (ctx) => {
     const kb = mainMenuKeyboard(isAdmin(ctx));
-    const waNote = MINIAPP_URL
+    const waNote = miniappUrl
       ? '🎮 با دکمهٔ زیر مینی‌اپ فارسی را باز کن:'
       : '⚠️ مینی‌اپ هنوز روی هاست HTTPS تنظیم نشده است (MINIAPP_URL خالی است) — دستورهای زیر بدون مینی‌اپ هم کار می‌کنند.';
     const caption =
       `👋 سلام! به <b>Persian Mlbb</b> خوش آمدی.\n\nربات فارسی Mobile Legends: Bang Bang — هیروها بر اساس نقش، متا، کانتر، بیلد، آیتم، امبلم، اخبار و تیرلیست و جدول MPL، همه به فارسی و با دادهٔ زنده.\n\n${waNote}\n\nبرای راهنما: /help` +
       (isAdmin(ctx) ? '\n\n🛠️ تو مدیر ربات هستی — /admin برای پنل مدیریت.' : '') + FOOTER;
-    // پیام ورود با عکس خوشامد (assets/welcome.jpg، وگرنه لوگوی ربات) — اگر فایل نبود، فقط متن فرستاده می‌شود
-    const welcomePath = [path.join(__dirname, '..', 'assets', 'welcome.jpg'), path.join(__dirname, '..', 'assets', 'logo.jpg')].find((p) => fs.existsSync(p));
-    if (welcomePath) {
+    // پیام ورود با عکس خوشامد — Node: فایل assets/welcome.jpg (وگرنه logo.jpg)؛ Workers: URL عمومی
+    if (welcomePhoto) {
       try {
-        await ctx.replyWithPhoto({ source: welcomePath }, { caption, parse_mode: 'HTML', ...kb });
+        if (welcomePhoto.kind === 'url') await ctx.replyWithPhoto(welcomePhoto.url, { caption, parse_mode: 'HTML', ...kb });
+        else await ctx.replyWithPhoto({ source: welcomePhoto.path }, { caption, parse_mode: 'HTML', ...kb });
         return;
       } catch { /* بدون عکس ادامه بده */ }
     }
@@ -411,7 +474,8 @@ function createBot() {
     if (disc.length) {
       t += '\n\n<b>💬 گفتگوها:</b>';
       disc.slice(0, 5).forEach((d) => {
-        t += `\n• <b>${esc(d.title)}</b>` + (d.category_fa ? ` — ${esc(d.category_fa)}` : '') + (dateFa(d.date_iso) ? ` — ${dateFa(d.date_iso)}` : '');
+        const fd = ((sd.faContent || {}).discussions || {})[d.title] || {};
+        t += `\n• <b>${esc(fd.title_fa || d.title)}</b>` + (d.category_fa ? ` — ${esc(d.category_fa)}` : '') + (dateFa(d.date_iso) ? ` — ${dateFa(d.date_iso)}` : '');
       });
     }
     t += FOOTER;
@@ -623,73 +687,80 @@ function createBot() {
   });
 
   // ---------- /player (ورود با کد تایید داخل بازی) ----------
-  bot.command('player', (ctx) => {
-    playerSessions.set(ctx.chat.id, { step: 'gameId' });
+  bot.command('player', async (ctx) => {
+    await sessionStore.set('player', ctx.chat.id, { step: 'gameId' });
     return ctx.replyWithHTML(
       '👤 <b>اتصال پروفایل بازی</b>\n\nبرای دیدن آمار و مچ‌های خودت، اول Game ID (آیدی عددی بازی) را بفرست.\n\n⚠️ بعد از آن باید کد تاییدی را که داخل بازی می‌آید وارد کنی. توکن ورود فقط در حافظهٔ همین چت نگه داشته می‌شود و ذخیره نمی‌شود.\n\nبرای لغو، /cancel را بفرست.' + FOOTER,
     );
   });
-  bot.command('cancel', (ctx) => {
-    playerSessions.delete(ctx.chat.id);
-    adminBroadcasts.delete(ctx.chat.id);
+  bot.command('cancel', async (ctx) => {
+    await sessionStore.delete('player', ctx.chat.id);
+    await sessionStore.delete('broadcast', ctx.chat.id);
     return ctx.replyWithHTML('لغو شد.' + FOOTER);
   });
   bot.on('text', async (ctx, next) => {
     const text = (ctx.message.text || '').trim();
     // پیش‌نویس پیام همگانی مدیر — اول بررسی می‌شود تا با جریان /player قاطی نشود
-    const bc = adminBroadcasts.get(ctx.chat.id);
+    const bc = await sessionStore.get('broadcast', ctx.chat.id);
     if (bc && isAdmin(ctx) && !text.startsWith('/')) {
       if (bc.step === 'text') {
         if (text.length > 4000) return ctx.replyWithHTML('⚠️ متن پیام همگانی حداکثر ۴۰۰۰ کاراکتر است. کوتاه‌تر بفرست.' + FOOTER);
         bc.text = text;
         bc.step = 'confirm';
+        await sessionStore.set('broadcast', ctx.chat.id, bc);
         return ctx.replyWithHTML(
-          `📣 <b>پیش‌نمایش پیام همگانی</b> — به ${faNum(users.size)} کاربر:\n\n${esc(text)}` + FOOTER,
+          `📣 <b>پیش‌نمایش پیام همگانی</b> — به ${faNum((await getUsers()).size)} کاربر:\n\n${esc(text)}` + FOOTER,
           Markup.inlineKeyboard([
-            [Markup.button.callback(`✅ ارسال به ${faNum(users.size)} کاربر`, 'admin_bc:send')],
+            [Markup.button.callback(`✅ ارسال به ${faNum((await getUsers()).size)} کاربر`, 'admin_bc:send')],
             [Markup.button.callback('❌ لغو', 'admin_bc:cancel')],
           ]),
         );
       }
     }
-    const s = playerSessions.get(ctx.chat.id);
+    const s = await sessionStore.get('player', ctx.chat.id);
     if (!s || text.startsWith('/')) return next();
     if (s.step === 'gameId') {
       if (!/^\d+$/.test(text)) return ctx.replyWithHTML('⚠️ Game ID فقط عدد است. دوباره بفرست.' + FOOTER);
       s.gameId = text;
       s.step = 'zoneId';
+      await sessionStore.set('player', ctx.chat.id, s);
       return ctx.replyWithHTML('حالا Zone ID (آیدی سرور/زون) را بفرست. معمولاً ۴ رقم است؛ مثلاً 1234.' + FOOTER);
     }
     if (s.step === 'zoneId') {
       if (!/^\d+$/.test(text)) return ctx.replyWithHTML('⚠️ Zone ID فقط عدد است. دوباره بفرست.' + FOOTER);
       s.zoneId = text;
       s.step = 'sending';
+      await sessionStore.set('player', ctx.chat.id, s);
       await ctx.replyWithHTML('⏳ در حال ارسال کد تایید به بازی… وارد بازی شو و کد را از صندوق پیام (اینباکس) بازی بردار.' + FOOTER);
       const r = await ronePost('/user/auth/send-vc', { game_id: s.gameId, zone_id: s.zoneId });
       // شکل دقیق body طبق OpenAPI ممکن است فرق کند؛ خطا را فارسی نشان می‌دهیم
       if (!r.ok) {
-        playerSessions.delete(ctx.chat.id);
+        await sessionStore.delete('player', ctx.chat.id);
         return ctx.replyWithHTML(`❌ ارسال کد ممکن نشد: ${esc(r.error)}\n\nمطمئن شو Game ID و Zone ID درست‌اند. اگر باز هم نشد، ورود به پروفایل فعلاً از این مسیر ممکن نیست.` + FOOTER);
       }
       s.step = 'code';
+      await sessionStore.set('player', ctx.chat.id, s);
       return ctx.replyWithHTML('✅ کد ارسال شد. کد تایید داخل بازی را اینجا بفرست.' + FOOTER);
     }
     if (s.step === 'code') {
       if (!/^\d{4,8}$/.test(text)) return ctx.replyWithHTML('⚠️ کد تایید عددی است (معمولاً ۴ تا ۸ رقم). دوباره بفرست.' + FOOTER);
       s.step = 'logging';
+      await sessionStore.set('player', ctx.chat.id, s);
       await ctx.replyWithHTML('⏳ در حال ورود…' + FOOTER);
       const r = await ronePost('/user/auth/login', { game_id: s.gameId, zone_id: s.zoneId, verification_code: text });
       if (!r.ok) {
         s.step = 'code';
+        await sessionStore.set('player', ctx.chat.id, s);
         return ctx.replyWithHTML(`❌ ورود ناموفق بود: ${esc(r.error)}\n\nاگر کد منقضی شده، با /player دوباره کد تازه بگیر.` + FOOTER);
       }
       const jwt = r.data?.token || r.data?.jwt || r.data?.access_token || (typeof r.data === 'string' ? r.data : null);
       if (!jwt) {
-        playerSessions.delete(ctx.chat.id);
+        await sessionStore.delete('player', ctx.chat.id);
         return ctx.replyWithHTML('❌ ورود انجام شد ولی توکن برنگشت؛ پروفایل فعلاً قابل نمایش نیست.' + FOOTER);
       }
       s.jwt = jwt;
       s.step = 'done';
+      await sessionStore.set('player', ctx.chat.id, s);
       const info = await roneGet('/user/info', { useCache: false, headers: { Authorization: `Bearer ${jwt}` } });
       const nick = info?.raw?.nickname || info?.raw?.data?.nickname || info?.raw?.username || '';
       return ctx.replyWithHTML(
@@ -732,22 +803,23 @@ function createBot() {
   bot.action('admin_status', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
-    const up = Math.floor((Date.now() - BOOT_TIME.getTime()) / 1000);
+    const up = Math.floor((Date.now() - bootTime.getTime()) / 1000);
     const h = Math.floor(up / 3600), m = Math.floor((up % 3600) / 60);
-    const mem = (process.memoryUsage().rss / 1048576).toFixed(0);
+    const mem = (typeof process !== 'undefined' && process.memoryUsage) ? (process.memoryUsage().rss / 1048576).toFixed(0) : '—';
     let v = '؟';
     try {
       const r = await roneGet('/academy/meta/version');
       if (r.ok) v = r.records.find((rec) => rec?.data?.game_version)?.data?.game_version || '؟';
     } catch { /* نسخه خوانده نشد */ }
     return ctx.replyWithHTML(
-      `📊 <b>وضعیت ربات</b>\n\n⏱️ زمان روشن بودن: ${faNum(h)} ساعت و ${faNum(m)} دقیقه\n🧠 حافظه: ${faNum(mem)} مگابایت\n🦸 هیروهای استاتیک: ${faNum(sd.heroes.length)}\n🧰 آیتم‌ها: ${faNum(sd.items.length)}\n🎮 نسخهٔ بازی: ${faNum(v)}\n👥 کاربران: ${faNum(users.size)}\n📡 حالت: polling (تلگرام)\n🔗 مینی‌اپ: ${esc(MINIAPP_URL || 'تنظیم نشده')}` + FOOTER,
+      `📊 <b>وضعیت ربات</b>\n\n⏱️ زمان روشن بودن: ${faNum(h)} ساعت و ${faNum(m)} دقیقه\n🧠 حافظه: ${faNum(mem)} مگابایت\n🦸 هیروهای استاتیک: ${faNum(sd.heroes.length)}\n🧰 آیتم‌ها: ${faNum(sd.items.length)}\n🎮 نسخهٔ بازی: ${faNum(v)}\n👥 کاربران: ${faNum((await getUsers()).size)}\n📡 حالت: ${isWorker ? 'webhook (Cloudflare Workers)' : 'polling (تلگرام)'}\n🔗 مینی‌اپ: ${esc(miniappUrl || 'تنظیم نشده')}` + FOOTER,
     );
   });
 
   bot.action('admin_users', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
+    const users = await getUsers();
     const list = [...users.values()].sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || '')).slice(0, 10);
     let t = `👥 <b>کاربران ربات — ${faNum(users.size)} نفر</b>\n`;
     for (const u of list) {
@@ -761,15 +833,16 @@ function createBot() {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
     const n = clearCache();
-    return ctx.replyWithHTML(`🔄 کش دادهٔ زنده پاک شد (${faNum(n)} مورد). درخواست‌های بعدی مستقیم از سرور زنده خوانده می‌شوند.\n\nدیتای استاتیک (هیرو/آیتم) موقع بالا آمدن ربات خوانده می‌شود؛ برای تغییر آن ری‌استارت لازم است.` + FOOTER);
+    return ctx.replyWithHTML(`🔄 کش دادهٔ زنده پاک شد (${faNum(n)} مورد). درخواست‌های بعدی مستقیم از سرور زنده خوانده می‌شوند.\n\n` + (isWorker ? 'دیتای استاتیک هر ۱۰ دقیقه از مینی‌اپ تازه می‌شود؛ نیازی به ری‌استارت نیست.' : 'دیتای استاتیک (هیرو/آیتم) موقع بالا آمدن ربات خوانده می‌شود؛ برای تغییر آن ری‌استارت لازم است.') + FOOTER);
   });
 
   bot.action('admin_logs', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
-    let lines = [];
-    try { lines = fs.readFileSync(path.join(__dirname, '..', 'logs', 'bot.log'), 'utf8').trim().split('\n').slice(-10); }
-    catch { return ctx.replyWithHTML('📝 لاگی پیدا نشد.' + FOOTER); }
+    const logs = await recentLogsFn();
+    if (logs && logs.note) return ctx.replyWithHTML(`📝 ${esc(logs.note)}` + FOOTER);
+    const lines = (logs && logs.lines) || [];
+    if (!lines.length) return ctx.replyWithHTML('📝 لاگی پیدا نشد.' + FOOTER);
     return ctx.replyWithHTML(`📝 <b>۱۰ خط آخر لاگ</b>\n\n<pre>${esc(lines.join('\n')).slice(-3000)}</pre>` + FOOTER);
   });
 
@@ -777,26 +850,26 @@ function createBot() {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
     return ctx.replyWithHTML(
-      `🔗 <b>مینی‌اپ</b>\n\nآدرس فعلی: ${esc(MINIAPP_URL || 'تنظیم نشده')}\n\nبرای تغییر آن، فایل miniapp.url را عوض کن و ربات را ری‌استارت کن.` + FOOTER,
+      `🔗 <b>مینی‌اپ</b>\n\nآدرس فعلی: ${esc(miniappUrl || 'تنظیم نشده')}\n\n` + (isWorker ? 'برای تغییر آن، متغیر MINIAPP_URL را در داشبورد Cloudflare عوض کن.' : 'برای تغییر آن، فایل miniapp.url را عوض کن و ربات را ری‌استارت کن.') + FOOTER,
     );
   });
 
   bot.action('admin_broadcast', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
-    adminBroadcasts.set(ctx.chat.id, { step: 'text' });
-    return ctx.replyWithHTML(`📣 <b>پیام همگانی</b>\n\nمتن پیامی را که می‌خواهی به همهٔ کاربران ربات (${faNum(users.size)} نفر) برود بفرست.\n\nبرای لغو، /cancel را بفرست.` + FOOTER);
+    await sessionStore.set('broadcast', ctx.chat.id, { step: 'text' });
+    return ctx.replyWithHTML(`📣 <b>پیام همگانی</b>\n\nمتن پیامی را که می‌خواهی به همهٔ کاربران ربات (${faNum((await getUsers()).size)} نفر) برود بفرست.\n\nبرای لغو، /cancel را بفرست.` + FOOTER);
   });
 
   bot.action(/^admin_bc:(send|cancel)$/, async (ctx) => {
     const chatId = ctx.chat.id;
-    const draft = adminBroadcasts.get(chatId);
+    const draft = await sessionStore.get('broadcast', chatId);
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
-    if (!draft?.text) { adminBroadcasts.delete(chatId); return ctx.replyWithHTML('پیش‌نویسی برای ارسال نیست.' + FOOTER); }
-    if (ctx.match[1] === 'cancel') { adminBroadcasts.delete(chatId); return ctx.replyWithHTML('❌ ارسال پیام همگانی لغو شد.' + FOOTER); }
-    adminBroadcasts.delete(chatId);
-    const targets = [...users.keys()].filter((id) => id !== String(ctx.from.id));
+    if (!draft?.text) { await sessionStore.delete('broadcast', chatId); return ctx.replyWithHTML('پیش‌نویسی برای ارسال نیست.' + FOOTER); }
+    if (ctx.match[1] === 'cancel') { await sessionStore.delete('broadcast', chatId); return ctx.replyWithHTML('❌ ارسال پیام همگانی لغو شد.' + FOOTER); }
+    await sessionStore.delete('broadcast', chatId);
+    const targets = [...(await getUsers()).keys()].filter((id) => id !== String(ctx.from.id));
     let ok = 0, fail = 0;
     for (const id of targets) {
       try { await ctx.telegram.sendMessage(id, draft.text); ok++; }
@@ -828,4 +901,4 @@ function createBot() {
   return bot;
 }
 
-module.exports = { createBot, playerSessions };
+module.exports = { createBot, playerSessions: defaultSessionStore._playerSessions };

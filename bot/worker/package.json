@@ -1,0 +1,1 @@
+{"description":"Persian MLBB Telegram bot on Cloudflare Workers (webhook mode)","devDependencies":{"wrangler":"^4.0.0"},"name":"persian-mlbb-bot-worker","private":true,"scripts":{"deploy":"wrangler deploy","dev":"wrangler dev","test":"node test-worker.js"},"type":"module","version":"1.0.0"}

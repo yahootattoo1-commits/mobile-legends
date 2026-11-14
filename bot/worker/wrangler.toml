@@ -1,0 +1,20 @@
+# Cloudflare Workers — ربات تلگرام Persian Mlbb (حالت وبهوک، بدون polling)
+# هیچ سکرتی در این فایل نیست؛ BOT_TOKEN و ADMIN_ID و WEBHOOK_SECRET با
+# `wrangler secret put` ست می‌شوند (مرحلهٔ ۲ — DEPLOY.md را ببین).
+
+name = "persian-mlbb-bot"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# KV برای کاربران ربات + سشن‌های /player و پیش‌نویس پیام همگانی.
+# id را بعد از ساخت نیم‌اسپیس جایگزین کن:
+#   wrangler kv:namespace create USERS
+[[kv_namespaces]]
+binding = "USERS"
+id = "98443f4730874f0c9cec44db0b10d895"
+
+[vars]
+MINIAPP_URL = "https://yahootattoo1-commits.github.io/mobile-legends/"
+STATIC_BASE_URL = "https://yahootattoo1-commits.github.io/mobile-legends/data"
+WELCOME_PHOTO_URL = "https://yahootattoo1-commits.github.io/mobile-legends/assets/welcome.jpg"

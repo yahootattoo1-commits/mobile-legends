@@ -1,12 +1,40 @@
 // دیتای استاتیک آفلاین p3hndrx/MLBB-API (فایل‌های v1 در data/)
 // hero-meta-final.json: ۱۳۴ هیرو (رکورد اول placeholder با hero_name="None" است — نادیده گرفته می‌شود)
 // item-meta-final.json: ۸۹ آیتم | emblem-meta-final.json: ۷ امبلم | talent-meta-final.json: ۳ تلنت
+//
+// دو مسیر لود دارد و هر دو همان state را می‌سازند:
+//   ۱) Node (پیش‌فرض): فایل‌ها موقع require از دیسک خوانده می‌شوند (همگام، مثل قبل).
+//   ۲) Workers: ensureRemote(baseUrl) فایل‌ها را با fetch می‌گیرد و state را جایگزین می‌کند.
+// همهٔ خروجی‌ها getter هستند تا بعد از لود ریموت، خواننده‌ها همان دادهٔ تازه را ببینند.
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+// روی Workers ‏__dirname‏ نیست (باندل ESM) — پس DATA_DIR فقط روی Node ست می‌شود؛
+// روی Workers لود دیسک رد می‌شود و ensureRemote دیتا را با fetch می‌گیرد.
+const DATA_DIR = (typeof __dirname !== 'undefined') ? path.join(__dirname, '..', 'data') : null;
+
+// فایل‌ها + کلیدشان در state — همین لیست در لودر ریموت (Workers) هم استفاده می‌شود
+const DATA_FILES = [
+  ['heroFile', 'hero-meta-final.json'],
+  ['itemFile', 'item-meta-final.json'],
+  ['emblemFile', 'emblem-meta-final.json'],
+  ['talentFile', 'talent-meta-final.json'],
+  ['faFile', 'fa-overrides.json'],
+  ['fullBuildsFile', 'builds-full.json'],
+  ['newsFile', 'news.json'],
+  ['tierlistFile', 'tierlist.json'],
+  ['discussionsFile', 'discussions.json'],
+  ['eventsFile', 'events.json'],
+  ['faContentFile', 'fa-content.json'],
+  ['heroStatsFile', 'hero-stats.json'],
+  ['teamCompsFile', 'team-comps.json'],
+  ['teamCompGuideFile', 'team-comp-guide.json'],
+  ['patchFullFile', 'patch-notes-full.json'],
+  ['matchupsFile', 'matchups.json'],
+];
 
 function loadJson(file) {
+  if (!DATA_DIR) return { data: [] }; // Workers: no disk — remote load fills state
   try {
     return JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
   } catch (e) {
@@ -15,82 +43,114 @@ function loadJson(file) {
   }
 }
 
-const heroFile = loadJson('hero-meta-final.json');
-const itemFile = loadJson('item-meta-final.json');
-const emblemFile = loadJson('emblem-meta-final.json');
-const talentFile = loadJson('talent-meta-final.json');
-// ترجمهٔ فارسی توضیحات (data/fa-overrides.json) — اگر نباشد، متن انگلیسی نشان داده می‌شود
-const faFile = loadJson('fa-overrides.json');
-// بیلد کامل ۶ آیتمی از mlbb.io (data/builds-full.json) — اگر نباشد، خالی است
-const fullBuildsFile = loadJson('builds-full.json');
-const fullBuilds = (fullBuildsFile && fullBuildsFile.heroes) || {};
-// اخبار و تیرلیست + انجمن + ایونت‌ها (data/news.json + data/tierlist.json + data/discussions.json + data/events.json) — اگر نباشند، خالی است
-const newsFile = loadJson('news.json');
-const tierlistFile = loadJson('tierlist.json');
-const discussionsFile = loadJson('discussions.json');
-const eventsFile = loadJson('events.json');
-const news = { patchNotes: (newsFile && newsFile.patch_notes) || [], wikiRecent: (newsFile && newsFile.wiki_recent) || [] };
-const discussions = (discussionsFile && discussionsFile.threads) || [];
-const events = (eventsFile && eventsFile.events) || [];
-const faContentFile = loadJson('fa-content.json');
-const faContent = (faContentFile && faContentFile.version) ? faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {} };
-const heroStatsFile = loadJson('hero-stats.json');
-const heroStats = (heroStatsFile && heroStatsFile.heroes) || [];
-const teamCompsFile = loadJson('team-comps.json');
-const teamComps = (teamCompsFile && teamCompsFile.comps) || [];
-const teamCompGuideFile = loadJson('team-comp-guide.json');
-const teamCompGuide = teamCompGuideFile || { faqs: [], how_it_works: '' };
-const patchFullFile = loadJson('patch-notes-full.json');
-const patchFull = (patchFullFile && patchFullFile.patches) || [];
-const matchupsFile = loadJson('matchups.json');
-const matchups = (matchupsFile && matchupsFile.heroes) || {};
-const tierlist = {
-  month: (tierlistFile && tierlistFile.month) || null,
-  tiers: (tierlistFile && tierlistFile.tiers) || {},
-  counts: (tierlistFile && tierlistFile.counts) || {},
-};
-const FA = {
-  heroSkills: (faFile && faFile.heroSkills) || {},
-  items: (faFile && faFile.items) || {},
-  talents: (faFile && faFile.talents) || {},
-  spells: (faFile && faFile.spells) || {},
-};
-function faSkill(heroId, skillName) { return FA.heroSkills[`${heroId}|${norm(skillName)}`] || null; }
-function faItem(itemId, name) { return FA.items[`${itemId}|${norm(name)}`] || null; }
-function faTalent(id) { return FA.talents[String(id)] || null; }
-function faSpell(name) { return FA.spells[norm(name)] || null; }
-function loreById(id) { return (faContent.lore || {})[String(id)] || null; }
-function statByName(name) {
-  const s = heroStats.find((x) => norm(x.name) === norm(name));
-  if (!s) return null;
-  const f = ((faContent.stats || {}).heroes || {})[s.slug] || {};
-  return { ...s, win_label_fa: f.win_label_fa || s.win_label, pick_label_fa: f.pick_label_fa || s.pick_label, ban_label_fa: f.ban_label_fa || s.ban_label, specialities_fa: f.specialities_fa || s.specialities || [] };
+function loadDiskFiles() {
+  const out = {};
+  for (const [key, file] of DATA_FILES) out[key] = loadJson(file);
+  return out;
 }
-function matchupById(id) {
-  const m = matchups[String(id)];
-  if (!m) return null;
-  const f = (faContent.matchups || {})[String(id)] || {};
-  const cbFa = f.countered_by_fa || {};
-  const rnFa = f.rank_notes_fa || {};
+
+// ساخت state مشتق‌شده از فایل‌های خام — برای هر دو مسیر لود یکسان است
+function buildState(f) {
+  // ترجمهٔ فارسی توضیحات (data/fa-overrides.json) — اگر نباشد، متن انگلیسی نشان داده می‌شود
+  const FA = {
+    heroSkills: (f.faFile && f.faFile.heroSkills) || {},
+    items: (f.faFile && f.faFile.items) || {},
+    talents: (f.faFile && f.faFile.talents) || {},
+    spells: (f.faFile && f.faFile.spells) || {},
+  };
+  // بیلد کامل ۶ آیتمی از mlbb.io (data/builds-full.json) — اگر نباشد، خالی است
+  const fullBuilds = (f.fullBuildsFile && f.fullBuildsFile.heroes) || {};
+  // اخبار و تیرلیست + انجمن + ایونت‌ها — اگر نباشند، خالی است
+  const news = { patchNotes: (f.newsFile && f.newsFile.patch_notes) || [], wikiRecent: (f.newsFile && f.newsFile.wiki_recent) || [] };
+  const discussions = (f.discussionsFile && f.discussionsFile.threads) || [];
+  const events = (f.eventsFile && f.eventsFile.events) || [];
+  const faContent = (f.faContentFile && f.faContentFile.version) ? f.faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {} };
+  const heroStats = (f.heroStatsFile && f.heroStatsFile.heroes) || [];
+  const teamComps = (f.teamCompsFile && f.teamCompsFile.comps) || [];
+  const teamCompGuide = f.teamCompGuideFile || { faqs: [], how_it_works: '' };
+  const patchFull = (f.patchFullFile && f.patchFullFile.patches) || [];
+  const matchups = (f.matchupsFile && f.matchupsFile.heroes) || {};
+  const tierlist = {
+    month: (f.tierlistFile && f.tierlistFile.month) || null,
+    tiers: (f.tierlistFile && f.tierlistFile.tiers) || {},
+    counts: (f.tierlistFile && f.tierlistFile.counts) || {},
+  };
+  const heroes = (f.heroFile.data || []).filter((h) => h && h.hero_name && h.hero_name !== 'None');
+  const items = f.itemFile.data || [];
+  const emblems = f.emblemFile.data || [];
+  const talents = f.talentFile.data || {}; // { tier1: [...], tier2: [...], tier3: [...] }
   return {
-    ...m,
-    countered_by: (m.countered_by || []).map((c) => ({ ...c, reason_fa: (cbFa[c.slug] || {}).reason_fa || c.reason, strength_fa: (cbFa[c.slug] || {}).strength_fa || c.strength })),
-    rank_notes: (m.rank_notes || []).map((r) => ({ ...r, text_fa: (rnFa[r.slug] || {}).text_fa || r.text })),
+    heroes, items, emblems, talents, fullBuilds, news, tierlist, discussions, events,
+    faContent, heroStats, teamComps, teamCompGuide, patchFull, matchups, FA,
+    heroRevdate: (f.heroFile && f.heroFile.revdate) || null,
+    itemRevdate: (f.itemFile && f.itemFile.revdate) || null,
+    faCounts: {
+      heroSkills: Object.keys(FA.heroSkills).length,
+      items: Object.keys(FA.items).length,
+      talents: Object.keys(FA.talents).length,
+      spells: Object.keys(FA.spells).length,
+    },
   };
 }
-function patchByTitle(title) {
-  const f = (faContent.patches || {})[title];
-  if (!f) return null;
-  const src = patchFull.find((p) => p.title === title) || {};
-  return { ...src, ...f };
+
+let state = buildState(loadDiskFiles());
+
+function logState(prefix) {
+  console.log(`[static] ${prefix}heroes=${state.heroes.length} items=${state.items.length} emblems=${state.emblems.length} news=${state.news.patchNotes.length + state.news.wikiRecent.length} tierlist=${Object.values(state.tierlist.counts).reduce((a, b) => a + b, 0)} discussions=${state.discussions.length} events=${state.events.length} facontent=${Object.keys(state.faContent.lore || {}).length}/${Object.keys(state.faContent.matchups || {}).length}/${Object.keys(state.faContent.patches || {}).length}/${Object.keys(state.faContent.events || {}).length} stats=${state.heroStats.length} comps=${state.teamComps.length} revdate=${state.heroRevdate || '?'}`);
+}
+logState('');
+
+// ---------- لود ریموت (Cloudflare Workers): همهٔ فایل‌ها با fetch، با TTL ده دقیقه ----------
+// روی Workers فایل دیسک نیست؛ ورودی مینی‌اپ/ربات قبل از هر هندل، ensureRemote را صدا می‌زند.
+// اگر لود ناموفق باشد، state قبلی (دیسک یا لود قبلی) حفظ می‌شود و false برمی‌گردد.
+const REMOTE_TTL_MS = 10 * 60 * 1000;
+let remoteLoadedAt = 0;
+let remotePromise = null;
+
+async function loadRemoteFiles(baseUrl, fetchImpl) {
+  const fetchFn = fetchImpl || fetch;
+  const base = String(baseUrl || '').replace(/\/+$/, '');
+  const entries = await Promise.all(DATA_FILES.map(async ([key, file]) => {
+    try {
+      const res = await fetchFn(`${base}/${file}`);
+      if (!res.ok) return [key, { data: [] }];
+      return [key, await res.json()];
+    } catch {
+      return [key, { data: [] }];
+    }
+  }));
+  return Object.fromEntries(entries);
 }
 
-const heroes = (heroFile.data || []).filter((h) => h && h.hero_name && h.hero_name !== 'None');
-const items = itemFile.data || [];
-const emblems = emblemFile.data || [];
-const talents = talentFile.data || {}; // { tier1: [...], tier2: [...], tier3: [...] }
+async function ensureRemote(baseUrl, fetchImpl) {
+  const now = Date.now();
+  if (remoteLoadedAt && now - remoteLoadedAt < REMOTE_TTL_MS) return true;
+  if (remotePromise) return remotePromise;
+  remotePromise = (async () => {
+    try {
+      const files = await loadRemoteFiles(baseUrl, fetchImpl);
+      const next = buildState(files);
+      if (!next.heroes.length) {
+        console.warn('[static] remote load returned no heroes — keeping previous state');
+        return false;
+      }
+      state = next;
+      remoteLoadedAt = Date.now();
+      logState('remote ');
+      return true;
+    } catch (e) {
+      console.warn('[static] remote load failed — keeping previous state:', e.message);
+      return false;
+    } finally {
+      remotePromise = null;
+    }
+  })();
+  return remotePromise;
+}
 
-console.log(`[static] heroes=${heroes.length} items=${items.length} emblems=${emblems.length} news=${news.patchNotes.length + news.wikiRecent.length} tierlist=${Object.values(tierlist.counts).reduce((a, b) => a + b, 0)} discussions=${discussions.length} events=${events.length} facontent=${Object.keys(faContent.lore || {}).length}/${Object.keys(faContent.matchups || {}).length}/${Object.keys(faContent.patches || {}).length}/${Object.keys(faContent.events || {}).length} stats=${heroStats.length} comps=${teamComps.length} revdate=${heroFile.revdate || '?'}`);
+function isRemoteReady() {
+  return remoteLoadedAt > 0;
+}
 
 function norm(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -110,11 +170,41 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
+function faSkill(heroId, skillName) { return state.FA.heroSkills[`${heroId}|${norm(skillName)}`] || null; }
+function faItem(itemId, name) { return state.FA.items[`${itemId}|${norm(name)}`] || null; }
+function faTalent(id) { return state.FA.talents[String(id)] || null; }
+function faSpell(name) { return state.FA.spells[norm(name)] || null; }
+function loreById(id) { return (state.faContent.lore || {})[String(id)] || null; }
+function statByName(name) {
+  const s = state.heroStats.find((x) => norm(x.name) === norm(name));
+  if (!s) return null;
+  const f = ((state.faContent.stats || {}).heroes || {})[s.slug] || {};
+  return { ...s, win_label_fa: f.win_label_fa || s.win_label, pick_label_fa: f.pick_label_fa || s.pick_label, ban_label_fa: f.ban_label_fa || s.ban_label, specialities_fa: f.specialities_fa || s.specialities || [] };
+}
+function matchupById(id) {
+  const m = state.matchups[String(id)];
+  if (!m) return null;
+  const f = (state.faContent.matchups || {})[String(id)] || {};
+  const cbFa = f.countered_by_fa || {};
+  const rnFa = f.rank_notes_fa || {};
+  return {
+    ...m,
+    countered_by: (m.countered_by || []).map((c) => ({ ...c, reason_fa: (cbFa[c.slug] || {}).reason_fa || c.reason, strength_fa: (cbFa[c.slug] || {}).strength_fa || c.strength })),
+    rank_notes: (m.rank_notes || []).map((r) => ({ ...r, text_fa: (rnFa[r.slug] || {}).text_fa || r.text })),
+  };
+}
+function patchByTitle(title) {
+  const f = (state.faContent.patches || {})[title];
+  if (!f) return null;
+  const src = state.patchFull.find((p) => p.title === title) || {};
+  return { ...src, ...f };
+}
+
 // جست‌وجوی هیرو: نام دقیق، شروع‌شونده، شامل‌شونده؛ اگر نبود نزدیک‌ترین‌ها
 function searchHeroes(query, limit = 5) {
   const q = norm(query);
   if (!q) return [];
-  const scored = heroes.map((h) => {
+  const scored = state.heroes.map((h) => {
     const name = norm(h.hero_name);
     let score = -1;
     if (name === q) score = 100;
@@ -136,13 +226,13 @@ function findHero(query) {
 
 function heroById(id) {
   const n = String(id);
-  return heroes.find((h) => String(h.mlid) === n || String(h.id) === n || norm(h.hero_name) === norm(id)) || null;
+  return state.heroes.find((h) => String(h.mlid) === n || String(h.id) === n || norm(h.hero_name) === norm(id)) || null;
 }
 
 function searchItems(query, limit = 5) {
   const q = norm(query);
-  if (!q) return items.slice(0, limit);
-  const scored = items.map((it) => {
+  if (!q) return state.items.slice(0, limit);
+  const scored = state.items.map((it) => {
     const name = norm(it.item_name);
     let score = -1;
     if (name === q) score = 100;
@@ -210,7 +300,7 @@ const { ROLES, roleList } = require('./fa');
 // برمی‌گرداند: [{ en, fa, emoji, count, heroes: [heroPublic...] }, ...] به ترتیب ROLES
 function heroesByRole() {
   return ROLES.map((r) => {
-    const list = heroes
+    const list = state.heroes
       .filter((h) => roleList(h.class).includes(r.en))
       .sort((a, b) => a.hero_name.localeCompare(b.hero_name))
       .map(heroPublic);
@@ -219,20 +309,30 @@ function heroesByRole() {
 }
 
 module.exports = {
-  heroes, items, emblems, talents, fullBuilds, news, tierlist, discussions, events,
-  faContent, heroStats, teamComps, teamCompGuide, patchFull, matchups,
+  get heroes() { return state.heroes; },
+  get items() { return state.items; },
+  get emblems() { return state.emblems; },
+  get talents() { return state.talents; },
+  get fullBuilds() { return state.fullBuilds; },
+  get news() { return state.news; },
+  get tierlist() { return state.tierlist; },
+  get discussions() { return state.discussions; },
+  get events() { return state.events; },
+  get faContent() { return state.faContent; },
+  get heroStats() { return state.heroStats; },
+  get teamComps() { return state.teamComps; },
+  get teamCompGuide() { return state.teamCompGuide; },
+  get patchFull() { return state.patchFull; },
+  get matchups() { return state.matchups; },
+  get heroRevdate() { return state.heroRevdate; },
+  get itemRevdate() { return state.itemRevdate; },
+  get faCounts() { return state.faCounts; },
   loreById, statByName, matchupById, patchByTitle,
-  heroRevdate: heroFile.revdate || null,
-  itemRevdate: itemFile.revdate || null,
   searchHeroes, findHero, heroById,
   searchItems, findItem,
   heroPublic, itemPublic,
   heroesByRole,
   faSkill, faItem, faTalent, faSpell,
-  faCounts: {
-    heroSkills: Object.keys(FA.heroSkills).length,
-    items: Object.keys(FA.items).length,
-    talents: Object.keys(FA.talents).length,
-    spells: Object.keys(FA.spells).length,
-  },
+  ensureRemote, isRemoteReady,
+  DATA_FILES: DATA_FILES.map(([, f]) => f),
 };

@@ -7,7 +7,7 @@
 // ======= DATA LAYER START (standalone: Rone direct + static JSON) =======
 const RONE_BASE = 'https://arena.rone.dev/api';
 const STATIC_BASE = 'data/';
-const DATA_VERSION = '20261115-0158'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const DATA_VERSION = '20261115-0250'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 
@@ -154,7 +154,7 @@ async function loadStatic() {
         tierlist: { month: tierFile.month || null, tiers: tierFile.tiers || {}, counts: tierFile.counts || {} },
         discussions: discFile.threads || [],
         events: evFile.events || [],
-        faContent: faContentFile && faContentFile.version ? faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {} },
+        faContent: faContentFile && faContentFile.version ? faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {}, discussions: {} },
         heroStats: heroStatsFile.heroes || [],
         teamComps: teamCompsFile.comps || [],
         teamCompGuide: teamCompGuideFile || {},
@@ -893,7 +893,7 @@ const thumb = (u) => {
         return `<div class="item-card">${thumb(e.image_url)}<b>${esc(fev.title_fa || e.title)}</b> <span class="sub">${esc(fev.status_fa || evStatusFa[e.status] || '')}${dates ? ' — ' + esc(dates) : ''}</span>${summary ? `<br><span class="sub">${esc(summary.slice(0, 160))}${summary.length > 160 ? '…' : ''}</span>` : ''}</div>`;
       }).join('') : '') +
       (wr.length ? '<h2>📚 تازه‌ها</h2>' + wr.slice(0, 10).map((w) => `<div class="item-card">${thumb(w.image_url)}<b>${esc(w.title)}</b><br><span class="sub">${esc(dateFa(w.timestamp))}${w.comment ? ' — ' + esc(w.comment) : ''}</span></div>`).join('') : '') +
-      (dc.length ? '<h2>💬 گفتگوها</h2>' + dc.slice(0, 10).map((d) => `<div class="item-card"><b>${esc(d.title)}</b><br><span class="sub">${esc(dateFa(d.date_iso))}${d.category_fa ? ' — ' + esc(d.category_fa) : ''}</span></div>`).join('') : '') ||
+      (dc.length ? '<h2>💬 گفتگوها</h2>' + dc.slice(0, 10).map((d) => { const fd = ((sd.faContent || {}).discussions || {})[d.title] || {}; return `<div class="item-card"><b>${esc(fd.title_fa || d.title)}</b><br><span class="sub">${esc(dateFa(d.date_iso))}${d.category_fa ? ' — ' + esc(d.category_fa) : ''}</span></div>`; }).join('') : '') ||
       '<p class="hint">خبری پیدا نشد.</p>';
     box.querySelectorAll('[data-patch]').forEach((el) => el.addEventListener('click', () => showPatchDetail(el.dataset.patch)));
     tb.innerHTML =

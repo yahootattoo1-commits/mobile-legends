@@ -2,7 +2,7 @@
 // Base: https://arena.rone.dev/api — پاسخ: {"code":0,"message":"OK","data":{"records":[...]}}
 // نکتهٔ کشف‌شده: پارامتر index از ۱ شروع می‌شود (index=0 خطای VALIDATION_ERROR می‌دهد)
 // lane فقط این ۵ مقدار کوچک را قبول می‌کند: exp | mid | roam | jungle | gold
-const BASE = process.env.RONE_BASE || 'https://arena.rone.dev/api';
+const BASE = (typeof process !== 'undefined' && process.env && process.env.RONE_BASE) || 'https://arena.rone.dev/api';
 const TTL_MS = 5 * 60 * 1000;
 const cache = new Map();
 
