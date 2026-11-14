@@ -7,7 +7,8 @@
 // ======= DATA LAYER START (standalone: Rone direct + static JSON) =======
 const RONE_BASE = 'https://arena.rone.dev/api';
 const STATIC_BASE = 'data/';
-const DATA_VERSION = '20261115-0250'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
+const DATA_VERSION = '20261115-0303'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 
@@ -798,6 +799,13 @@ async function openHero(id) {
         return `<div class="skill hrow"><div><b>${esc(cb.name)}</b> <span class="meta">${esc(f.strength_fa || cb.strength || '')}</span><br>${esc(f.reason_fa || cb.reason || '')}</div></div>`;
       }).join('');
     }
+    // هم‌تیمی‌های خوب: اگر هیرو در یکی از ترکیب‌های تیمی هست، ۴ هم‌تیمی دیگرش
+    const comp = (sd.teamComps || []).find((c) => (c.heroes || []).some((x) => normStr(x.name) === normStr(h.name)));
+    if (comp) {
+      const mates = comp.heroes.filter((x) => normStr(x.name) !== normStr(h.name));
+      const laneName = { exp: 'اکس‌پی', mid: 'مید', gold: 'گلد', roam: 'روم', jungle: 'جانگل' };
+      extra += `<h2>🤝 هم‌تیمی‌های خوب</h2>` + mates.map((m) => `<div class="skill hrow"><div><b>${esc(m.name)}</b> — ${esc(laneName[m.lane] || m.lane)} (وین ${pct(m.win_rate)})</div></div>`).join('');
+    }
     if (extra) box.innerHTML += extra;
     laneRow.innerHTML = '<span style="align-self:center">🛠️ بیلد برای لین:</span>' +
       [['exp', 'اکس‌پی'], ['mid', 'مید'], ['gold', 'گلد'], ['roam', 'روم'], ['jungle', 'جانگل']]
@@ -857,6 +865,86 @@ function renderMeta() {
     </tr>`).join('')}</tbody></table>`;
 }
 document.getElementById('metaSort').addEventListener('change', renderMeta);
+
+// ---------- کانتر تیمی (داخل تب متا) ----------
+// ورودی را مثل ربات تجزیه می‌کند: کاما اولویت دارد (نام چندکلمه‌ای سالم می‌ماند)؛
+// وگرنه کل متن یک هیروست و بعد با فاصله جدا می‌شود. برمی‌گرداند { valid, unknown }
+function parseCounterInput(q, heroes) {
+  const find = (name) => (searchHeroes(heroes, name, 1) || [])[0] || null;
+  const trimmed = String(q || '').trim();
+  if (!trimmed) return { valid: [], unknown: [] };
+  if (!trimmed.includes(',')) {
+    const single = find(trimmed);
+    if (single) return { valid: [single], unknown: [] };
+  }
+  const parts = trimmed.includes(',')
+    ? trimmed.split(',').map((s) => s.trim()).filter(Boolean)
+    : trimmed.split(/\s+/).filter(Boolean);
+  const valid = [];
+  const unknown = [];
+  for (const p of parts.slice(0, 5)) {
+    const h = find(p);
+    if (h && !valid.some((v) => normStr(v.hero_name) === normStr(h.hero_name))) valid.push(h);
+    else if (!h) unknown.push(p);
+  }
+  return { valid, unknown };
+}
+// رتبه‌بندی کانتر تیمی از دیتای استاتیک: پوشش (چند تا از حریف‌ها را کانتر می‌کند)، بعد وین‌ریت
+function teamCounterTop(sd, enemyHeroes, limit = 5) {
+  const enemyNorms = enemyHeroes.map((h) => normStr(h.hero_name));
+  const enemySet = new Set(enemyNorms);
+  const rows = [];
+  for (const h of sd.heroes || []) {
+    if (enemySet.has(normStr(h.hero_name))) continue;
+    const entry = (sd.matchups || {})[String(h.mlid)] || {};
+    const countered = new Set((entry.counters || []).map((c) => normStr(c.slug || c.name)));
+    const hit = enemyHeroes.filter((e) => countered.has(normStr(e.hero_name)));
+    if (!hit.length) continue;
+    const st = (sd.heroStats || []).find((x) => normStr(x.name) === normStr(h.hero_name));
+    rows.push({ hero: h, coverage: hit.length, hitNames: hit.map((e) => e.hero_name), win: st ? Number(st.win_rate) || 0 : 0 });
+  }
+  rows.sort((a, b) => (b.coverage - a.coverage) || (b.win - a.win));
+  return rows.slice(0, limit);
+}
+async function renderTeamCounter() {
+  const box = document.getElementById('teamCounterBox');
+  const q = document.getElementById('teamCounterQ').value.trim();
+  if (!q) { box.innerHTML = '<p class="hint">نام هیروها را بنویس؛ مثلاً: Yu Zhong, Pharsa</p>'; return; }
+  loading(box, '⏳ در حال محاسبه…');
+  try {
+    const sd = await loadStatic();
+    const { valid, unknown } = parseCounterInput(q, sd.heroes || []);
+    if (!valid.length) { box.innerHTML = '<p class="hint">هیرویی با این نام پیدا نشد؛ نام انگلیسی هیرو را بنویس.</p>'; return; }
+    if (valid.length === 1) {
+      box.innerHTML = `<p class="hint">فقط یک هیرو پیدا شد (${esc(valid[0].hero_name)}) — برای کانتر تیمی دست‌کم ۲ هیرو بده.${unknown.length ? ' «' + esc(unknown.join('، ')) + '» پیدا نشد.' : ''}</p>`;
+      return;
+    }
+    const top = teamCounterTop(sd, valid, 5);
+    box.innerHTML = (unknown.length ? `<p class="hint">⚠️ «${esc(unknown.join('، '))}» پیدا نشد و نادیده گرفته شد.</p>` : '') +
+      `<h3>🛡️ کانتر تیم حریف — ${valid.map((h) => esc(h.hero_name)).join('، ')}</h3>` +
+      (top.length ? top.map((r, i) => `<div class="item-card"><b>${faNum(i + 1)}. ${esc(r.hero.hero_name)}</b> <span class="sub">${esc(roleFa(r.hero.class))} — ${esc(laneFa(r.hero.laning))} — کانتر ${faNum(r.coverage)} تا از ${faNum(valid.length)} هیرو (${r.hitNames.map(esc).join('، ')}) — وین‌ریت ${pct(r.win)}</span></div>`).join('')
+        : '<p class="hint">— هیچ هیرویی این تیم را کانتر نمی‌کند.</p>');
+  } catch (e) { showError(box, e); }
+}
+document.getElementById('teamCounterBtn').addEventListener('click', renderTeamCounter);
+document.getElementById('teamCounterQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') renderTeamCounter(); });
+
+// ---------- مربی هوش مصنوعی ----------
+async function sendCoach() {
+  const box = document.getElementById('coachBox');
+  const q = document.getElementById('coachQ').value.trim();
+  if (!q) { box.innerHTML = '<p class="hint">سؤالت را بنویس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟</p>'; return; }
+  loading(box, '🧠 مربی دارد فکر می‌کند…');
+  try {
+    const r = await fetchJson(COACH_API, { method: 'POST', body: { question: q } });
+    if (!r.ok || !r.json || typeof r.json.answer !== 'string' || !r.json.answer) {
+      throw new Error('مربی الان در دسترس نیست، کمی بعد دوباره بپرس');
+    }
+    box.innerHTML = `<div class="result">${esc(r.json.answer).replace(/\n/g, '<br>')}</div>`;
+  } catch (e) { showError(box, e); }
+}
+document.getElementById('coachSend').addEventListener('click', sendCoach);
+document.getElementById('coachQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCoach(); });
 
 // ---------- اخبار و تیرلیست ----------
 async function loadNews() {

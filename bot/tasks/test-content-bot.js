@@ -8,7 +8,12 @@ const backup = hadUsers ? fs.readFileSync(USERS) : null;
 async function main() {
   process.env.BOT_TOKEN = process.env.BOT_TOKEN || 'test-token-no-network';
   const { createBot } = require('/home/hatch/workspace/mlbb-bot/src/bot');
-  const bot = createBot();
+  // مربی هوش مصنوعی: استاب Workers AI (مدل واقعی صدا نمی‌خورد)
+  const aiCalls = [];
+  const stubAI = { run: async (model, opts) => { aiCalls.push({ model, opts }); return { response: 'پاسخ تستی مربی' }; } };
+  const kvMap = new Map();
+  const stubKV = { get: async (k) => (kvMap.has(k) ? kvMap.get(k) : null), put: async (k, v) => { kvMap.set(k, v); } };
+  const bot = createBot({}, { coachAI: stubAI, coachKV: stubKV });
   const captured = [];
   const Telegram = require('/home/hatch/workspace/mlbb-bot/node_modules/telegraf/lib/telegram').default;
   Telegram.prototype.callApi = async function (method, payload) {
@@ -34,6 +39,11 @@ async function main() {
   await bot.handleUpdate(upd('/lore Miya'));
   await bot.handleUpdate(upd('/lore'));
   await bot.handleUpdate(upd('/lore Zzzzzz'));
+  await bot.handleUpdate(upd('/hero Masha'));
+  await bot.handleUpdate(upd('/counter Yu Zhong Pharsa'));
+  await bot.handleUpdate(upd('/counter Zzzzzz'));
+  await bot.handleUpdate(upd('/counter Miya Zzzzzz'));
+  await bot.handleUpdate(upd('/ask بهترین بیلد Miya چیست؟'));
 
   const textOf = (pred) => {
     const c = captured.find((x) => pred(x.payload.text || x.payload.caption || ''));
@@ -49,6 +59,11 @@ async function main() {
   const lorePhoto = captured.find((x) => x.method === 'sendPhoto' && (x.payload.caption || '').includes('داستان Miya'));
   const loreNoArg = textOf((t) => t.includes('نام هیرو را بنویس') && t.includes('/lore Miya'));
   const loreUnknown = textOf((t) => t.includes('پیدا نشد') && t.includes('Zzzzzz'));
+  const mashaMsg = textOf((t) => t.includes('هم‌تیمی‌های خوب'));
+  const teamCounterMsg = textOf((t) => t.includes('کانتر تیم حریف'));
+  const counterUnknownMsg = textOf((t) => t.includes('پیدا نشد') && t.includes('Zzzzzz'));
+  const counterIgnoredMsg = textOf((t) => t.includes('نادیده گرفته شد'));
+  const askMsg = textOf((t) => t.includes('پاسخ تستی مربی'));
   const realNL = (t) => t && t.includes(String.fromCharCode(10)) && t.indexOf(String.fromCharCode(92) + 'n') === -1;
   const checks = [
     ['/hero رسید', !!heroMsg],
@@ -78,6 +93,19 @@ async function main() {
     ['/lore Miya: زیر ۴۰۹۶ کاراکتر', loreBody && loreBody.length < 4096],
     ['/lore بدون نام: راهنما', !!loreNoArg],
     ['/lore نام اشتباه: پیدا نشد', !!loreUnknown],
+    ['/hero Masha: هم‌تیمی‌های خوب', mashaMsg && mashaMsg.includes('هم‌تیمی‌های خوب') && mashaMsg.includes('Bruno')],
+    ['/counter تیمی رسید', !!teamCounterMsg],
+    ['/counter تیمی: Masha اول است', teamCounterMsg && teamCounterMsg.includes('Masha') && teamCounterMsg.indexOf('Masha') < teamCounterMsg.indexOf('۲.')],
+    ['/counter تیمی: پوشش ۲ از ۲', teamCounterMsg && teamCounterMsg.includes('کانتر ۲ تا از ۲ هیرو')],
+    ['/counter تیمی: وین‌ریت', teamCounterMsg && teamCounterMsg.includes('وین‌ریت')],
+    ['/counter تیمی: زیر ۴۰۹۶ کاراکتر', teamCounterMsg && teamCounterMsg.length < 4096],
+    ['/counter نام اشتباه: پیدا نشد', !!counterUnknownMsg],
+    ['/counter Miya Zzzzzz: نادیده گرفته شد', !!counterIgnoredMsg],
+    ['/ask رسید', !!askMsg],
+    ['/ask: مدل درست', aiCalls.length === 1 && aiCalls[0].model === '@cf/meta/llama-3.1-8b-instruct-fp8'],
+    ['/ask: پرامپت بیلد Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Windtalker')],
+    ['/ask: پرامپت کانتر Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Belerick')],
+    ['/ask: شمارندهٔ روزانه ۱ شد', kvMap.get('coach:' + new Date().toISOString().slice(0, 10)) === '1'],
   ];
   for (const [name, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + name);
   if (heroMsg) console.log('--- /hero length:', heroMsg.length);

@@ -53,6 +53,7 @@ globalThis.fetch = async (url, init) => {
 };
 
 const kvStore = new Map();
+const aiCalls = []; // { model, opts } — تماس‌های Workers AI
 const env = {
   BOT_TOKEN: '123456:TEST-TOKEN-NOT-REAL',
   MINIAPP_URL: 'https://yahootattoo1-commits.github.io/mobile-legends/',
@@ -60,6 +61,12 @@ const env = {
   WELCOME_PHOTO_URL: WELCOME_URL,
   WEBHOOK_SECRET: 'test-secret',
   ADMIN_ID: '999999999', // شناسهٔ ساختگیِ تست — هرگز شناسهٔ واقعی اینجا ننویس
+  AI: {
+    async run(model, opts) {
+      aiCalls.push({ model, opts });
+      return { response: 'پاسخ تستی مربی' };
+    },
+  },
   USERS: {
     async get(k, type) {
       const v = kvStore.get(k);
@@ -105,6 +112,7 @@ checks.push(['/start: 200', r1.status === 200]);
 checks.push(['/start: عکس خوشامد با URL', !!startPhoto && startPhoto.payload.photo === WELCOME_URL]);
 checks.push(['/start: کپشن «Persian Mlbb» + خوش آمدی', !!startPhoto && (startPhoto.payload.caption || '').includes('Persian Mlbb') && (startPhoto.payload.caption || '').includes('خوش آمدی')]);
 checks.push(['/start: دکمهٔ مینی‌اپ', !!startPhoto && JSON.stringify(startPhoto.payload.reply_markup || {}).includes('باز کردن مینی‌اپ')]);
+checks.push(['/start: دکمهٔ مربی هوش مصنوعی', !!startPhoto && JSON.stringify(startPhoto.payload.reply_markup || {}).includes('مربی هوش مصنوعی')]);
 checks.push(['/start: کاربر در KV ثبت شد', (() => {
   const raw = kvStore.get('users');
   return !!raw && JSON.parse(raw).some((u) => String(u.id) === '111');
@@ -120,6 +128,32 @@ checks.push(['/hero: نام + وین‌ریت', heroText.includes('Miya') && her
 checks.push(['/hero: اسکیل‌ها', heroText.includes('اسکیل‌ها') || heroText.includes('Moon Arrow')]);
 checks.push(['/hero: داستان کوتاه', heroText.includes('جنگ چیست')]);
 checks.push(['/hero: زیر ۴۰۹۶ کاراکتر', heroCalls.every((c) => (c.payload.text || '').length < 4096 && (c.payload.caption || '').length <= 1024)]);
+
+async function postAsk(body) {
+  return worker.fetch(new Request('https://worker.test/api/ask', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+  }), env, {});
+}
+
+// ---------- /api/ask — مربی هوش مصنوعی ----------
+const ask1 = await postAsk({ question: 'بهترین بیلد Miya چیست؟' });
+const ask1Json = await ask1.json();
+checks.push(['/api/ask: 200 + جواب تستی', ask1.status === 200 && ask1Json.answer === 'پاسخ تستی مربی']);
+checks.push(['/api/ask: هدر CORS', ask1.headers.get('access-control-allow-origin') === '*']);
+checks.push(['/api/ask: مدل درست', aiCalls.length === 1 && aiCalls[0].model === '@cf/meta/llama-3.1-8b-instruct-fp8']);
+checks.push(['/api/ask: پرامپت بیلد Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Windtalker')]);
+checks.push(['/api/ask: پرامپت کانتر Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Belerick')]);
+checks.push(['/api/ask: جواب فارسی (سیستم فارسی)', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('مربی هوش مصنوعی')]);
+
+const askOpt = await worker.fetch(new Request('https://worker.test/api/ask', { method: 'OPTIONS' }), env, {});
+checks.push(['/api/ask: OPTIONS 204 + CORS', askOpt.status === 204 && askOpt.headers.get('access-control-allow-origin') === '*']);
+
+// سقف روزانه: شمارنده را روی ۴۰۰ می‌گذاریم — مدل نباید صدا بخورد
+kvStore.set('coach:' + new Date().toISOString().slice(0, 10), '400');
+const askCap = await postAsk({ question: 'بهترین بیلد Miya چیست؟' });
+const askCapJson = await askCap.json();
+checks.push(['/api/ask: سقف روزانه پیام ثابت می‌دهد', askCap.status === 200 && askCapJson.answer === 'سهم امروز مربی تمام شد، فردا دوباره بپرس']);
+checks.push(['/api/ask: سقف روزانه مدل را صدا نمی‌زند', aiCalls.length === 1]);
 
 const r3 = await postUpdate(msgUpd('/start'), 'wrong-secret');
 checks.push(['وبهوک با سکرت اشتباه: 403', r3.status === 403]);

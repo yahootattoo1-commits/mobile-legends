@@ -4,6 +4,9 @@ const { Telegraf, Markup } = require('telegraf');
 const { roneGet, ronePost, clearCache, normRankRecord, normCounterRecord, normBuildRecord, normStanding, equipNameMap } = require('./rone');
 const sd = require('./staticData');
 const { faNum, faInt, pct, esc, FOOTER, cleanText, truncate, ROLES, roleFa, laneFa } = require('./fa');
+const { askCoach } = require('./coach');
+
+function normName(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 const LANES = [
   { v: 'exp', fa: '🛡️ اکس‌پی (EXP)' },
@@ -152,6 +155,9 @@ function createBot(env, deps) {
   const sessionStore = deps.sessionStore || defaultSessionStore;
   const recentLogsFn = deps.recentLogs || (async () => ({ lines: nodeRecentLogs() }));
   const welcomePhoto = deps.welcomePhoto !== undefined ? deps.welcomePhoto : nodeWelcomePhoto();
+  // مربی هوش مصنوعی: بایندینگ Workers AI روی ورکر (env.AI)؛ در Node نیست مگر استاب تست
+  const coachAI = (env && env.AI) || deps.coachAI || null;
+  const coachKV = (env && env.USERS) || deps.coachKV || null;
   const bootTime = new Date();
   const agent = telegramProxyAgent();
   const bot = new Telegraf(token, agent ? { telegram: { agent, attachmentAgent: agent } } : {});
@@ -197,6 +203,7 @@ function createBot(env, deps) {
       [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
       [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
       [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
+      [Markup.button.callback('🧠 مربی هوش مصنوعی', 'coach')],
     ];
     if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
     const wa = webAppButton();
@@ -211,7 +218,8 @@ function createBot(env, deps) {
 /lore &lt;نام هیرو&gt; — داستان کامل هیرو (فارسی)
 /heroes — لیست هیروها بر اساس نقش (۱۳۳ هیرو در ۶ نقش)
 /meta — برترین هیروهای متا (۷ روز اخیر، وین‌ریت)
-/counter &lt;نام هیرو&gt; — بهترین کانترهای آن هیرو
+/counter &lt;نام هیرو&gt; — بهترین کانترهای آن هیرو؛ چند هیرو: /counter Miya Layla
+/ask &lt;سؤال&gt; — مربی هوش مصنوعی؛ مثلاً: /ask بهترین بیلد Miya چیست؟
 /build &lt;نام هیرو&gt; — بیلد پیشنهادی (بعد لین را انتخاب کن)
 /items — لیست آیتم‌ها
 /item &lt;نام آیتم&gt; — جزییات آیتم
@@ -293,6 +301,12 @@ function createBot(env, deps) {
       mu.countered_by.slice(0, 2).forEach((c) => {
         t += `\n• <b>${esc(c.name)}</b>${c.strength_fa ? ` (${esc(c.strength_fa)})` : ''} — ${esc(truncate(c.reason_fa || '', 110))}`;
       });
+    }
+    // هم‌تیمی‌های خوب: اگر هیرو در یکی از ترکیب‌های تیمی هست، ۴ هم‌تیمی دیگرش
+    const comp = (sd.teamComps || []).find((c) => (c.heroes || []).some((x) => normName(x.name) === normName(hero.hero_name)));
+    if (comp) {
+      const mates = comp.heroes.filter((x) => normName(x.name) !== normName(hero.hero_name));
+      t += `\n\n🤝 <b>هم‌تیمی‌های خوب</b> (${esc(comp.title_fa || comp.title)}):` + mates.map((x) => `\n• <b>${esc(x.name)}</b> — ${laneFa([x.lane])}`).join('');
     }
     t += `\n\nبرای کانتر: <code>/counter ${esc(hero.hero_name)}</code>\nبرای بیلد: <code>/build ${esc(hero.hero_name)}</code>\nبرای داستان: <code>/lore ${esc(hero.hero_name)}</code>`;
     t += FOOTER;
@@ -379,13 +393,81 @@ function createBot(env, deps) {
     t += FOOTER;
     return ctx.replyWithHTML(t);
   }
+  // ---------- /counter — تک‌هیرو (مثل قبل) یا تیمی (۲ تا ۵ هیرو) ----------
+  // رتبه‌بندی کانتر تیمی: برای هر هیروی نامزد، پوشش = چند تا از هیروهای حریف را
+  // کانتر می‌کند (matchups.counters)؛ مرتب بر اساس پوشش، بعد وین‌ریت ۷ روزه.
+  function teamCounterTop(enemyHeroes, limit = 5) {
+    const enemyNorms = enemyHeroes.map((h) => normName(h.hero_name));
+    const enemySet = new Set(enemyNorms);
+    const rows = [];
+    for (const h of sd.heroes) {
+      if (enemySet.has(normName(h.hero_name))) continue; // هیروی حریف را نمی‌شود برداشت
+      const entry = (sd.matchups || {})[String(h.mlid)] || {};
+      const countered = new Set((entry.counters || []).map((c) => normName(c.slug || c.name)));
+      const hit = enemyHeroes.filter((e) => countered.has(normName(e.hero_name)));
+      if (!hit.length) continue;
+      const st = sd.statByName(h.hero_name);
+      rows.push({ hero: h, coverage: hit.length, hitNames: hit.map((e) => e.hero_name), win: st ? Number(st.win_rate) || 0 : 0 });
+    }
+    rows.sort((a, b) => (b.coverage - a.coverage) || (b.win - a.win));
+    return rows.slice(0, limit);
+  }
+  async function sendTeamCounters(ctx, enemyHeroes) {
+    const n = enemyHeroes.length;
+    const top = teamCounterTop(enemyHeroes, 5);
+    let t = `🛡️ <b>کانتر تیم حریف</b> — تیم حریف: ${enemyHeroes.map((h) => esc(h.hero_name)).join('، ')}`;
+    if (!top.length) {
+      t += '\n\n— هیچ هیرویی این تیم را کانتر نمی‌کند.';
+    } else {
+      top.forEach((r, i) => {
+        t += `\n${faNum(i + 1)}. <b>${esc(r.hero.hero_name)}</b> — ${esc(roleFa(r.hero.class))} — ${esc(laneFa(r.hero.laning))} — کانتر ${faNum(r.coverage)} تا از ${faNum(n)} هیرو (${r.hitNames.map(esc).join('، ')}) — وین‌ریت ${pct(r.win)}`;
+      });
+    }
+    t += FOOTER;
+    return ctx.replyWithHTML(t);
+  }
   bot.command('counter', async (ctx) => {
     const q = ctx.message.text.replace(/^\/counter(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/counter Miya</code>' + FOOTER);
-    const hero = sd.findHero(q);
-    if (!hero) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
-    await ctx.replyWithHTML('⏳ در حال گرفتن کانترها…');
-    return sendCounters(ctx, hero);
+    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/counter Miya</code> یا تیمی: <code>/counter Miya Layla</code>' + FOOTER);
+    // اگر کل متن یک هیروست (حتی چندکلمه‌ای مثل «Popol and Kupa»)، مسیر تک‌هیرو مثل قبل
+    if (!q.includes(',')) {
+      const single = sd.findHero(q);
+      if (single) {
+        await ctx.replyWithHTML('⏳ در حال گرفتن کانترها…');
+        return sendCounters(ctx, single);
+      }
+    }
+    // چند هیرو: اول با کاما جدا کن (نام چندکلمه‌ای سالم می‌ماند)، وگرنه با فاصله
+    const parts = q.includes(',')
+      ? q.split(',').map((s) => s.trim()).filter(Boolean)
+      : q.split(/\s+/).filter(Boolean);
+    const valid = [];
+    const unknown = [];
+    for (const p of parts.slice(0, 5)) {
+      const h = sd.findHero(p);
+      if (h && !valid.some((v) => normName(v.hero_name) === normName(h.hero_name))) valid.push(h);
+      else if (!h) unknown.push(p);
+    }
+    if (!valid.length) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
+    if (unknown.length) {
+      await ctx.replyWithHTML(`⚠️ ${unknown.map((u) => `«${esc(u)}»`).join('، ')} پیدا نشد و نادیده گرفته شد.` + FOOTER);
+    }
+    if (valid.length === 1) {
+      await ctx.replyWithHTML('⏳ در حال گرفتن کانترها…');
+      return sendCounters(ctx, valid[0]);
+    }
+    return sendTeamCounters(ctx, valid);
+  });
+
+  // ---------- /ask — مربی هوش مصنوعی ----------
+  bot.command('ask', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/ask(@\S+)?\s*/i, '').trim();
+    if (!q) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya برای لین گلد چیست؟</code>' + FOOTER);
+    if (!coachAI) return ctx.replyWithHTML('مربی فقط روی ورکر فعال است.' + FOOTER);
+    await ctx.replyWithHTML('🧠 مربی دارد فکر می‌کند…');
+    const ans = await askCoach({ AI: coachAI }, { kv: coachKV }, q);
+    if (!ans) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya چیست؟</code>' + FOOTER);
+    return ctx.replyWithHTML(esc(ans) + FOOTER);
   });
 
   // ---------- /build ----------
@@ -892,6 +974,10 @@ function createBot(env, deps) {
   bot.action('menu_build', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('نام هیرو را بفرست؛ مثلاً: <code>/build Miya</code>' + FOOTER)));
   bot.action('menu_wr', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('فرمت: <code>/wr 100 50 60</code>' + FOOTER)));
   bot.action('menu_mpl', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('برای جدول MPL: /mpl' + FOOTER)));
+  bot.action('coach', async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('🧠 <b>مربی هوش مصنوعی</b>\n\nسؤالت را با دستور /ask بپرس؛ مثلاً:\n<code>/ask بهترین بیلد Miya برای لین گلد چیست؟</code>' + FOOTER);
+  });
 
   bot.catch((err, ctx) => {
     console.error('[bot] error', err);

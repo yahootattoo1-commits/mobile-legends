@@ -83,6 +83,7 @@
     <button data-tab="news">📰 اخبار</button>
     <button data-tab="comps">👥 ترکیب تیمی</button>
     <button data-tab="lore">📖 داستان‌ها</button>
+    <button data-tab="coach">🧠 مربی</button>
   </nav>
 
   <!-- هیروها -->
@@ -115,6 +116,13 @@
     </div>
     <div id="metaTable"></div>
     <div id="metaStatus" class="status"></div>
+    <h3>🛡️ کانتر تیمی</h3>
+    <p class="hint">هیروهای تیم حریف را با کاما جدا کن؛ مثلاً: Yu Zhong, Pharsa</p>
+    <div class="search-row">
+      <input id="teamCounterQ" type="search" placeholder="مثلاً: Yu Zhong, Pharsa" autocomplete="off">
+      <button id="teamCounterBtn">🛡️</button>
+    </div>
+    <div id="teamCounterBox"></div>
   </section>
 
   <!-- آیتم‌ها -->
@@ -197,12 +205,24 @@
     <div id="loreStatus" class="status"></div>
   </section>
 
+  <!-- مربی هوش مصنوعی -->
+  <section id="tab-coach" class="tab">
+    <h2>🧠 مربی هوش مصنوعی</h2>
+    <p class="hint">سؤالت را دربارهٔ هیروها، بیلد، کانتر و متا بپرس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟</p>
+    <div class="search-row">
+      <input id="coachQ" type="search" placeholder="سؤالت را بنویس…" autocomplete="off">
+      <button id="coachSend">🧠</button>
+    </div>
+    <div id="coachBox"></div>
+    <div id="coachStatus" class="status"></div>
+  </section>
+
   <footer class="app-footer">
     <b>Persian MLBB</b> — پلتفرم تخصصی جامعه گیمرهای ایرانی موبایل لجندز؛ تحلیل متا، بیلدها، داستان هیروها و اخبار پچ — همه به فارسی.
     <br>© ۲۰۲۶ Persian MLBB
   </footer>
 </main>
 
-<script src="app.js?v=20261115-0250"></script>
+<script src="app.js?v=20261115-0303"></script>
 </body>
 </html>

@@ -14,6 +14,11 @@ compatibility_flags = ["nodejs_compat"]
 binding = "USERS"
 id = "98443f4730874f0c9cec44db0b10d895"
 
+# Workers AI برای مربی هوش مصنوعی (/ask و /api/ask) — همان اکانت،
+# سهمیهٔ رایگان ۱۰٬۰۰۰ نورون در روز؛ سکرتی لازم ندارد.
+[ai]
+binding = "AI"
+
 [vars]
 MINIAPP_URL = "https://yahootattoo1-commits.github.io/mobile-legends/"
 STATIC_BASE_URL = "https://yahootattoo1-commits.github.io/mobile-legends/data"

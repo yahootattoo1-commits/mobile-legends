@@ -6,6 +6,7 @@
 // require از طریق createRequire در باندل جا می‌ماند و زمان‌اجرا خطا می‌دهد.
 import { createBot } from '../../src/bot.js';
 import sd from '../../src/staticData.js';
+import { askCoach } from '../../src/coach.js';
 import { telegramLib } from './patch-telegram.cjs';
 
 import { WorkerTelegram } from './telegram.js';
@@ -28,7 +29,7 @@ async function getBot(env) {
   await sd.ensureRemote(env.STATIC_BASE_URL || DEFAULT_STATIC_BASE).catch((e) => console.warn('[worker] static refresh failed', e.message));
   if (bot) return bot;
   bot = createBot(
-    { BOT_TOKEN: env.BOT_TOKEN, MINIAPP_URL: env.MINIAPP_URL, ADMIN_ID: env.ADMIN_ID },
+    { BOT_TOKEN: env.BOT_TOKEN, MINIAPP_URL: env.MINIAPP_URL, ADMIN_ID: env.ADMIN_ID, AI: env.AI, USERS: env.USERS },
     {
       isWorker: true,
       userStore: kvUserStore(env),
@@ -41,9 +42,28 @@ async function getBot(env) {
   return bot;
 }
 
+const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // مربی هوش مصنوعی برای مینی‌اپ — POST {question} -> {answer} (CORS باز)
+    if (url.pathname === '/api/ask') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: CORS_HEADERS });
+      }
+      if (request.method === 'POST') {
+        let body = null;
+        try { body = await request.json(); } catch { return Response.json({ error: 'bad json' }, { status: 400, headers: CORS_HEADERS }); }
+        const question = typeof body?.question === 'string' ? body.question.trim() : '';
+        if (!question) return Response.json({ error: 'question required' }, { status: 400, headers: CORS_HEADERS });
+        await sd.ensureRemote(env.STATIC_BASE_URL || DEFAULT_STATIC_BASE).catch(() => {});
+        const answer = await askCoach(env, { kv: env.USERS }, question);
+        return Response.json({ answer }, { headers: CORS_HEADERS });
+      }
+      return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS });
+    }
 
     if (request.method === 'POST' && url.pathname === '/webhook') {
       const secret = env.WEBHOOK_SECRET;

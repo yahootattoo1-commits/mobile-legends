@@ -33,14 +33,22 @@ const documentStub = new Proxy({}, {
   set: () => true,
 });
 
-async function fakeFetch(url) {
+async function fakeFetch(url, init) {
   const u = String(url);
   if (u.startsWith('data/')) {
     const body = fs.readFileSync('/home/hatch/workspace/mlbb-bot/' + u.split('?')[0], 'utf8');
-    return { ok: true, json: async () => JSON.parse(body), text: async () => body };
+    return { ok: true, status: 200, json: async () => JSON.parse(body), text: async () => body };
+  }
+  if (u.startsWith('https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask')) {
+    return { ok: true, status: 200, json: async () => ({ answer: 'پاسخ تستی مربی' }), text: async () => JSON.stringify({ answer: 'پاسخ تستی مربی' }) };
   }
   if (u.startsWith('/api/heroes/')) {
-    return { ok: true, json: async () => ({ hero: { id: 1, name: 'Miya', class: 'Marksman', laning: ['gold lane'], rank: { win: 52.1, ban: 1.2, pick: 3.4 }, skills: [{ name: 'Moon Arrow', type: 'Passive', description: 'test desc' }], portrait: null, head_big: null, head: null, relation: { weak: [] } } }), text: async () => '' };
+    const id = decodeURIComponent(u.slice('/api/heroes/'.length).split('?')[0]);
+    const raw = JSON.parse(fs.readFileSync('/home/hatch/workspace/mlbb-bot/data/hero-meta-final.json', 'utf8'));
+    const rec = (raw.data || []).find((h) => String(h.mlid) === String(id));
+    const name = rec ? rec.hero_name : 'Miya';
+    const skills = (rec?.skills || []).slice(0, 4).map((s) => ({ name: s.skill_name, type: s.type, description: s.description }));
+    return { ok: true, status: 200, json: async () => ({ hero: { id: Number(id) || 1, name, class: rec?.class || 'Marksman', laning: rec?.laning || ['gold lane'], rank: { win: 52.1, ban: 1.2, pick: 3.4 }, skills: skills.length ? skills : [{ name: 'Moon Arrow', type: 'Passive', description: 'test desc' }], portrait: rec?.portrait || null, head_big: null, head: null, relation: { weak: [] } } }), text: async () => '' };
   }
   if (u.startsWith('/api/counters/')) {
     return { ok: true, json: async () => ({ counters: { counters: [] } }), text: async () => '' };
@@ -164,5 +172,29 @@ vm.runInContext(src, sandbox);
     ['اسپات‌لایت: بدون three.js', !spotHTML.includes('threejs')],
   ];
   for (const [name, ok] of checks7) console.log((ok ? 'PASS ' : 'FAIL ') + name);
-  if ([...checks, ...checks2, ...checks3, ...checks4, ...checks5, ...checks6, ...checks7].some(([, ok]) => !ok)) process.exit(1);
+  // ---------- مربی + کانتر تیمی + هم‌تیمی‌های خوب ----------
+  const htmlSrc = fs.readFileSync('/home/hatch/workspace/mlbb-bot/public/index.html', 'utf8');
+  const checks8 = [
+    ['تب مربی در index.html', htmlSrc.includes('id="tab-coach"') && htmlSrc.includes('id="coachQ"') && htmlSrc.includes('id="coachSend"') && htmlSrc.includes('data-tab="coach"')],
+    ['بلوک کانتر تیمی در تب متا', htmlSrc.includes('id="teamCounterQ"') && htmlSrc.includes('id="teamCounterBtn"') && htmlSrc.includes('id="teamCounterBox"')],
+  ];
+  for (const [name, ok] of checks8) console.log((ok ? 'PASS ' : 'FAIL ') + name);
+  elements.coachQ.value = 'بهترین بیلد Miya چیست؟';
+  await sandbox.sendCoach();
+  const coachHTML = elements.coachBox.innerHTML;
+  elements.teamCounterQ.value = 'Yu Zhong, Pharsa';
+  await sandbox.renderTeamCounter();
+  const tcHTML = elements.teamCounterBox.innerHTML;
+  await sandbox.openHero(88); // Masha — در ترکیب بهترین وین‌ریت هست
+  const mashaHTML = elements.heroDetail.innerHTML;
+  const checks9 = [
+    ['مربی: جواب تستی برگشت', coachHTML.includes('پاسخ تستی مربی')],
+    ['کانتر تیمی: Masha اول است', tcHTML.includes('Masha') && tcHTML.indexOf('Masha') < tcHTML.indexOf('۲.')],
+    ['کانتر تیمی: پوشش ۲ از ۲', tcHTML.includes('کانتر ۲ تا از ۲ هیرو')],
+    ['کانتر تیمی بدون نام منبع', !tcHTML.includes('Fandom') && !tcHTML.includes('mlbb.io') && !tcHTML.includes('Rone') && !tcHTML.includes('ویکی')],
+    ['هم‌تیمی‌های خوب Masha: Bruno', mashaHTML.includes('هم‌تیمی‌های خوب') && mashaHTML.includes('Bruno')],
+    ['هم‌تیمی‌های خوب بدون نام منبع', !mashaHTML.includes('Fandom') && !mashaHTML.includes('mlbb.io') && !mashaHTML.includes('Rone') && !mashaHTML.includes('ویکی')],
+  ];
+  for (const [name, ok] of checks9) console.log((ok ? 'PASS ' : 'FAIL ') + name);
+  if ([...checks, ...checks2, ...checks3, ...checks4, ...checks5, ...checks6, ...checks7, ...checks8, ...checks9].some(([, ok]) => !ok)) process.exit(1);
 })();
