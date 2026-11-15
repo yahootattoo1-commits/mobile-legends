@@ -197,22 +197,20 @@ function createBot(env, deps) {
 
   function webAppButton() {
     if (!miniappUrl) return null;
-    return Markup.button.webApp('⚪ 🎮 باز کردن مینی‌اپ', miniappUrl);
+    return Markup.button.webApp('🎮 باز کردن مینی‌اپ', miniappUrl);
   }
 
   // رنگ هر بخش در منو — دکمه‌های تلگرام رنگ پس‌زمینه نمی‌گیرند، پس دایرهٔ رنگی
-  // جای رنگ را می‌گیرد: 🟡 هیروها/متا 🟢 کانتر/بیلد 🟤 آیتم‌ها/امبلم‌ها
-  // 🔵 وین‌ریت/MPL 🟠 اخبار/پچ 🔴 تیرلیست/ترکیب تیمی ⚪ داستان‌ها/مینی‌اپ 🟣 مربی
   function mainMenuKeyboard(isAdminUser = false) {
     const rows = [
-      [Markup.button.callback('🟡 🦸 هیروها', 'menu_heroes'), Markup.button.callback('🟡 📊 متا', 'menu_meta')],
-      [Markup.button.callback('🟢 ⚔️ کانتر', 'menu_counter'), Markup.button.callback('🟢 🛠️ بیلد', 'menu_build')],
-      [Markup.button.callback('🟤 🧰 آیتم‌ها', 'menu_items'), Markup.button.callback('🟤 🛡️ امبلم‌ها', 'menu_emblems')],
-      [Markup.button.callback('🔵 🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🔵 🏆 MPL', 'menu_mpl')],
-      [Markup.button.callback('🟠 📰 اخبار', 'menu_news'), Markup.button.callback('🔴 🏆 تیرلیست', 'menu_tier')],
-      [Markup.button.callback('🔴 👥 ترکیب تیمی', 'menu_comps'), Markup.button.callback('⚪ 📖 داستان‌ها', 'menu_lore')],
-      [Markup.button.callback('🟠 📝 پچ‌نوت‌ها', 'menu_patch')],
-      [Markup.button.callback('🟣 🧠 مربی هوش مصنوعی', 'coach')],
+      [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
+      [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
+      [Markup.button.callback('🧰 آیتم‌ها', 'menu_items'), Markup.button.callback('🛡️ امبلم‌ها', 'menu_emblems')],
+      [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
+      [Markup.button.callback('📰 اخبار', 'menu_news'), Markup.button.callback('🏆 تیرلیست', 'menu_tier')],
+      [Markup.button.callback('👥 ترکیب تیمی', 'menu_comps'), Markup.button.callback('📖 داستان‌ها', 'menu_lore')],
+      [Markup.button.callback('📝 پچ‌نوت‌ها', 'menu_patch')],
+      [Markup.button.callback('🧠 مربی هوش مصنوعی', 'coach')],
     ];
     if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
     const wa = webAppButton();
@@ -224,21 +222,21 @@ function createBot(env, deps) {
 
 همهٔ بخش‌ها با دکمه‌ها در دسترس‌اند — فقط بزن و انتخاب کن، چیزی لازم نیست بنویسی:
 
-🟡 🦸 <b>هیروها</b> — لیست ۱۳۳ هیرو بر اساس نقش؛ روی هر هیرو بزن تا اطلاعات، اسکیل‌ها و وین‌ریت زنده‌اش را ببینی
-🟡 📊 <b>متا</b> — برترین هیروهای متا در ۷ روز اخیر
-🟢 ⚔️ <b>کانتر</b> — بهترین کانتر برای یک هیرو، یا برای کل تیم حریف (۲ تا ۵ هیرو)
-🟢 🛠️ <b>بیلد</b> — بیلد پیشنهادی (۶ آیتم) + بیلد هر لین
-🟤 🧰 <b>آیتم‌ها</b> — همهٔ آیتم‌ها بر اساس دسته؛ روی هر آیتم بزن تا جزییاتش را ببینی
-🟤 🛡️ <b>امبلم‌ها</b> — ۷ امبلم و ۱۲ اسپل؛ روی هر کدام بزن تا جزییاتش را ببینی
-🔵 🧮 <b>ماشین وین‌ریت</b> — چند برد پشت سر هم لازم است تا به وین‌ریت هدفت برسی؟
-🔵 🏆 <b>MPL</b> — جدول لیگ‌های اندونزی، فیلیپین، مالزی و کامبوج
-🟠 📰 <b>اخبار</b> — اخبار، ایونت‌ها و گفتگوهای تازه
-🔴 🏆 <b>تیرلیست</b> — رتبه‌بندی هیروها
-🔴 👥 <b>ترکیب تیمی</b> — ترکیب‌های پیشنهادی + راهنما
-⚪ 📖 <b>داستان‌ها</b> — داستان کامل هر هیرو به فارسی
-🟠 📝 <b>پچ‌نوت‌ها</b> — متن کامل پچ‌ها به فارسی
-🟣 🧠 <b>مربی هوش مصنوعی</b> — سؤالت را همین‌جا بنویس؛ بدون دستور، فقط سؤال را بنویس (روزانه ۳ جواب برای هر کاربر)
-⚪ 🎮 <b>مینی‌اپ</b> — با دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود
+🦸 <b>هیروها</b> — لیست ۱۳۳ هیرو بر اساس نقش؛ روی هر هیرو بزن تا اطلاعات، اسکیل‌ها و وین‌ریت زنده‌اش را ببینی
+📊 <b>متا</b> — برترین هیروهای متا در ۷ روز اخیر
+⚔️ <b>کانتر</b> — بهترین کانتر برای یک هیرو، یا برای کل تیم حریف (۲ تا ۵ هیرو)
+🛠️ <b>بیلد</b> — بیلد پیشنهادی (۶ آیتم) + بیلد هر لین
+🧰 <b>آیتم‌ها</b> — همهٔ آیتم‌ها بر اساس دسته؛ روی هر آیتم بزن تا جزییاتش را ببینی
+🛡️ <b>امبلم‌ها</b> — ۷ امبلم و ۱۲ اسپل؛ روی هر کدام بزن تا جزییاتش را ببینی
+🧮 <b>ماشین وین‌ریت</b> — چند برد پشت سر هم لازم است تا به وین‌ریت هدفت برسی؟
+🏆 <b>MPL</b> — جدول لیگ‌های اندونزی، فیلیپین، مالزی و کامبوج
+📰 <b>اخبار</b> — اخبار، ایونت‌ها و گفتگوهای تازه
+🏆 <b>تیرلیست</b> — رتبه‌بندی هیروها
+👥 <b>ترکیب تیمی</b> — ترکیب‌های پیشنهادی + راهنما
+📖 <b>داستان‌ها</b> — داستان کامل هر هیرو به فارسی
+📝 <b>پچ‌نوت‌ها</b> — متن کامل پچ‌ها به فارسی
+🧠 <b>مربی هوش مصنوعی</b> — سؤالت را همین‌جا بنویس؛ بدون دستور، فقط سؤال را بنویس (روزانه ۳ جواب برای هر کاربر)
+🎮 <b>مینی‌اپ</b> — با دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود
 
 👤 اتصال پروفایل بازی با دستور /player انجام می‌شود (Game ID و کد تایید داخل بازی را خودت می‌نویسی)؛ برای لغو /cancel.
 
@@ -253,16 +251,13 @@ function createBot(env, deps) {
   }
   function heroDetailKeyboard(id) {
     return Markup.inlineKeyboard([
-      [Markup.button.callback('🟢 ⚔️ کانتر', `hero:counter:${id}`), Markup.button.callback('🟢 🛠️ بیلد', `hero:build:${id}`)],
-      [Markup.button.callback('⚪ 📖 داستان', `hero:lore:${id}`), Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+      [Markup.button.callback('⚔️ کانتر', `hero:counter:${id}`), Markup.button.callback('🛠️ بیلد', `hero:build:${id}`)],
+      [Markup.button.callback('📖 داستان', `hero:lore:${id}`), Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
   }
   // انتخاب‌کنندهٔ هیرو بر اساس هدف: heroes | build | counter | counterTeam | lore
-  // — رنگ دکمه‌های نقش، رنگ بخش همان هدف است (🟡 هیروها، 🟢 کانتر/بیلد، ⚪ داستان)
-  const PICK_COLOR = { heroes: '🟡', build: '🟢', counter: '🟢', counterTeam: '🟢', lore: '⚪' };
   function rolePickerKeyboard(purpose) {
-    const dot = PICK_COLOR[purpose] || '';
-    const rows = sd.heroesByRole().map((g) => [Markup.button.callback(`${dot} ${g.emoji} ${g.en} (${faNum(g.count)})`, `pick:${purpose}:role:${g.en}`)]);
+    const rows = sd.heroesByRole().map((g) => [Markup.button.callback(`${g.emoji} ${g.en} (${faNum(g.count)})`, `pick:${purpose}:role:${g.en}`)]);
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
   }
@@ -280,8 +275,8 @@ function createBot(env, deps) {
   // ---------- کانتر: انتخاب تک‌هیرو یا تیم حریف ----------
   function counterModeKeyboard() {
     return Markup.inlineKeyboard([
-      [Markup.button.callback('🟢 ⚔️ یک هیرو', 'counter:mode:single')],
-      [Markup.button.callback('🟢 🛡️ تیم حریف (۲ تا ۵ هیرو)', 'counter:mode:team')],
+      [Markup.button.callback('⚔️ یک هیرو', 'counter:mode:single')],
+      [Markup.button.callback('🛡️ تیم حریف (۲ تا ۵ هیرو)', 'counter:mode:team')],
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
   }
@@ -293,8 +288,8 @@ function createBot(env, deps) {
     const names = picks.heroes.map((id) => sd.heroById(id)?.hero_name).filter(Boolean);
     const t = `🛡️ <b>تیم حریف</b>\n\nانتخاب شده: ${names.length ? names.map((n) => `<b>${esc(n)}</b>`).join('، ') : '—'} (${faNum(names.length)} هیرو)\n\nهیروهای تیم حریف را یکی‌یکی انتخاب کن (۲ تا ۵ هیرو).` + FOOTER;
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('🟢 ➕ اضافه کردن هیروی دیگر', 'counter:addmore')],
-      [Markup.button.callback('🟢 ✅ محاسبه', 'counter:calc'), Markup.button.callback('🟢 ❌ پاک‌کردن', 'counter:clear')],
+      [Markup.button.callback('➕ اضافه کردن هیروی دیگر', 'counter:addmore')],
+      [Markup.button.callback('✅ محاسبه', 'counter:calc'), Markup.button.callback('❌ پاک‌کردن', 'counter:clear')],
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML(t, kb);
@@ -324,7 +319,7 @@ function createBot(env, deps) {
     const prefix = step === 'm' ? 'wr:m' : step === 'now' ? 'wr:now' : 'wr:tgt';
     const rows = [];
     for (let i = 0; i < values.length; i += 2) {
-      rows.push(values.slice(i, i + 2).map((v) => Markup.button.callback(`🔵 ${step === 'm' ? faNum(v) : `${faNum(v)}٪`}`, `${prefix}:${v}`)));
+      rows.push(values.slice(i, i + 2).map((v) => Markup.button.callback(`${step === 'm' ? faNum(v) : `${faNum(v)}٪`}`, `${prefix}:${v}`)));
     }
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
@@ -352,7 +347,7 @@ function createBot(env, deps) {
       ? '🎮 با دکمهٔ زیر مینی‌اپ فارسی را باز کن:'
       : '⚠️ مینی‌اپ هنوز روی هاست HTTPS تنظیم نشده است (MINIAPP_URL خالی است) — دستورهای زیر بدون مینی‌اپ هم کار می‌کنند.';
     const caption =
-      `👋 سلام! به <b>Persian Mlbb</b> خوش آمدی.\n\nربات فارسی Mobile Legends: Bang Bang — همه‌چیز با دکمه، به فارسی و با دادهٔ زنده:\n\n🟡 <b>هیروها و متا</b> — همهٔ هیروها و برترین‌های متا\n🟢 <b>کانتر و بیلد</b> — کانتر حریف و بهترین بیلد\n🟤 <b>آیتم‌ها و امبلم‌ها</b> — همهٔ آیتم‌ها، امبلم‌ها و اسپل‌ها\n🔵 <b>وین‌ریت و MPL</b> — ماشین وین‌ریت و جدول لیگ‌ها\n🟠 <b>اخبار و پچ</b> — تازه‌ترین اخبار و پچ‌نوت‌ها\n🔴 <b>تیرلیست و ترکیب تیمی</b> — رتبه‌بندی و بهترین ترکیب‌ها\n⚪ <b>داستان‌ها و مینی‌اپ</b> — داستان هیروها و مینی‌اپ فارسی\n🟣 <b>مربی</b> — سؤالت را همین‌جا بنویس، جواب مربی می‌گیری\n\n${waNote}\n\nبرای راهنما: /help` +
+      `👋 سلام! به <b>Persian Mlbb</b> خوش آمدی.\n\nربات فارسی Mobile Legends: Bang Bang — همه‌چیز با دادهٔ زنده:\n\n🦸 <b>هیروها و متا</b> — همهٔ هیروها و برترین‌های متا\n⚔️ <b>کانتر و بیلد</b> — کانتر حریف و بهترین بیلد\n🧰 <b>آیتم‌ها و امبلم‌ها</b> — همهٔ آیتم‌ها، امبلم‌ها و اسپل‌ها\n🧮 <b>وین‌ریت و MPL</b> — ماشین وین‌ریت و جدول لیگ‌ها\n📰 <b>اخبار و پچ</b> — تازه‌ترین اخبار و پچ‌نوت‌ها\n🏆 <b>تیرلیست و ترکیب تیمی</b> — رتبه‌بندی و بهترین ترکیب‌ها\n📖 <b>داستان‌ها و مینی‌اپ</b> — داستان هیروها و مینی‌اپ فارسی\n🧠 <b>مربی</b> — سؤالت را همین‌جا بنویس، جواب مربی می‌گیری\n\n${waNote}\n\nبرای راهنما: /help\n\n🤖 لینک ربات: https://t.me/Mlbb_Baz_bot` +
       (isAdmin(ctx) ? '\n\n🛠️ تو مدیر ربات هستی — /admin برای پنل مدیریت.' : '') + FOOTER;
     // پیام ورود با عکس خوشامد — Node: فایل assets/welcome.jpg (وگرنه logo.jpg)؛ Workers: URL عمومی
     if (welcomePhoto) {
@@ -569,7 +564,7 @@ function createBot(env, deps) {
   // ---------- /build ----------
   async function askLane(ctx, hero) {
     const kb = Markup.inlineKeyboard([
-      ...LANES.map((l) => [Markup.button.callback(`🟢 ${l.fa}`, `build:${hero.mlid}:${l.v}`)]),
+      ...LANES.map((l) => [Markup.button.callback(`${l.fa}`, `build:${hero.mlid}:${l.v}`)]),
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML(`🛠️ بیلد <b>${esc(hero.hero_name)}</b> برای کدام لین؟` + FOOTER, kb);
@@ -690,7 +685,7 @@ function createBot(env, deps) {
     const titles = patchTitles();
     if (!titles.length) return ctx.replyWithHTML('پچ‌نوتی فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
     const kb = Markup.inlineKeyboard([
-      ...titles.map((title, i) => [Markup.button.callback(`🟠 ${(((sd.faContent || {}).patches || {})[title] || {}).title_fa || title}`, `patch:${i}`)]),
+      ...titles.map((title, i) => [Markup.button.callback(`${(((sd.faContent || {}).patches || {})[title] || {}).title_fa || title}`, `patch:${i}`)]),
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML('📝 <b>پچ‌نوت‌ها</b>\n\nکدام پچ را می‌خواهی ببینی؟' + FOOTER, kb);
@@ -780,7 +775,7 @@ function createBot(env, deps) {
     return Object.entries(byCat).sort((a, b) => b[1].length - a[1].length);
   }
   function itemCategoryKeyboard() {
-    const rows = itemCategories().map(([c, list]) => [Markup.button.callback(`🟤 ${c} (${faNum(list.length)})`, `itemcat:${c}`)]);
+    const rows = itemCategories().map(([c, list]) => [Markup.button.callback(`${c} (${faNum(list.length)})`, `itemcat:${c}`)]);
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
   }
@@ -860,9 +855,9 @@ function createBot(env, deps) {
     }).filter((s) => s.name);
   }
   function emblemPickerKeyboard(spells) {
-    const rows = sd.emblems.map((e) => [Markup.button.callback(`🟤 🛡️ ${e.emblem_name}`, `emblem:${e.id}`)]);
+    const rows = sd.emblems.map((e) => [Markup.button.callback(`🛡️ ${e.emblem_name}`, `emblem:${e.id}`)]);
     for (let i = 0; i < spells.length; i += 2) {
-      rows.push(spells.slice(i, i + 2).map((s, j) => Markup.button.callback(`🟤 🪄 ${s.name}`, `spell:${i + j}`)));
+      rows.push(spells.slice(i, i + 2).map((s, j) => Markup.button.callback(`🪄 ${s.name}`, `spell:${i + j}`)));
     }
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
@@ -932,7 +927,7 @@ function createBot(env, deps) {
 
   // ---------- /mpl ----------
   async function sendMplLeagues(ctx) {
-    const kb = Markup.inlineKeyboard([...LEAGUES.map((l) => [Markup.button.callback(`🔵 ${l.fa}`, `mpl:${l.v}`)]), [Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
+    const kb = Markup.inlineKeyboard([...LEAGUES.map((l) => [Markup.button.callback(`${l.fa}`, `mpl:${l.v}`)]), [Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
     return ctx.replyWithHTML('🏆 کدام لیگ MPL؟' + FOOTER, kb);
   }
   bot.command('mpl', async (ctx) => sendMplLeagues(ctx));

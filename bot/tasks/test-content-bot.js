@@ -273,7 +273,7 @@ async function main() {
   const coachHint = textOf2((t) => t.includes('سؤالت را همین‌جا بنویس'));
   const freeCoachMsg = textOf2((t) => t.includes('پاسخ تستی مربی'));
   const playerZoneMsg = textOf2((t) => t.includes('Zone ID'));
-  const startCaption = textOf2((t) => t.includes('Persian Mlbb') && t.includes('هیروها و متا'));
+  const startCaption = textOf2((t) => t.includes('Persian Mlbb') && t.includes('همه‌چیز با دادهٔ زنده:'));
   const startKbEntry = kbOf2((k) => k.includes('menu_heroes') && k.includes('menu_items'));
   const startKb = startKbEntry ? JSON.stringify(startKbEntry.payload.reply_markup || {}) : null;
   const askSys = aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages);
@@ -307,8 +307,8 @@ async function main() {
     ['منو: راهنمای مربی بدون /ask', coachHint && !coachHint.includes('/ask')],
     ['منو: متن آزاد به مربی می‌رسد', !!freeCoachMsg && aiCallsAfterFreeText === 1],
     ['منو: متن آزاد وسط /player به مربی نمی‌رسد', !!playerZoneMsg && aiCallsAfterPlayer === 1],
-    ['منو: کپشن /start خط‌های رنگی دارد', startCaption && startCaption.includes('🟡') && startCaption.includes('هیروها و متا') && startCaption.includes('🟣') && startCaption.includes('مربی') && startCaption.includes('🟤') && startCaption.includes('آیتم‌ها و امبلم‌ها') && startCaption.includes('🔵') && startCaption.includes('وین‌ریت و MPL')],
-    ['منو: دکمه‌ها پیشوند رنگی دارند', startKb && startKb.includes('🟡 🦸 هیروها') && startKb.includes('🟢 ⚔️ کانتر') && startKb.includes('🟤 🧰 آیتم‌ها') && startKb.includes('🟤 🛡️ امبلم‌ها') && startKb.includes('🔵 🧮 ماشین وین‌ریت') && startKb.includes('🟠 📰 اخبار') && startKb.includes('🔴 🏆 تیرلیست') && startKb.includes('⚪ 📖 داستان‌ها') && startKb.includes('🟣 🧠 مربی هوش مصنوعی')],
+    ['منو: کپشن /start پیام اصلی با استیکر دکمه‌ها و لینک ربات است', startCaption && startCaption.includes('ربات فارسی Mobile Legends: Bang Bang — همه‌چیز با دادهٔ زنده:') && startCaption.includes('🦸') && startCaption.includes('هیروها و متا') && startCaption.includes('⚔️') && startCaption.includes('کانتر و بیلد') && startCaption.includes('🧰') && startCaption.includes('آیتم‌ها و امبلم‌ها') && startCaption.includes('🧮') && startCaption.includes('وین‌ریت و MPL') && startCaption.includes('📰') && startCaption.includes('اخبار و پچ') && startCaption.includes('🏆') && startCaption.includes('تیرلیست و ترکیب تیمی') && startCaption.includes('📖') && startCaption.includes('داستان‌ها و مینی‌اپ') && startCaption.includes('🧠') && startCaption.includes('مربی') && startCaption.includes('https://t.me/Mlbb_Baz_bot') && !['🟡','🟢','🟤','🔵','🟠','🔴','⚪','🟣'].some((c) => startCaption.includes(c))],
+    ['منو: دکمه‌ها بدون گوی رنگی‌اند', startKb && startKb.includes('🦸 هیروها') && startKb.includes('⚔️ کانتر') && startKb.includes('🧰 آیتم‌ها') && startKb.includes('🛡️ امبلم‌ها') && startKb.includes('🧮 ماشین وین‌ریت') && startKb.includes('📰 اخبار') && startKb.includes('🏆 تیرلیست') && startKb.includes('📖 داستان‌ها') && startKb.includes('🧠 مربی هوش مصنوعی') && !['🟡','🟢','🟤','🔵','🟠','🔴','⚪','🟣'].some((c) => startKb.includes(c))],
     ['منو: callbackها همان قبلی‌اند', startKb && startKb.includes('menu_meta') && startKb.includes('menu_news') && startKb.includes('menu_items') && startKb.includes('menu_emblems') && !!captured.find((x) => JSON.stringify(x.payload.reply_markup || {}).includes('admin_users'))],
     ['منو: /ask ساختار مربی را دارد', askSys && askSys.includes('خلاصه') && askSys.includes('چرا') && askSys.includes('چیکار کن')],
     ['منو: /ask مربی Masha هم‌تیمی دارد', mashaAsk && mashaAsk.includes('هم‌تیمی') && mashaAsk.includes('Bruno')],

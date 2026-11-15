@@ -295,7 +295,7 @@ checks.push(['منو (ورکر): دکمهٔ داستان در جزئیات هی�
 checks.push(['منو (ورکر): داستان با دکمه باز می‌شود', menuText.includes('داستان Miya')]);
 checks.push(['منو (ورکر): راهنمای مربی بدون /ask', menuText.includes('سؤالت را همین‌جا بنویس') && !menuText.includes('/ask')]);
 checks.push(['منو (ورکر): متن آزاد به مربی می‌رسد', menuText.includes('پاسخ تستی مربی') && aiCalls.length === aiBeforeFree + 1]);
-checks.push(['منو (ورکر): دکمه‌ها پیشوند رنگی دارند', menuKb.includes('🟡 🦸 هیروها') && menuKb.includes('🟤 🧰 آیتم‌ها') && menuKb.includes('🟣 🧠 مربی هوش مصنوعی') && menuKb.includes('⚪ 📖 داستان‌ها')]);
+checks.push(['منو (ورکر): دکمه‌ها بدون گوی رنگی‌اند', menuKb.includes('🦸 هیروها') && menuKb.includes('🧰 آیتم‌ها') && menuKb.includes('🧠 مربی هوش مصنوعی') && menuKb.includes('📖 داستان‌ها') && !['🟡','🟢','🟤','🔵','🟠','🔴','⚪','🟣'].some((c) => menuKb.includes(c))]);
 checks.push(['منو (ورکر): آیتم‌ها دسته → آیتم → جزئیات', menuKb.includes('itemcat:Attack') && menuKb.includes('item:a001') && menuText.includes("Berserker's Fury") && menuText.includes('دسته: Attack')]);
 checks.push(['منو (ورکر): امبلم‌ها و اسپل دکمه دارند', menuKb.includes('emblem:001') && menuKb.includes('spell:0')]);
 checks.push(['منو (ورکر): جزئیات Tank و اسپل', menuText.includes('Tank') && menuText.includes('تلنت‌ها') && menuText.includes('Flicker')]);
