@@ -43,6 +43,7 @@ async function main() {
   await bot.handleUpdate(upd('/hero Miya'));
   await bot.handleUpdate(upd('/patch'));
   await bot.handleUpdate(upd('/patch 1.9.20'));
+  await bot.handleUpdate(upd('/patch 2.2.16'));
   await bot.handleUpdate(upd('/comps'));
   await bot.handleUpdate(upd('/news'));
   await bot.handleUpdate(upd('/lore Miya'));
@@ -76,6 +77,75 @@ async function main() {
   const limitAfterReset = kvMap.get('coach:limit:111');
   await bot.handleUpdate(updCb('coach:u:222', 111, 'Test')); // غیرمدیر — رد می‌شود
 
+  // ---------- منوی دکمه‌ای — نمونهٔ دوم ربات با استاب تازه ----------
+  // شمارنده‌های مربی در نمونهٔ اول سفت شده‌اند (۱۷ جواب)، پس تست‌های منو روی نمونهٔ
+  // دوم با استاب و KV تازه می‌دوند تا شمارنده‌های نمونهٔ اول دست نخورند.
+  const aiCalls2 = [];
+  const stubAI2 = { run: async (model, opts) => { aiCalls2.push({ model, opts }); return { response: 'پاسخ تستی مربی' }; } };
+  const kvMap2 = new Map();
+  const stubKV2 = { get: async (k) => (kvMap2.has(k) ? kvMap2.get(k) : null), put: async (k, v) => { kvMap2.set(k, v); }, delete: async (k) => { kvMap2.delete(k); } };
+  const bot2 = createBot({ ADMIN_ID: '999999999' }, { coachAI: stubAI2, coachKV: stubKV2 });
+  const captured2 = [];
+  Telegram.prototype.callApi = async function (method, payload) {
+    captured2.push({ method, payload });
+    return { ok: true, result: { message_id: 1 } };
+  };
+  const updText = (text, fromId = 444, firstName = 'Menu') => ({
+    update_id: 3,
+    message: {
+      message_id: 2, date: 1730000000, text,
+      chat: { id: fromId, type: 'private' },
+      from: { id: fromId, is_bot: false, first_name: firstName },
+    },
+  });
+  const U = 444; // کاربر عادی تست منو
+  // متا و MPL
+  await bot2.handleUpdate(updCb('menu_meta', U, 'Menu'));
+  await bot2.handleUpdate(updCb('menu_mpl', U, 'Menu'));
+  await bot2.handleUpdate(updCb('mpl:id', U, 'Menu'));
+  // بیلد: نقش → هیرو → لین → بیلد
+  await bot2.handleUpdate(updCb('menu_build', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:build:role:Marksman', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:build:hero:1', U, 'Menu'));
+  await bot2.handleUpdate(updCb('build:1:gold', U, 'Menu'));
+  // کانتر تک‌هیرو: نقش → هیرو → کانتر
+  await bot2.handleUpdate(updCb('menu_counter', U, 'Menu'));
+  await bot2.handleUpdate(updCb('counter:mode:single', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counter:role:Marksman', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counter:hero:1', U, 'Menu'));
+  // کانتر تیمی: دو هیرو → محاسبه
+  await bot2.handleUpdate(updCb('menu_counter', U, 'Menu'));
+  await bot2.handleUpdate(updCb('counter:mode:team', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counterTeam:role:Marksman', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counterTeam:hero:1', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counterTeam:role:Marksman', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:counterTeam:hero:18', U, 'Menu'));
+  await bot2.handleUpdate(updCb('counter:calc', U, 'Menu'));
+  // وین‌ریت: ۱۰۰ مچ، ۵۰٪، هدف ۶۰٪
+  await bot2.handleUpdate(updCb('menu_wr', U, 'Menu'));
+  await bot2.handleUpdate(updCb('wr:m:100', U, 'Menu'));
+  await bot2.handleUpdate(updCb('wr:now:50', U, 'Menu'));
+  await bot2.handleUpdate(updCb('wr:tgt:60', U, 'Menu'));
+  // اخبار، تیرلیست، ترکیب، پچ
+  await bot2.handleUpdate(updCb('menu_news', U, 'Menu'));
+  await bot2.handleUpdate(updCb('menu_tier', U, 'Menu'));
+  await bot2.handleUpdate(updCb('menu_comps', U, 'Menu'));
+  await bot2.handleUpdate(updCb('menu_patch', U, 'Menu'));
+  await bot2.handleUpdate(updCb('patch:0', U, 'Menu'));
+  // هیروها: نقش → هیرو → جزئیات + دکمهٔ داستان
+  await bot2.handleUpdate(updCb('menu_heroes', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:heroes:role:Marksman', U, 'Menu'));
+  await bot2.handleUpdate(updCb('pick:heroes:hero:1', U, 'Menu'));
+  await bot2.handleUpdate(updCb('hero:lore:1', U, 'Menu'));
+  // راهنمای مربی — بدون هیچ اشاره‌ای به /ask
+  await bot2.handleUpdate(updCb('coach', U, 'Menu'));
+  // مربی با متن آزاد
+  await bot2.handleUpdate(updText('بهترین بیلد Miya چیه؟', U, 'Menu'));
+  const aiCallsAfterFreeText = aiCalls2.length;
+  // متن آزاد وسط جلسهٔ /player به مربی نمی‌رسد
+  await bot2.handleUpdate(upd('/player', 555, 'Player'));
+  await bot2.handleUpdate(updText('12345678', 555, 'Player'));
+
   const textOf = (pred) => {
     const c = captured.find((x) => pred(x.payload.text || x.payload.caption || ''));
     if (!c) return null;
@@ -88,7 +158,8 @@ async function main() {
   const newsMsg = textOf((t) => t.includes('اخبار و پچ‌نوت‌ها'));
   const loreBody = textOf((t) => t.includes('جنگ چیست'));
   const lorePhoto = captured.find((x) => x.method === 'sendPhoto' && (x.payload.caption || '').includes('داستان Miya'));
-  const loreNoArg = textOf((t) => t.includes('نام هیرو را بنویس') && t.includes('/lore Miya'));
+  const loreNoArg = captured.find((x) => (x.payload.text || '').includes('داستان‌ها') && JSON.stringify(x.payload.reply_markup || {}).includes('pick:lore:role:'));
+  const patchListMsg = captured.find((x) => (x.payload.text || '').includes('کدام پچ را می‌خواهی ببینی؟') && JSON.stringify(x.payload.reply_markup || {}).includes('patch:0'));
   const loreUnknown = textOf((t) => t.includes('پیدا نشد') && t.includes('Zzzzzz'));
   const mashaMsg = textOf((t) => t.includes('هم‌تیمی‌های خوب'));
   const teamCounterMsg = textOf((t) => t.includes('کانتر تیم حریف'));
@@ -118,6 +189,7 @@ async function main() {
     ['/patch: خط‌های واقعی', realNL(patchMsg)],
     ['/patch: زیر ۴۰۹۶ کاراکتر', patchMsg && patchMsg.length < 4096],
     ['/patch 1.9.20 رسید', !!patchOldMsg],
+    ['/patch بدون نسخه: لیست پچ‌ها', !!patchListMsg],
     ['/comps رسید', !!compsMsg],
     ['/comps: ۳ ترکیب', compsMsg && (compsMsg.match(/میانگین وین‌ریت/g) || []).length === 3],
     ['/comps: Bruno', compsMsg && compsMsg.includes('Bruno')],
@@ -130,7 +202,7 @@ async function main() {
     ['/lore Miya: داستان کامل', !!loreBody],
     ['/lore Miya: خط‌های واقعی', realNL(loreBody)],
     ['/lore Miya: زیر ۴۰۹۶ کاراکتر', loreBody && loreBody.length < 4096],
-    ['/lore بدون نام: راهنما', !!loreNoArg],
+    ['/lore بدون نام: انتخاب نقش', !!loreNoArg],
     ['/lore نام اشتباه: پیدا نشد', !!loreUnknown],
     ['/hero Masha: هم‌تیمی‌های خوب', mashaMsg && mashaMsg.includes('هم‌تیمی‌های خوب') && mashaMsg.includes('Bruno')],
     ['/counter تیمی رسید', !!teamCounterMsg],
@@ -144,6 +216,7 @@ async function main() {
     ['/ask: مدل درست', aiCalls[0] && aiCalls[0].model === '@cf/meta/llama-3.1-8b-instruct-fp8'],
     ['/ask: پرامپت بیلد Miya را دارد', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('Windtalker')],
     ['/ask: پرامپت کانتر Miya را دارد', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('Belerick')],
+    ['/ask: جهت کانتر در پرامپت صریح است', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('این هیروها Miya را کانتر می‌کنند') && JSON.stringify(aiCalls[0].opts.messages).includes('Miya این هیروها را کانتر می‌کند')],
     ['/ask: شمارندهٔ سراسری ۱۷ است', kvMap.get('coach:' + today) === '17'],
     ['/ask: شمارندهٔ کاربر ۱۱۱ سه است', kvMap.get('coach:user:111:' + today) === '3'],
     ['/ask: جواب چهارم کاربر ۱۱۱ سقف ۳ است', !!askCap3 && aiCalls.length === 17],
@@ -161,11 +234,56 @@ async function main() {
     ['/admin: تایید برگشت به پیش‌فرض', !!resetConfirmMsg],
     ['/admin: غیرمدیر به جزئیات کاربر نمی‌رسد', !!textOf((t) => t.includes('⛔ این بخش فقط برای مدیر ربات است.'))],
   ];
+  const textOf2 = (pred) => {
+    const c = captured2.find((x) => pred(x.payload.text || x.payload.caption || ''));
+    if (!c) return null;
+    return c.payload.text || c.payload.caption || '';
+  };
+  const kbOf2 = (pred) => captured2.find((x) => pred(JSON.stringify(x.payload.reply_markup || {})));
+  const menuMetaMsg = textOf2((t) => t.includes('برترین هیروهای متا'));
+  const menuMplBtns = kbOf2((k) => k.includes('mpl:id') && k.includes('mpl:ph') && k.includes('mpl:my') && k.includes('mpl:kh'));
+  const menuMplMsg = textOf2((t) => t.includes('اندونزی'));
+  const buildMsg = textOf2((t) => t.includes('۶ آیتم'));
+  const counterMsg = textOf2((t) => t.includes('کانتر می‌کند') && t.includes('Miya'));
+  const teamPickMsg = textOf2((t) => t.includes('(۲ هیرو)') && t.includes('Miya') && t.includes('Layla'));
+  const teamCounterMsg2 = textOf2((t) => t.includes('کانتر تیم حریف') && t.includes('از ۲ هیرو'));
+  const wrExpected = Math.max(0, Math.ceil((60 / 100 * 100 - 100 * 50 / 100) / (1 - 60 / 100) - 1e-9)); // ۲۵ برد
+  const wrMsg = textOf2((t) => t.includes('ماشین‌حساب وین‌ریت') && t.includes('برد پشت سر هم'));
+  const newsMenuMsg = textOf2((t) => t.includes('اخبار و پچ‌نوت‌ها'));
+  const tierMenuMsg = textOf2((t) => t.includes('تیرلیست هیروها'));
+  const compsMenuMsg = textOf2((t) => t.includes('ترکیب‌های تیمی'));
+  const patchMenuMsg = textOf2((t) => t.includes('پچ ۲.۲.۱۶') && t.includes('تغییرات هیروها'));
+  const heroDetailKb = kbOf2((k) => k.includes('hero:lore:1'));
+  const loreViaBtn = textOf2((t) => t.includes('داستان Miya'));
+  const coachHint = textOf2((t) => t.includes('سؤالت را همین‌جا بنویس'));
+  const freeCoachMsg = textOf2((t) => t.includes('پاسخ تستی مربی'));
+  const playerZoneMsg = textOf2((t) => t.includes('Zone ID'));
+  const menuChecks = [
+    ['منو: متا جدول را نشان می‌دهد', !!menuMetaMsg],
+    ['منو: متا هیچ دستوری نمی‌گوید', menuMetaMsg && !menuMetaMsg.includes('/meta')],
+    ['منو: MPL چهار لیگ را نشان می‌دهد', !!menuMplBtns],
+    ['منو: MPL جدول لیگ باز می‌شود', !!menuMplMsg],
+    ['منو: بیلد نقش→هیرو→لین→۶ آیتم', buildMsg && buildMsg.includes('Windtalker')],
+    ['منو: کانتر تک‌هیرو', !!counterMsg],
+    ['منو: کانتر تیمی دو هیرو انتخاب شد', !!teamPickMsg],
+    ['منو: کانتر تیمی نتیجه با پوشش', !!teamCounterMsg2],
+    ['منو: وین‌ریت ۱۰۰/۵۰/۶۰ → ۲۵ برد', wrMsg && wrMsg.includes('۲۵ برد پشت سر هم') && wrMsg.includes('مچ فعلی: ۱۰۰') && wrExpected === 25],
+    ['منو: اخبار', !!newsMenuMsg],
+    ['منو: تیرلیست', !!tierMenuMsg],
+    ['منو: ترکیب تیمی', !!compsMenuMsg],
+    ['منو: پچ‌نوت‌ها با دکمه', !!patchMenuMsg],
+    ['منو: جزئیات هیرو دکمهٔ داستان دارد', !!heroDetailKb],
+    ['منو: دکمهٔ داستان، داستان را باز می‌کند', !!loreViaBtn],
+    ['منو: راهنمای مربی بدون /ask', coachHint && !coachHint.includes('/ask')],
+    ['منو: متن آزاد به مربی می‌رسد', !!freeCoachMsg && aiCallsAfterFreeText === 1],
+    ['منو: متن آزاد وسط /player به مربی نمی‌رسد', !!playerZoneMsg && aiCalls2.length === 1],
+  ];
   for (const [name, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + name);
+  for (const [name, ok] of menuChecks) console.log((ok ? 'PASS ' : 'FAIL ') + name);
   if (heroMsg) console.log('--- /hero length:', heroMsg.length);
   if (patchMsg) console.log('--- /patch length:', patchMsg.length);
   if (compsMsg) console.log('--- /comps length:', compsMsg.length);
-  if (checks.some(([, ok]) => !ok)) process.exit(1);
+  if (checks.some(([, ok]) => !ok) || menuChecks.some(([, ok]) => !ok)) process.exit(1);
 }
 
 main().finally(() => {

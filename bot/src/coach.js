@@ -146,7 +146,7 @@ async function askCoach(env, deps, question, userId) {
 
 module.exports = { askCoach, detectHeroes, coachIsAdmin, coachUserCapMsg, coachLimitFromOverride, getCoachUsage, setCoachLimit, COACH_MODEL, COACH_DAILY_CAP, COACH_DEFAULT_LIMIT, COACH_CAP_MSG, COACH_UNAVAILABLE_MSG, COACH_NO_AI_MSG };
 
-const SYSTEM_PROMPT = 'تو «مربی هوش مصنوعی» ربات Persian MLBB هستی. فقط به فارسی جواب بده؛ کوتاه و کاربردی (حداکثر حدود ۳۰۰ کلمه). برای هر واقعیتی دربارهٔ هیروها، آیتم‌ها، بیلد، کانتر و متا فقط از داده‌هایی که در پیام کاربر داده شده استفاده کن؛ هیچ عدد، بیلد یا کانتری را از خودت نساز و اگر داده‌ای نداری، بگو نمی‌دانی. اگر سؤال ربطی به موبایل لجندز ندارد، خیلی کوتاه بگو فقط دربارهٔ این بازی جواب می‌دهی. هیچ‌وقت از منبع داده حرف نزن و هیچ لینکی نده.';
+const SYSTEM_PROMPT = 'تو «مربی هوش مصنوعی» ربات Persian MLBB هستی. فقط به فارسی جواب بده؛ کوتاه و کاربردی (حداکثر حدود ۳۰۰ کلمه). برای هر واقعیتی دربارهٔ هیروها، آیتم‌ها، بیلد، کانتر و متا فقط از داده‌هایی که در پیام کاربر داده شده استفاده کن؛ هیچ عدد، بیلد یا کانتری را از خودت نساز و اگر داده‌ای نداری، بگو نمی‌دانی. جهت کانتر را قاطی نکن: «این هیروها X را کانتر می‌کنند» یعنی آن هیروها جلوی X قوی‌ترند، و «X این هیروها را کانتر می‌کند» یعنی X جلوی آن‌ها قوی‌تر است. اگر سؤال ربطی به موبایل لجندز ندارد، خیلی کوتاه بگو فقط دربارهٔ این بازی جواب می‌دهی. هیچ‌وقت از منبع داده حرف نزن و هیچ لینکی نده.';
 
 function norm(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -190,7 +190,7 @@ function heroGrounding(hero) {
   const mu = sd.matchupById(Number(hero.mlid));
   if (mu) {
     if ((mu.countered_by || []).length) {
-      lines.push(`بهترین کانترهای ${hero.hero_name}: ` + mu.countered_by.slice(0, 3).map((c) => `${c.name}${c.strength_fa ? ` (${c.strength_fa})` : ''}${c.reason_fa ? ` — ${c.reason_fa}` : ''}`).join('؛ '));
+      lines.push(`این هیروها ${hero.hero_name} را کانتر می‌کنند: ` + mu.countered_by.slice(0, 3).map((c) => `${c.name}${c.strength_fa ? ` (${c.strength_fa})` : ''}${c.reason_fa ? ` — ${c.reason_fa}` : ''}`).join('؛ '));
     }
     if ((mu.counters || []).length) {
       lines.push(`${hero.hero_name} این هیروها را کانتر می‌کند: ` + mu.counters.slice(0, 3).map((c) => c.name).join('، '));

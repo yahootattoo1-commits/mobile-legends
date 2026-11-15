@@ -60,13 +60,17 @@ function nodeUserStore() {
 function nodeSessionStore() {
   const playerSessions = new Map(); // chatId -> { step, gameId, zoneId, jwt }
   const adminBroadcasts = new Map(); // chatId -> { step, text } — پیش‌نویس پیام همگانی در انتظار تایید
-  const maps = { player: playerSessions, broadcast: adminBroadcasts };
+  const counterTeamPicks = new Map(); // chatId -> { heroes: [mlid, ...] } — انتخاب تیم حریف برای کانتر تیمی
+  const wrPicks = new Map(); // chatId -> { m, now, tgt } — مراحل ماشین وین‌ریت
+  const maps = { player: playerSessions, broadcast: adminBroadcasts, counterTeam: counterTeamPicks, wrPick: wrPicks };
   return {
     async get(kind, chatId) { return (maps[kind] && maps[kind].get(chatId)) || null; },
     async set(kind, chatId, value) { if (maps[kind]) maps[kind].set(chatId, value); },
     async delete(kind, chatId) { if (maps[kind]) maps[kind].delete(chatId); },
     _playerSessions: playerSessions,
     _adminBroadcasts: adminBroadcasts,
+    _counterTeamPicks: counterTeamPicks,
+    _wrPicks: wrPicks,
   };
 }
 function nodeRecentLogs() {
@@ -108,10 +112,8 @@ function heroNotFoundText(query, suggestions) {
   let t = `❌ هیرویی با نام «${query}» پیدا نشد.`;
   if (suggestions && suggestions.length) {
     t += '\n\nشاید منظورت این‌هاست:\n' + suggestions.map((h) => `• ${h.hero_name}`).join('\n');
-    t += '\n\nنام انگلیسی هیرو را بنویس؛ مثلاً: /hero Miya';
-  } else {
-    t += '\nنام انگلیسی هیرو را کامل یا بخشی از آن را بنویس؛ مثلاً: /hero Miya یا /hero Gusion';
   }
+  t += '\n\nاز دکمه‌های زیر هیرو را انتخاب کن.';
   return t + FOOTER;
 }
 
@@ -203,6 +205,9 @@ function createBot(env, deps) {
       [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
       [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
       [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
+      [Markup.button.callback('📰 اخبار', 'menu_news'), Markup.button.callback('🏆 تیرلیست', 'menu_tier')],
+      [Markup.button.callback('👥 ترکیب تیمی', 'menu_comps'), Markup.button.callback('📖 داستان‌ها', 'menu_lore')],
+      [Markup.button.callback('📝 پچ‌نوت‌ها', 'menu_patch')],
       [Markup.button.callback('🧠 مربی هوش مصنوعی', 'coach')],
     ];
     if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
@@ -213,31 +218,121 @@ function createBot(env, deps) {
 
   const helpText = `🤖 <b>راهنمای ربات MLBB</b>
 
-<b>دستورها:</b>
-/hero &lt;نام هیرو&gt; — اطلاعات هیرو، اسکیل‌ها و وین‌ریت زنده
-/lore &lt;نام هیرو&gt; — داستان کامل هیرو (فارسی)
-/heroes — لیست هیروها بر اساس نقش (۱۳۳ هیرو در ۶ نقش)
-/meta — برترین هیروهای متا (۷ روز اخیر، وین‌ریت)
-/counter &lt;نام هیرو&gt; — بهترین کانترهای آن هیرو؛ چند هیرو: /counter Miya Layla
-/ask &lt;سؤال&gt; — مربی هوش مصنوعی؛ مثلاً: /ask بهترین بیلد Miya چیست؟
-/build &lt;نام هیرو&gt; — بیلد پیشنهادی (بعد لین را انتخاب کن)
-/items — لیست آیتم‌ها
-/item &lt;نام آیتم&gt; — جزییات آیتم
-/emblems — امبلم‌ها و تلنت‌ها
-/wr &lt;مچ فعلی&gt; &lt;وین‌ریت فعلی&gt; &lt;وین‌ریت هدف&gt; — چند برد پشت سر هم لازم است؟
-/mpl — جدول لیگ‌های MPL (ID / PH / MY / KH)
-/player — اتصال پروفایل بازی (با کد تایید داخل بازی)
-/news — اخبار و پچ‌نوت‌های بازی
-/patch [نسخه] — متن کامل پچ‌نوت (فارسی)؛ بدون نسخه، تازه‌ترین پچ
-/comps — ترکیب‌های تیمی پیشنهادی + راهنما
-/tier — تیرلیست هیروها
-/version — نسخهٔ فعلی بازی
-/admin — پنل مدیریت (فقط مدیر)
-/help — همین راهنما
+همهٔ بخش‌ها با دکمه‌ها در دسترس‌اند — فقط بزن و انتخاب کن، چیزی لازم نیست بنویسی:
 
-🔍 نام هیرو را می‌توانی به انگلیسی، کامل یا بخشی از آن بنویسی؛ مثلاً <code>/hero miy</code> هم Miya را پیدا می‌کند.
+🦸 <b>هیروها</b> — لیست ۱۳۳ هیرو بر اساس نقش؛ روی هر هیرو بزن تا اطلاعات، اسکیل‌ها و وین‌ریت زنده‌اش را ببینی
+📊 <b>متا</b> — برترین هیروهای متا در ۷ روز اخیر
+⚔️ <b>کانتر</b> — بهترین کانتر برای یک هیرو، یا برای کل تیم حریف (۲ تا ۵ هیرو)
+🛠️ <b>بیلد</b> — بیلد پیشنهادی (۶ آیتم) + بیلد هر لین
+🧮 <b>ماشین وین‌ریت</b> — چند برد پشت سر هم لازم است تا به وین‌ریت هدفت برسی؟
+🏆 <b>MPL</b> — جدول لیگ‌های اندونزی، فیلیپین، مالزی و کامبوج
+📰 <b>اخبار</b> — اخبار، ایونت‌ها و گفتگوهای تازه
+🏆 <b>تیرلیست</b> — رتبه‌بندی هیروها
+👥 <b>ترکیب تیمی</b> — ترکیب‌های پیشنهادی + راهنما
+📖 <b>داستان‌ها</b> — داستان کامل هر هیرو به فارسی
+📝 <b>پچ‌نوت‌ها</b> — متن کامل پچ‌ها به فارسی
+🧠 <b>مربی هوش مصنوعی</b> — سؤالت را همین‌جا بنویس؛ بدون دستور، فقط سؤال را بنویس (روزانه ۳ جواب برای هر کاربر)
+🎮 <b>مینی‌اپ</b> — با دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود
 
-🎮 مینی‌اپ فارسی هم از دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود.` + FOOTER;
+👤 اتصال پروفایل بازی با دستور /player انجام می‌شود (Game ID و کد تایید داخل بازی را خودت می‌نویسی)؛ برای لغو /cancel.
+
+🏠 با دکمهٔ «منوی اصلی» همیشه می‌توانی به اول برگردی.` + FOOTER;
+
+  // ---------- کمک‌کننده‌های منوی دکمه‌ای ----------
+  function homeKeyboard() {
+    return Markup.inlineKeyboard([[Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
+  }
+  async function sendMainMenu(ctx) {
+    return ctx.replyWithHTML('🏠 <b>منوی اصلی</b>\n\nیکی را انتخاب کن:' + FOOTER, mainMenuKeyboard(isAdmin(ctx)));
+  }
+  function heroDetailKeyboard(id) {
+    return Markup.inlineKeyboard([
+      [Markup.button.callback('⚔️ کانتر', `hero:counter:${id}`), Markup.button.callback('🛠️ بیلد', `hero:build:${id}`)],
+      [Markup.button.callback('📖 داستان', `hero:lore:${id}`), Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+  }
+  // انتخاب‌کنندهٔ هیرو بر اساس هدف: heroes | build | counter | counterTeam | lore
+  function rolePickerKeyboard(purpose) {
+    const rows = sd.heroesByRole().map((g) => [Markup.button.callback(`${g.emoji} ${g.en} (${faNum(g.count)})`, `pick:${purpose}:role:${g.en}`)]);
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  function heroPickerKeyboard(purpose, roleEn) {
+    const g = sd.heroesByRole().find((x) => x.en === roleEn);
+    if (!g) return null;
+    const rows = [];
+    for (let i = 0; i < g.heroes.length; i += 2) {
+      rows.push(g.heroes.slice(i, i + 2).map((h) => Markup.button.callback(h.name, `pick:${purpose}:hero:${h.id}`)));
+    }
+    rows.push([Markup.button.callback('← نقش‌ها', `pick:${purpose}:roles`)]);
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  // ---------- کانتر: انتخاب تک‌هیرو یا تیم حریف ----------
+  function counterModeKeyboard() {
+    return Markup.inlineKeyboard([
+      [Markup.button.callback('⚔️ یک هیرو', 'counter:mode:single')],
+      [Markup.button.callback('🛡️ تیم حریف (۲ تا ۵ هیرو)', 'counter:mode:team')],
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+  }
+  async function sendCounterMode(ctx) {
+    return ctx.replyWithHTML('⚔️ <b>کانتر</b>\n\nمی‌خواهی کانتر یک هیرو را ببینی یا کانتر کل تیم حریف را؟' + FOOTER, counterModeKeyboard());
+  }
+  async function sendCounterPicks(ctx) {
+    const picks = (await sessionStore.get('counterTeam', ctx.chat.id)) || { heroes: [] };
+    const names = picks.heroes.map((id) => sd.heroById(id)?.hero_name).filter(Boolean);
+    const t = `🛡️ <b>تیم حریف</b>\n\nانتخاب شده: ${names.length ? names.map((n) => `<b>${esc(n)}</b>`).join('، ') : '—'} (${faNum(names.length)} هیرو)\n\nهیروهای تیم حریف را یکی‌یکی انتخاب کن (۲ تا ۵ هیرو).` + FOOTER;
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback('➕ اضافه کردن هیروی دیگر', 'counter:addmore')],
+      [Markup.button.callback('✅ محاسبه', 'counter:calc'), Markup.button.callback('❌ پاک‌کردن', 'counter:clear')],
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+    return ctx.replyWithHTML(t, kb);
+  }
+  async function pickCounterTeamHero(ctx, hero) {
+    const st = (await sessionStore.get('counterTeam', ctx.chat.id)) || { heroes: [] };
+    const id = Number(hero.mlid);
+    if (st.heroes.includes(id)) {
+      await ctx.answerCbQuery('این هیرو قبلاً انتخاب شده است');
+      return sendCounterPicks(ctx);
+    }
+    if (st.heroes.length >= 5) {
+      await ctx.answerCbQuery('حداکثر ۵ هیرو');
+      return sendCounterPicks(ctx);
+    }
+    st.heroes.push(id);
+    await sessionStore.set('counterTeam', ctx.chat.id, st);
+    await ctx.answerCbQuery();
+    return sendCounterPicks(ctx);
+  }
+  // ---------- ماشین وین‌ریت: انتخاب سه‌مرحله‌ای با دکمه ----------
+  const WR_MATCHES = [50, 100, 200, 300, 500, 1000];
+  const WR_RATES = [40, 45, 50, 55, 60, 65, 70];
+  const WR_TARGETS = [55, 60, 65, 70, 75, 80];
+  function wrStepKeyboard(step) {
+    const values = step === 'm' ? WR_MATCHES : step === 'now' ? WR_RATES : WR_TARGETS;
+    const prefix = step === 'm' ? 'wr:m' : step === 'now' ? 'wr:now' : 'wr:tgt';
+    const rows = [];
+    for (let i = 0; i < values.length; i += 2) {
+      rows.push(values.slice(i, i + 2).map((v) => Markup.button.callback(step === 'm' ? faNum(v) : `${faNum(v)}٪`, `${prefix}:${v}`)));
+    }
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  function wrResultText(m, now, fut, n) {
+    return `🧮 <b>ماشین‌حساب وین‌ریت</b>\n\nمچ فعلی: ${faInt(m)}\nوین‌ریت فعلی: ${pct(now)}\nهدف: ${pct(fut)}\n\n✅ برای رسیدن به ${pct(fut)} باید <b>${faInt(n)} برد پشت سر هم</b> بدون باخت بگیری.`;
+  }
+  async function sendWrStep(ctx, step) {
+    const st = (await sessionStore.get('wrPick', ctx.chat.id)) || {};
+    if (step === 'm') {
+      return ctx.replyWithHTML('🧮 <b>ماشین‌حساب وین‌ریت</b>\n\nمچ فعلی چند تاست؟' + FOOTER, wrStepKeyboard('m'));
+    }
+    if (step === 'now') {
+      return ctx.replyWithHTML(`🧮 <b>ماشین‌حساب وین‌ریت</b>\n\nمچ فعلی: ${faInt(st.m)}\n\nوین‌ریت فعلی چند درصد است؟` + FOOTER, wrStepKeyboard('now'));
+    }
+    return ctx.replyWithHTML(`🧮 <b>ماشین‌حساب وین‌ریت</b>\n\nمچ فعلی: ${faInt(st.m)} — وین‌ریت فعلی: ${pct(st.now)}\n\nهدف چند درصد است؟` + FOOTER, wrStepKeyboard('tgt'));
+  }
 
   // ثبت هر کاربری که با ربات حرف می‌زند (برای شمارش و پیام همگانی)
   bot.use(async (ctx, next) => { await trackUser(ctx); return next(); });
@@ -264,13 +359,7 @@ function createBot(env, deps) {
   bot.help((ctx) => ctx.replyWithHTML(helpText));
 
   // ---------- /hero ----------
-  bot.command('hero', async (ctx) => {
-    const q = ctx.message.text.replace(/^\/hero(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/hero Miya</code>' + FOOTER);
-    const hero = sd.findHero(q);
-    if (!hero) {
-      return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
-    }
+  async function sendHeroDetail(ctx, hero) {
     const id = Number(hero.mlid);
     const rankRes = await getRankList(7);
     const rank = rankRes.ok ? rankRes.all.find((r) => r.id === id) : null;
@@ -308,63 +397,54 @@ function createBot(env, deps) {
       const mates = comp.heroes.filter((x) => normName(x.name) !== normName(hero.hero_name));
       t += `\n\n🤝 <b>هم‌تیمی‌های خوب</b> (${esc(comp.title_fa || comp.title)}):` + mates.map((x) => `\n• <b>${esc(x.name)}</b> — ${laneFa([x.lane])}`).join('');
     }
-    t += `\n\nبرای کانتر: <code>/counter ${esc(hero.hero_name)}</code>\nبرای بیلد: <code>/build ${esc(hero.hero_name)}</code>\nبرای داستان: <code>/lore ${esc(hero.hero_name)}</code>`;
     t += FOOTER;
+    const kb = heroDetailKeyboard(id);
     if (head) {
       try {
-        if (t.length <= 1000) return await ctx.replyWithPhoto(head, { caption: t, parse_mode: 'HTML' });
+        if (t.length <= 1000) return await ctx.replyWithPhoto(head, { caption: t, parse_mode: 'HTML', ...kb });
         // کپشن عکس حداکثر ۱۰۲۴ کاراکتر است؛ برای هیروهای شلوغ عکس با خلاصه می‌آید و متن کامل پیام بعد است
         const cap = `🦸 <b>${esc(hero.hero_name)}</b>` + (hero.class ? ` — ${roleFa(hero.class)}` : '') + (hero.laning?.length ? `\n🛤️ لین: ${laneFa(hero.laning)}` : '') + (rank ? `\n\n📊 <b>آمار زنده (۷ روز اخیر)</b>\nوین‌ریت: ${pct(rank.win)}\nبن‌ریت: ${pct(rank.ban)}\nپیک‌ریت: ${pct(rank.pick)}` : '') + (skills.length ? '\n\n✨ <b>اسکیل‌ها:</b>' + skills.map((sk) => `\n• <b>${esc(sk.name)}</b>`).join('') : '') + FOOTER;
         await ctx.replyWithPhoto(head, { caption: cap, parse_mode: 'HTML' });
-        return await ctx.replyWithHTML(t);
+        return await ctx.replyWithHTML(t, kb);
       } catch { /* بدون عکس ادامه بده */ }
     }
-    return ctx.replyWithHTML(t);
+    return ctx.replyWithHTML(t, kb);
+  }
+
+  bot.command('hero', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/hero(@\S+)?\s*/i, '').trim();
+    if (!q) {
+      return ctx.replyWithHTML(`🦸 <b>هیروها بر اساس نقش</b>\n\n${faNum(sd.heroes.length)} هیرو در ۶ نقش — یکی را انتخاب کن:` + FOOTER, rolePickerKeyboard('heroes'));
+    }
+    const hero = sd.findHero(q);
+    if (!hero) {
+      return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))), rolePickerKeyboard('heroes'));
+    }
+    return sendHeroDetail(ctx, hero);
   });
 
   // ---------- /heroes — لیست هیروها بر اساس نقش ----------
-  function heroesRoleKeyboard() {
-    const groups = sd.heroesByRole();
-    const rows = groups.map((g) => [Markup.button.callback(`${g.emoji} ${g.en} (${faNum(g.count)})`, `heroes_role:${g.en}`)]);
-    return Markup.inlineKeyboard(rows);
-  }
-
   bot.command('heroes', async (ctx) => {
     const total = sd.heroes.length;
     return ctx.replyWithHTML(
       `🦸 <b>هیروها بر اساس نقش</b>\n\n${faNum(total)} هیرو در ۶ نقش — یکی را انتخاب کن:` + FOOTER,
-      heroesRoleKeyboard(),
+      rolePickerKeyboard('heroes'),
     );
   });
 
-  bot.action(/^heroes_role:(.+)$/, async (ctx) => {
-    const role = ctx.match[1];
-    const g = sd.heroesByRole().find((x) => x.en === role);
-    if (!g) return ctx.answerCbQuery('نقش پیدا نشد');
-    await ctx.answerCbQuery();
-    let t = `${g.emoji} <b>${g.en} (${faNum(g.count)})</b>\n`;
-    for (const h of g.heroes) {
-      t += `\n• <b>${esc(h.name)}</b> — ${laneFa(h.laning)}`;
-    }
-    t += `\n\nبرای جزئیات هر هیرو: <code>/hero نام</code>` + FOOTER;
-    // پیام تلگرام حداکثر ۴۰۹۶ کاراکتر — لیست نقش‌ها زیر این حد است، ولی برای اطمینان تکه‌تکه می‌فرستیم
-    for (let i = 0; i < t.length; i += 3500) {
-      await ctx.replyWithHTML(t.slice(i, i + 3500));
-    }
-  });
-
   // ---------- /meta ----------
-  bot.command('meta', async (ctx) => {
+  async function sendMeta(ctx) {
     const r = await getRankList(7);
-    if (!r.ok) return ctx.replyWithHTML(`❌ گرفتن متا فعلاً ممکن نشد: ${esc(r.error)}` + FOOTER);
+    if (!r.ok) return ctx.replyWithHTML(`❌ گرفتن متا فعلاً ممکن نشد: ${esc(r.error)}` + FOOTER, homeKeyboard());
     const top = [...r.all].sort((a, b) => (b.win ?? 0) - (a.win ?? 0)).slice(0, 10);
     let t = '📊 <b>برترین هیروهای متا — ۷ روز اخیر (بر اساس وین‌ریت)</b>\n';
     top.forEach((h, i) => {
       t += `\n${faNum(i + 1)}. <b>${esc(h.name)}</b> — وین ${pct(h.win)} | بن ${pct(h.ban)} | پیک ${pct(h.pick)}`;
     });
     t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
+    return ctx.replyWithHTML(t, homeKeyboard());
+  }
+  bot.command('meta', async (ctx) => sendMeta(ctx));
 
   // ---------- /counter ----------
   async function sendCounters(ctx, hero) {
@@ -428,7 +508,7 @@ function createBot(env, deps) {
   }
   bot.command('counter', async (ctx) => {
     const q = ctx.message.text.replace(/^\/counter(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/counter Miya</code> یا تیمی: <code>/counter Miya Layla</code>' + FOOTER);
+    if (!q) return sendCounterMode(ctx);
     // اگر کل متن یک هیروست (حتی چندکلمه‌ای مثل «Popol and Kupa»)، مسیر تک‌هیرو مثل قبل
     if (!q.includes(',')) {
       const single = sd.findHero(q);
@@ -448,7 +528,7 @@ function createBot(env, deps) {
       if (h && !valid.some((v) => normName(v.hero_name) === normName(h.hero_name))) valid.push(h);
       else if (!h) unknown.push(p);
     }
-    if (!valid.length) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
+    if (!valid.length) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))), counterModeKeyboard());
     if (unknown.length) {
       await ctx.replyWithHTML(`⚠️ ${unknown.map((u) => `«${esc(u)}»`).join('، ')} پیدا نشد و نادیده گرفته شد.` + FOOTER);
     }
@@ -460,9 +540,7 @@ function createBot(env, deps) {
   });
 
   // ---------- /ask — مربی هوش مصنوعی ----------
-  bot.command('ask', async (ctx) => {
-    const q = ctx.message.text.replace(/^\/ask(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya برای لین گلد چیست؟</code>' + FOOTER);
+  async function askCoachQuestion(ctx, q) {
     if (!coachAI) return ctx.replyWithHTML('مربی فقط روی ورکر فعال است.' + FOOTER);
     const usage = await getCoachUsage(envOf('ADMIN_ID'), coachKV, ctx.from && ctx.from.id);
     if (usage && !usage.unlimited && usage.used >= usage.limit) {
@@ -470,22 +548,28 @@ function createBot(env, deps) {
     }
     await ctx.replyWithHTML('🧠 مربی دارد فکر می‌کند…');
     const ans = await askCoach({ AI: coachAI, ADMIN_ID: envOf('ADMIN_ID') }, { kv: coachKV }, q, ctx.from && ctx.from.id);
-    if (!ans) return ctx.replyWithHTML('سؤالت را بنویس؛ مثلاً: <code>/ask بهترین بیلد Miya چیست؟</code>' + FOOTER);
+    if (!ans) return ctx.replyWithHTML('سؤالت را همین‌جا بنویس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟' + FOOTER);
     return ctx.replyWithHTML(esc(ans) + FOOTER);
+  }
+  bot.command('ask', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/ask(@\S+)?\s*/i, '').trim();
+    if (!q) return ctx.replyWithHTML('سؤالت را همین‌جا بنویس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟' + FOOTER);
+    return askCoachQuestion(ctx, q);
   });
 
   // ---------- /build ----------
   async function askLane(ctx, hero) {
-    const kb = Markup.inlineKeyboard(
-      LANES.map((l) => [Markup.button.callback(l.fa, `build:${hero.mlid}:${l.v}`)]),
-    );
+    const kb = Markup.inlineKeyboard([
+      ...LANES.map((l) => [Markup.button.callback(l.fa, `build:${hero.mlid}:${l.v}`)]),
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
     return ctx.replyWithHTML(`🛠️ بیلد <b>${esc(hero.hero_name)}</b> برای کدام لین؟` + FOOTER, kb);
   }
   bot.command('build', async (ctx) => {
     const q = ctx.message.text.replace(/^\/build(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/build Miya</code>' + FOOTER);
+    if (!q) return ctx.replyWithHTML('🛠️ <b>بیلد</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('build'));
     const hero = sd.findHero(q);
-    if (!hero) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
+    if (!hero) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))), rolePickerKeyboard('build'));
     return askLane(ctx, hero);
   });
   bot.action(/^build:(\d+):(exp|mid|gold|roam|jungle)$/, async (ctx) => {
@@ -526,7 +610,7 @@ function createBot(env, deps) {
   });
 
   // ---------- /news و /tier ----------
-  bot.command('news', async (ctx) => {
+  async function sendNews(ctx) {
     const { patchNotes, wikiRecent } = sd.news || {};
     const disc = sd.discussions || [];
     const ev = sd.events || [];
@@ -565,23 +649,15 @@ function createBot(env, deps) {
       });
     }
     t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
+    return ctx.replyWithHTML(t, homeKeyboard());
+  }
+  bot.command('news', async (ctx) => sendNews(ctx));
 
   // ---------- /patch — متن کامل پچ‌نوت (فارسی) ----------
-  bot.command('patch', async (ctx) => {
-    const q = ctx.message.text.replace(/^\/patch(@\S+)?\s*/i, '').trim();
-    const patches = (sd.faContent || {}).patches || {};
-    const titles = Object.keys(patches);
-    if (!titles.length) return ctx.replyWithHTML('پچ‌نوتی فعلاً در دسترس نیست.' + FOOTER);
-    let key = titles[0];
-    if (q) {
-      const normQ = q.replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^0-9.]/g, '');
-      key = titles.find((t) => t.toLowerCase().includes(normQ.toLowerCase())) || null;
-      if (!key) return ctx.replyWithHTML('پچی با این نسخه پیدا نشد؛ مثلاً: <code>/patch 2.2.16</code>' + FOOTER);
-    }
+  function patchTitles() { return Object.keys((sd.faContent || {}).patches || {}); }
+  async function showPatch(ctx, key) {
     const p = sd.patchByTitle(key);
-    if (!p) return ctx.replyWithHTML('جزئیات این پچ پیدا نشد.' + FOOTER);
+    if (!p) return ctx.replyWithHTML('جزئیات این پچ پیدا نشد.' + FOOTER, homeKeyboard());
     let t = `📝 <b>${esc(p.title_fa || key)}</b>` + (p.release_date ? ` — ${esc(p.release_date)}` : '');
     if ((p.new_heroes_fa || []).length) {
       t += '\n\n🆕 <b>هیروهای تازه:</b>';
@@ -599,13 +675,32 @@ function createBot(env, deps) {
     const eq = p.equipment_adjustments_fa || [];
     if (eq.length) t += `\n\n🛡️ تغییرات آیتم: ${faNum(eq.length)} مورد`;
     t += FOOTER;
-    return ctx.replyWithHTML(t);
+    return ctx.replyWithHTML(t, homeKeyboard());
+  }
+  async function sendPatchList(ctx) {
+    const titles = patchTitles();
+    if (!titles.length) return ctx.replyWithHTML('پچ‌نوتی فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
+    const kb = Markup.inlineKeyboard([
+      ...titles.map((title, i) => [Markup.button.callback((((sd.faContent || {}).patches || {})[title] || {}).title_fa || title, `patch:${i}`)]),
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+    return ctx.replyWithHTML('📝 <b>پچ‌نوت‌ها</b>\n\nکدام پچ را می‌خواهی ببینی؟' + FOOTER, kb);
+  }
+  bot.command('patch', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/patch(@\S+)?\s*/i, '').trim();
+    const titles = patchTitles();
+    if (!titles.length) return ctx.replyWithHTML('پچ‌نوتی فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
+    if (!q) return sendPatchList(ctx);
+    const normQ = q.replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^0-9.]/g, '');
+    const key = titles.find((t) => t.toLowerCase().includes(normQ.toLowerCase())) || null;
+    if (!key) return sendPatchList(ctx);
+    return showPatch(ctx, key);
   });
 
   // ---------- /comps — ترکیب‌های تیمی ----------
-  bot.command('comps', async (ctx) => {
+  async function sendComps(ctx) {
     const comps = sd.teamComps || [];
-    if (!comps.length) return ctx.replyWithHTML('ترکیب تیمی فعلاً در دسترس نیست.' + FOOTER);
+    if (!comps.length) return ctx.replyWithHTML('ترکیب تیمی فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
     let t = '👥 <b>ترکیب‌های تیمی پیشنهادی</b>';
     for (const c of comps) {
       const titleFa = (((sd.faContent || {}).comps || {})[c.id] || {}).title_fa || c.title_fa || c.title;
@@ -613,17 +708,12 @@ function createBot(env, deps) {
       for (const h of c.heroes) t += `\n• <b>${esc(h.name)}</b> — ${laneFa([h.lane])} (وین ${pct(h.win_rate)})`;
     }
     t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
+    return ctx.replyWithHTML(t, homeKeyboard());
+  }
+  bot.command('comps', async (ctx) => sendComps(ctx));
 
   // ---------- /lore — داستان کامل هیرو (فارسی) ----------
-  bot.command('lore', async (ctx) => {
-    const q = ctx.message.text.replace(/^\/lore(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام هیرو را بنویس؛ مثلاً: <code>/lore Miya</code>' + FOOTER);
-    const hero = sd.findHero(q);
-    if (!hero) {
-      return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))));
-    }
+  async function sendLore(ctx, hero) {
     const id = Number(hero.mlid);
     const lore = sd.loreById(id);
     if (!lore || (!lore.bio_fa && !lore.bio_short_fa)) {
@@ -638,17 +728,25 @@ function createBot(env, deps) {
     if (head) {
       try {
         await ctx.replyWithPhoto(head, { caption: cap, parse_mode: 'HTML' });
-        return await ctx.replyWithHTML(esc(body));
+        return await ctx.replyWithHTML(esc(body), homeKeyboard());
       } catch { /* بدون عکس ادامه بده */ }
     }
-    return ctx.replyWithHTML(`📖 <b>داستان ${esc(hero.hero_name)}</b>` + (infoBits ? `\n${esc(infoBits)}` : '') + `\n\n${esc(body)}` + FOOTER);
+    return ctx.replyWithHTML(`📖 <b>داستان ${esc(hero.hero_name)}</b>` + (infoBits ? `\n${esc(infoBits)}` : '') + `\n\n${esc(body)}` + FOOTER, homeKeyboard());
+  }
+
+  bot.command('lore', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/lore(@\S+)?\s*/i, '').trim();
+    if (!q) return ctx.replyWithHTML('📖 <b>داستان‌ها</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('lore'));
+    const hero = sd.findHero(q);
+    if (!hero) return ctx.replyWithHTML(esc(heroNotFoundText(q, sd.searchHeroes(q, 5))), rolePickerKeyboard('lore'));
+    return sendLore(ctx, hero);
   });
 
-  bot.command('tier', async (ctx) => {
+  async function sendTier(ctx) {
     const tl = sd.tierlist || {};
     const order = ['SS', 'S', 'A', 'B', 'C', 'D'];
     if (!order.some((k) => ((tl.tiers || {})[k] || []).length)) {
-      return ctx.replyWithHTML('❌ تیرلیست فعلاً در دسترس نیست.' + FOOTER);
+      return ctx.replyWithHTML('❌ تیرلیست فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
     }
     let t = '🏆 <b>تیرلیست هیروها</b>' + (tl.month ? ' — ' + esc(monthFa(tl.month)) : '');
     for (const k of order) {
@@ -657,8 +755,9 @@ function createBot(env, deps) {
       t += `\n\n<b>${k}</b> (${faNum(list.length)}): ` + list.map((h) => esc(h.name)).join('، ');
     }
     t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
+    return ctx.replyWithHTML(t, homeKeyboard());
+  }
+  bot.command('tier', async (ctx) => sendTier(ctx));
 
   // ---------- /items و /item ----------
   bot.command('items', async (ctx) => {
@@ -734,42 +833,45 @@ function createBot(env, deps) {
     return Math.max(0, Math.ceil(n - 1e-9));
   }
   bot.command('wr', async (ctx) => {
-    const args = ctx.message.text.replace(/^\/wr(@\S+)?\s*/i, '').trim().split(/\s+/).map(Number);
+    const raw = ctx.message.text.replace(/^\/wr(@\S+)?\s*/i, '').trim();
+    const args = raw ? raw.split(/\s+/).map(Number) : [];
     if (args.length < 3 || args.some((x) => !Number.isFinite(x))) {
-      return ctx.replyWithHTML('فرمت درست: <code>/wr 100 50 60</code>\nیعنی: ۱۰۰ مچ، وین‌ریت فعلی ۵۰٪، هدف ۶۰٪' + FOOTER);
+      await sessionStore.delete('wrPick', ctx.chat.id);
+      return sendWrStep(ctx, 'm');
     }
     const [m, now, fut] = args;
-    if (fut <= now) return ctx.replyWithHTML('⚠️ وین‌ریت هدف باید بیشتر از وین‌ریت فعلی باشد.' + FOOTER);
+    if (fut <= now) return ctx.replyWithHTML('⚠️ وین‌ریت هدف باید بیشتر از وین‌ریت فعلی باشد.' + FOOTER, homeKeyboard());
     const r = await roneGet(`/addon/win-rate-calculator?match-now=${m}&wr-now=${now}&wr-future=${fut}`);
     let n = r.ok ? (r.raw?.required_no_lose_matches ?? r.raw?.data?.required_no_lose_matches) : null;
     if (n == null) n = wrNeeded(m, now, fut); // فالبک محاسبهٔ محلی
-    let t = `🧮 <b>ماشین‌حساب وین‌ریت</b>\n\nمچ فعلی: ${faInt(m)}\nوین‌ریت فعلی: ${pct(now)}\nهدف: ${pct(fut)}\n\n✅ برای رسیدن به ${pct(fut)} باید <b>${faInt(n)} برد پشت سر هم</b> بدون باخت بگیری.`;
+    let t = wrResultText(m, now, fut, n);
     if (!r.ok) t += '\n\n(محاسبهٔ محلی — سرویس زنده در دسترس نبود.)';
     t += FOOTER;
-    return ctx.replyWithHTML(t);
+    return ctx.replyWithHTML(t, homeKeyboard());
   });
 
   // ---------- /mpl ----------
-  bot.command('mpl', async (ctx) => {
-    const kb = Markup.inlineKeyboard(LEAGUES.map((l) => [Markup.button.callback(l.fa, `mpl:${l.v}`)]));
+  async function sendMplLeagues(ctx) {
+    const kb = Markup.inlineKeyboard([...LEAGUES.map((l) => [Markup.button.callback(l.fa, `mpl:${l.v}`)]), [Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
     return ctx.replyWithHTML('🏆 کدام لیگ MPL؟' + FOOTER, kb);
-  });
+  }
+  bot.command('mpl', async (ctx) => sendMplLeagues(ctx));
   bot.action(/^mpl:(id|ph|my|kh)$/, async (ctx) => {
     const league = ctx.match[1];
     const name = (LEAGUES.find((l) => l.v === league) || {}).fa || league;
     await ctx.answerCbQuery('⏳ در حال گرفتن جدول…');
     const r = await roneGet(`/esports/${league}/standings`);
     if (!r.ok) {
-      return ctx.replyWithHTML(`❌ جدول ${esc(name)} فعلاً در دسترس نیست: ${esc(r.error)}\n\nممکن است فصل این لیگ شروع نشده باشد یا سرویس بالادستی خطا بدهد.` + FOOTER);
+      return ctx.replyWithHTML(`❌ جدول ${esc(name)} فعلاً در دسترس نیست: ${esc(r.error)}\n\nممکن است فصل این لیگ شروع نشده باشد یا سرویس بالادستی خطا بدهد.` + FOOTER, homeKeyboard());
     }
     const rows = r.records.map(normStanding).slice(0, 10);
-    if (!rows.length) return ctx.replyWithHTML(`🏆 ${esc(name)}\n\nفعلاً ردیفی در جدول نیست.` + FOOTER);
+    if (!rows.length) return ctx.replyWithHTML(`🏆 ${esc(name)}\n\nفعلاً ردیفی در جدول نیست.` + FOOTER, homeKeyboard());
     let t = `🏆 <b>جدول ${esc(name)}</b>\n`;
     rows.forEach((d) => {
       t += `\n${faNum(d.rank ?? 0)}. <b>${esc(d.team)}</b>${d.fullName ? ` (${esc(d.fullName)})` : ''}${d.wins != null ? ` — برد ${faNum(d.wins)}` : ''}${d.losses != null ? ` | باخت ${faNum(d.losses)}` : ''}${d.points != null ? ` | امتیاز ${faNum(d.points)}` : ''}${d.gameWins != null ? ` | گیم ${faNum(d.gameWins)}–${faNum(d.gameLosses)}` : ''}`;
     });
     t += FOOTER;
-    return ctx.replyWithHTML(t);
+    return ctx.replyWithHTML(t, homeKeyboard());
   });
 
   // ---------- /player (ورود با کد تایید داخل بازی) ----------
@@ -782,6 +884,8 @@ function createBot(env, deps) {
   bot.command('cancel', async (ctx) => {
     await sessionStore.delete('player', ctx.chat.id);
     await sessionStore.delete('broadcast', ctx.chat.id);
+    await sessionStore.delete('counterTeam', ctx.chat.id);
+    await sessionStore.delete('wrPick', ctx.chat.id);
     return ctx.replyWithHTML('لغو شد.' + FOOTER);
   });
   bot.on('text', async (ctx, next) => {
@@ -804,15 +908,16 @@ function createBot(env, deps) {
       }
     }
     const s = await sessionStore.get('player', ctx.chat.id);
-    if (!s || text.startsWith('/')) return next();
-    if (s.step === 'gameId') {
+    if (text.startsWith('/')) return next();
+    const playerActive = s && s.step !== 'done';
+    if (playerActive && s.step === 'gameId') {
       if (!/^\d+$/.test(text)) return ctx.replyWithHTML('⚠️ Game ID فقط عدد است. دوباره بفرست.' + FOOTER);
       s.gameId = text;
       s.step = 'zoneId';
       await sessionStore.set('player', ctx.chat.id, s);
       return ctx.replyWithHTML('حالا Zone ID (آیدی سرور/زون) را بفرست. معمولاً ۴ رقم است؛ مثلاً 1234.' + FOOTER);
     }
-    if (s.step === 'zoneId') {
+    if (playerActive && s.step === 'zoneId') {
       if (!/^\d+$/.test(text)) return ctx.replyWithHTML('⚠️ Zone ID فقط عدد است. دوباره بفرست.' + FOOTER);
       s.zoneId = text;
       s.step = 'sending';
@@ -828,7 +933,7 @@ function createBot(env, deps) {
       await sessionStore.set('player', ctx.chat.id, s);
       return ctx.replyWithHTML('✅ کد ارسال شد. کد تایید داخل بازی را اینجا بفرست.' + FOOTER);
     }
-    if (s.step === 'code') {
+    if (playerActive && s.step === 'code') {
       if (!/^\d{4,8}$/.test(text)) return ctx.replyWithHTML('⚠️ کد تایید عددی است (معمولاً ۴ تا ۸ رقم). دوباره بفرست.' + FOOTER);
       s.step = 'logging';
       await sessionStore.set('player', ctx.chat.id, s);
@@ -852,6 +957,10 @@ function createBot(env, deps) {
       return ctx.replyWithHTML(
         `✅ وارد شدی! پروفایلت متصل است.${nick ? `\n\n👤 ${esc(nick)}` : ''}\n\n⚠️ توکن ورود فقط در حافظهٔ همین چت است و بعد از ری‌استارت سرور پاک می‌شود.` + FOOTER,
       );
+    }
+    // سؤال مربی با متن آزاد — فقط چت خصوصی، وقتی جریانی فعال نیست
+    if (text && ctx.chat?.type === 'private' && (!s || s.step === 'done')) {
+      return askCoachQuestion(ctx, text);
     }
     return next();
   });
@@ -1021,18 +1130,142 @@ function createBot(env, deps) {
   bot.action('menu_heroes', async (ctx) => {
     await ctx.answerCbQuery();
     return ctx.replyWithHTML(
-      `🦸 <b>هیروها بر اساس نقش</b>\n\n${faNum(sd.heroes.length)} هیرو در ۶ نقش — یکی را انتخاب کن، یا نام هیرو را با دستور بفرست؛ مثلاً: <code>/hero Miya</code>` + FOOTER,
-      heroesRoleKeyboard(),
+      `🦸 <b>هیروها بر اساس نقش</b>\n\n${faNum(sd.heroes.length)} هیرو در ۶ نقش — یکی را انتخاب کن:` + FOOTER,
+      rolePickerKeyboard('heroes'),
     );
   });
-  bot.action('menu_meta', async (ctx) => { await ctx.answerCbQuery(); return ctx.replyWithHTML('برای دیدن متا: /meta' + FOOTER); });
-  bot.action('menu_counter', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('نام هیرو را بفرست؛ مثلاً: <code>/counter Gusion</code>' + FOOTER)));
-  bot.action('menu_build', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('نام هیرو را بفرست؛ مثلاً: <code>/build Miya</code>' + FOOTER)));
-  bot.action('menu_wr', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('فرمت: <code>/wr 100 50 60</code>' + FOOTER)));
-  bot.action('menu_mpl', (ctx) => ctx.answerCbQuery().then(() => ctx.replyWithHTML('برای جدول MPL: /mpl' + FOOTER)));
+  bot.action('menu_meta', async (ctx) => { await ctx.answerCbQuery(); return sendMeta(ctx); });
+  bot.action('menu_counter', async (ctx) => { await ctx.answerCbQuery(); return sendCounterMode(ctx); });
+  bot.action('menu_build', async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('🛠️ <b>بیلد</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('build'));
+  });
+  bot.action('menu_wr', async (ctx) => {
+    await ctx.answerCbQuery();
+    await sessionStore.delete('wrPick', ctx.chat.id);
+    return sendWrStep(ctx, 'm');
+  });
+  bot.action('menu_mpl', async (ctx) => { await ctx.answerCbQuery(); return sendMplLeagues(ctx); });
+  bot.action('menu_news', async (ctx) => { await ctx.answerCbQuery(); return sendNews(ctx); });
+  bot.action('menu_tier', async (ctx) => { await ctx.answerCbQuery(); return sendTier(ctx); });
+  bot.action('menu_comps', async (ctx) => { await ctx.answerCbQuery(); return sendComps(ctx); });
+  bot.action('menu_lore', async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('📖 <b>داستان‌ها</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('lore'));
+  });
+  bot.action('menu_patch', async (ctx) => { await ctx.answerCbQuery(); return sendPatchList(ctx); });
+  bot.action('menu_home', async (ctx) => { await ctx.answerCbQuery(); return sendMainMenu(ctx); });
   bot.action('coach', async (ctx) => {
     await ctx.answerCbQuery();
-    return ctx.replyWithHTML('🧠 <b>مربی هوش مصنوعی</b>\n\nسؤالت را با دستور /ask بپرس؛ مثلاً:\n<code>/ask بهترین بیلد Miya برای لین گلد چیست؟</code>' + FOOTER);
+    return ctx.replyWithHTML('🧠 <b>مربی هوش مصنوعی</b>\n\nسؤالت را همین‌جا بنویس — بدون دستور، فقط سؤال را بنویس.\n\nمثلاً: بهترین بیلد Miya برای لین گلد چیست؟' + FOOTER);
+  });
+
+  // ---------- انتخاب‌کنندهٔ هیرو (نقش → هیرو) ----------
+  // «roles» باید قبل از «role:» ثبت شود، وگرنه regex نقش «roles» را هم می‌گیرد
+  bot.action(/^pick:([a-zA-Z]+):roles$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('یکی از نقش‌ها را انتخاب کن:' + FOOTER, rolePickerKeyboard(ctx.match[1]));
+  });
+  bot.action(/^pick:([a-zA-Z]+):role:(.+)$/, async (ctx) => {
+    const [, purpose, role] = ctx.match;
+    const kb = heroPickerKeyboard(purpose, role);
+    if (!kb) return ctx.answerCbQuery('نقش پیدا نشد');
+    await ctx.answerCbQuery();
+    const g = sd.heroesByRole().find((x) => x.en === role);
+    return ctx.replyWithHTML(`${g.emoji} <b>${g.en} (${faNum(g.count)})</b>\n\nیکی از هیروها را انتخاب کن:` + FOOTER, kb);
+  });
+  bot.action(/^pick:([a-zA-Z]+):hero:(\d+)$/, async (ctx) => {
+    const [, purpose, idStr] = ctx.match;
+    const hero = sd.heroById(idStr);
+    if (!hero) return ctx.answerCbQuery('هیرو پیدا نشد');
+    if (purpose === 'counterTeam') return pickCounterTeamHero(ctx, hero);
+    await ctx.answerCbQuery();
+    if (purpose === 'build') return askLane(ctx, hero);
+    if (purpose === 'counter') {
+      await ctx.replyWithHTML('⏳ در حال گرفتن کانترها…');
+      return sendCounters(ctx, hero);
+    }
+    if (purpose === 'lore') return sendLore(ctx, hero);
+    return sendHeroDetail(ctx, hero);
+  });
+
+  // ---------- کانتر تیمی ----------
+  bot.action('counter:mode:single', async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('⚔️ <b>کانتر یک هیرو</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('counter'));
+  });
+  bot.action('counter:mode:team', async (ctx) => {
+    await ctx.answerCbQuery();
+    await sessionStore.set('counterTeam', ctx.chat.id, { heroes: [] });
+    return ctx.replyWithHTML('🛡️ <b>تیم حریف</b>\n\nهیروهای تیم حریف را یکی‌یکی انتخاب کن (۲ تا ۵ هیرو):' + FOOTER, rolePickerKeyboard('counterTeam'));
+  });
+  bot.action('counter:addmore', async (ctx) => {
+    await ctx.answerCbQuery();
+    return ctx.replyWithHTML('🛡️ <b>تیم حریف</b>\n\nهیروی دیگری را انتخاب کن:' + FOOTER, rolePickerKeyboard('counterTeam'));
+  });
+  bot.action('counter:calc', async (ctx) => {
+    const st = (await sessionStore.get('counterTeam', ctx.chat.id)) || { heroes: [] };
+    const heroes = st.heroes.map((id) => sd.heroById(id)).filter(Boolean);
+    if (heroes.length < 2) {
+      await ctx.answerCbQuery('اول حداقل ۲ هیرو انتخاب کن');
+      return sendCounterPicks(ctx);
+    }
+    await ctx.answerCbQuery();
+    await sessionStore.delete('counterTeam', ctx.chat.id);
+    return sendTeamCounters(ctx, heroes);
+  });
+  bot.action('counter:clear', async (ctx) => {
+    await ctx.answerCbQuery();
+    await sessionStore.delete('counterTeam', ctx.chat.id);
+    return sendCounterMode(ctx);
+  });
+
+  // ---------- پچ و جزئیات هیرو ----------
+  bot.action(/^patch:(\d+)$/, async (ctx) => {
+    const titles = patchTitles();
+    const key = titles[Number(ctx.match[1])];
+    if (!key) return ctx.answerCbQuery('پچ پیدا نشد');
+    await ctx.answerCbQuery();
+    return showPatch(ctx, key);
+  });
+  bot.action(/^hero:(counter|build|lore):(\d+)$/, async (ctx) => {
+    const [, kind, idStr] = ctx.match;
+    const hero = sd.heroById(idStr);
+    if (!hero) return ctx.answerCbQuery('هیرو پیدا نشد');
+    await ctx.answerCbQuery();
+    if (kind === 'counter') {
+      await ctx.replyWithHTML('⏳ در حال گرفتن کانترها…');
+      return sendCounters(ctx, hero);
+    }
+    if (kind === 'build') return askLane(ctx, hero);
+    return sendLore(ctx, hero);
+  });
+
+  // ---------- ماشین وین‌ریت ----------
+  bot.action(/^wr:m:(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    await sessionStore.set('wrPick', ctx.chat.id, { m: Number(ctx.match[1]) });
+    return sendWrStep(ctx, 'now');
+  });
+  bot.action(/^wr:now:(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const st = (await sessionStore.get('wrPick', ctx.chat.id)) || {};
+    if (!st.m) return sendWrStep(ctx, 'm');
+    st.now = Number(ctx.match[1]);
+    await sessionStore.set('wrPick', ctx.chat.id, st);
+    return sendWrStep(ctx, 'tgt');
+  });
+  bot.action(/^wr:tgt:(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const st = (await sessionStore.get('wrPick', ctx.chat.id)) || {};
+    if (!st.m || st.now == null) return sendWrStep(ctx, 'm');
+    const fut = Number(ctx.match[1]);
+    if (fut <= st.now) {
+      return ctx.replyWithHTML('⚠️ وین‌ریت هدف باید بیشتر از وین‌ریت فعلی باشد. هدف دیگری انتخاب کن:' + FOOTER, wrStepKeyboard('tgt'));
+    }
+    const n = wrNeeded(st.m, st.now, fut);
+    await sessionStore.delete('wrPick', ctx.chat.id);
+    return ctx.replyWithHTML(wrResultText(st.m, st.now, fut, n) + FOOTER, homeKeyboard());
   });
 
   bot.catch((err, ctx) => {

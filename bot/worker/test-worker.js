@@ -91,6 +91,24 @@ const msgUpd = (text, fromId = 111) => ({
   },
 });
 
+const cbUpd = (data, fromId = 444) => ({
+  update_id: 4,
+  callback_query: {
+    id: 'cb1',
+    from: { id: fromId, is_bot: false, first_name: 'Test' },
+    message: { message_id: 1, date: 1730000000, chat: { id: fromId, type: 'private' }, text: 'panel' },
+    data,
+  },
+});
+const txtUpd = (text, fromId = 444) => ({
+  update_id: 3,
+  message: {
+    message_id: 2, date: 1730000000, text,
+    chat: { id: fromId, type: 'private' },
+    from: { id: fromId, is_bot: false, first_name: 'Test' },
+  },
+});
+
 async function postUpdate(update, secret = 'test-secret') {
   const headers = { 'content-type': 'application/json' };
   if (secret) headers['x-telegram-bot-api-secret-token'] = secret;
@@ -207,6 +225,64 @@ const anonCap = await askAnswer({ question: 'بهترین بیلد Miya چیست
 checks.push(['/api/ask: ناشناس چهارم سقف ۳ می‌گیرد', anonCap.includes('سهم امروزت') && anonCap.includes('(۳ جواب در روز)')]);
 checks.push(['/api/ask: سطل ناشناس ۳ است', kvStore.get(`coach:anon:${today}`) === '3']);
 
+// ---------- منوی دکمه‌ای — وب‌هوک باید همهٔ کال‌بک‌ها را بدون خطا بگیرد ----------
+// (قبل از سقف سراسری می‌دود؛ شمارندهٔ سراسری اینجا ۲۱ است، پس سقف ۴۰۰ رد نمی‌شود)
+const menuBefore = captured.length;
+const menuStatuses = [];
+async function postMenu(update) {
+  const r = await postUpdate(update);
+  menuStatuses.push(r.status);
+  return r;
+}
+await postMenu(cbUpd('menu_meta'));
+await postMenu(cbUpd('menu_mpl'));
+await postMenu(cbUpd('mpl:id'));
+await postMenu(cbUpd('menu_build'));
+await postMenu(cbUpd('pick:build:role:Marksman'));
+await postMenu(cbUpd('pick:build:hero:1'));
+await postMenu(cbUpd('build:1:gold'));
+await postMenu(cbUpd('menu_counter'));
+await postMenu(cbUpd('counter:mode:single'));
+await postMenu(cbUpd('pick:counter:role:Marksman'));
+await postMenu(cbUpd('pick:counter:hero:1'));
+await postMenu(cbUpd('menu_counter'));
+await postMenu(cbUpd('counter:mode:team'));
+await postMenu(cbUpd('pick:counterTeam:role:Marksman'));
+await postMenu(cbUpd('pick:counterTeam:hero:1'));
+await postMenu(cbUpd('pick:counterTeam:role:Marksman'));
+await postMenu(cbUpd('pick:counterTeam:hero:18'));
+await postMenu(cbUpd('counter:calc'));
+await postMenu(cbUpd('menu_wr'));
+await postMenu(cbUpd('wr:m:100'));
+await postMenu(cbUpd('wr:now:50'));
+await postMenu(cbUpd('wr:tgt:60'));
+await postMenu(cbUpd('menu_news'));
+await postMenu(cbUpd('menu_tier'));
+await postMenu(cbUpd('menu_comps'));
+await postMenu(cbUpd('menu_patch'));
+await postMenu(cbUpd('patch:0'));
+await postMenu(cbUpd('menu_heroes'));
+await postMenu(cbUpd('pick:heroes:role:Marksman'));
+await postMenu(cbUpd('pick:heroes:hero:1'));
+await postMenu(cbUpd('hero:lore:1'));
+await postMenu(cbUpd('coach'));
+const aiBeforeFree = aiCalls.length;
+await postMenu(txtUpd('بهترین بیلد Miya چیه؟'));
+const menuCalls = captured.slice(menuBefore);
+const menuText = menuCalls.map((c) => `${c.payload.text || ''} ${c.payload.caption || ''}`).join('\n');
+const menuKb = menuCalls.map((c) => JSON.stringify(c.payload.reply_markup || {})).join('\n');
+checks.push(['منو (ورکر): همهٔ وب‌هوک‌ها 200', menuStatuses.every((s) => s === 200)]);
+checks.push(['منو (ورکر): متا جدول می‌دهد', menuText.includes('برترین هیروهای متا')]);
+checks.push(['منو (ورکر): MPL چهار لیگ', menuKb.includes('mpl:id') && menuKb.includes('mpl:ph') && menuKb.includes('mpl:my') && menuKb.includes('mpl:kh')]);
+checks.push(['منو (ورکر): بیلد جواب می‌دهد (استاب بیلد ندارد)', menuText.includes('بیلدی پیدا نشد')]);
+checks.push(['منو (ورکر): کانتر تیمی با پوشش', menuText.includes('کانتر تیم حریف') && menuText.includes('از ۲ هیرو')]);
+checks.push(['منو (ورکر): وین‌ریت ۲۵ برد', menuText.includes('۲۵ برد پشت سر هم')]);
+checks.push(['منو (ورکر): اخبار/تیرلیست/ترکیب/پچ', menuText.includes('اخبار و پچ‌نوت‌ها') && menuText.includes('تیرلیست هیروها') && menuText.includes('ترکیب‌های تیمی') && menuText.includes('پچ ۲.۲.۱۶')]);
+checks.push(['منو (ورکر): دکمهٔ داستان در جزئیات هیرو', menuKb.includes('hero:lore:1')]);
+checks.push(['منو (ورکر): داستان با دکمه باز می‌شود', menuText.includes('داستان Miya')]);
+checks.push(['منو (ورکر): راهنمای مربی بدون /ask', menuText.includes('سؤالت را همین‌جا بنویس') && !menuText.includes('/ask')]);
+checks.push(['منو (ورکر): متن آزاد به مربی می‌رسد', menuText.includes('پاسخ تستی مربی') && aiCalls.length === aiBeforeFree + 1]);
+
 // سقف روزانه: شمارندهٔ سراسری را روی ۴۰۰ می‌گذاریم — مدل نباید صدا بخورد
 // (سطل ناشناس را صفر می‌کنیم تا سقف سراسری دیده شود؛ سطل ناشناس پر است)
 kvStore.set(`coach:anon:${today}`, '0');
@@ -217,9 +293,10 @@ const askCapJson = await askCap.json();
 checks.push(['/api/ask: سقف روزانه پیام ثابت می‌دهد', askCap.status === 200 && askCapJson.answer === 'سهم امروز مربی تمام شد، فردا دوباره بپرس']);
 checks.push(['/api/ask: سقف روزانه مدل را صدا نمی‌زند', aiCalls.length === callsBeforeCap]);
 
+const beforeWrongSecret = captured.length;
 const r3 = await postUpdate(msgUpd('/start'), 'wrong-secret');
 checks.push(['وبهوک با سکرت اشتباه: 403', r3.status === 403]);
-checks.push(['وبهوک با سکرت اشتباه: هیچ تماسی نرفت', captured.length === beforeHero + heroCalls.length]);
+checks.push(['وبهوک با سکرت اشتباه: هیچ تماسی نرفت', captured.length === beforeWrongSecret]);
 
 const r4 = await worker.fetch(new Request('https://worker.test/health'), env, {});
 const health = await r4.json();

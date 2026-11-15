@@ -1,5 +1,5 @@
 {
- "fetched_at": "2026-11-14T22:26:26.642391+00:00",
+ "fetched_at": "2026-11-14T23:50:51.466924+00:00",
  "patch_notes": [
   {
    "title": "Patch Notes 2.2.16",
@@ -83,6 +83,20 @@
   }
  ],
  "wiki_recent": [
+  {
+   "title": "Harley",
+   "timestamp": "2026-11-14T23:49:40Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Harley",
+   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/8/81/Hero421-portrait.png/revision/latest?cb=20241021141633"
+  },
+  {
+   "title": "Lesley",
+   "timestamp": "2026-11-14T23:47:55Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Lesley",
+   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/f/f1/Hero531-portrait.png/revision/latest?cb=20241021141920"
+  },
   {
    "title": "Advanced Server",
    "timestamp": "2026-11-14T18:31:23Z",
@@ -172,20 +186,6 @@
    "timestamp": "2026-11-13T16:55:10Z",
    "comment": "",
    "url": "https://mobile-legends.fandom.com/wiki/Zilong/Mastery_Code",
-   "image_url": null
-  },
-  {
-   "title": "Zhask/Mastery Code",
-   "timestamp": "2026-11-13T16:53:03Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Zhask/Mastery_Code",
-   "image_url": null
-  },
-  {
-   "title": "Vexana/Mastery Code",
-   "timestamp": "2026-11-13T16:50:33Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Vexana/Mastery_Code",
    "image_url": null
   }
  ]
