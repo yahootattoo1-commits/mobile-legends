@@ -201,6 +201,21 @@ vm.runInContext(src, sandbox);
     ['هم‌تیمی‌های خوب Masha: Bruno', mashaHTML.includes('هم‌تیمی‌های خوب') && mashaHTML.includes('Bruno')],
     ['هم‌تیمی‌های خوب بدون نام منبع', !mashaHTML.includes('Fandom') && !mashaHTML.includes('mlbb.io') && !mashaHTML.includes('Rone') && !mashaHTML.includes('ویکی')],
   ];
+  // ---------- شیشه‌ای (glassmorphism) — چک استاتیک روی style.css ----------
+  const css = fs.readFileSync('/home/hatch/workspace/mlbb-bot/public/style.css', 'utf8');
+  const checks10 = [
+    ['شیشه‌ای: backdrop-filter دارد', (css.match(/backdrop-filter: blur\(/g) || []).length >= 8],
+    ['شیشه‌ای: -webkit- fallback دارد', (css.match(/-webkit-backdrop-filter: blur\(/g) || []).length >= 8],
+    ['شیشه‌ای: بوردر روشن rgba(.12) دارد', css.includes('rgba(255, 255, 255, 0.12)')],
+    ['شیشه‌ای: تب‌بار شیشه‌ای است', /\.tabs \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: کارت هیرو شیشه‌ای است', /\.hero-card \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: کارت ویژگی شیشه‌ای است', /\.feature-card \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: اسپات‌لایت شیشه‌ای است', /\.spotlight-card \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: چیپ نقش شیشه‌ای است', /\.role-chip \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: دکمهٔ اصلی شیشه‌ای است', /\.search-row button, \.primary \{[^}]*backdrop-filter: blur\(/.test(css)],
+    ['شیشه‌ای: ورودی شیشه‌ای است', /^input, select \{[^}]*backdrop-filter: blur\(/m.test(css)],
+  ];
   for (const [name, ok] of checks9) console.log((ok ? 'PASS ' : 'FAIL ') + name);
-  if ([...checks, ...checks2, ...checks3, ...checks4, ...checks5, ...checks6, ...checks7, ...checks8, ...checks9].some(([, ok]) => !ok)) process.exit(1);
+  for (const [name, ok] of checks10) console.log((ok ? 'PASS ' : 'FAIL ') + name);
+  if ([...checks, ...checks2, ...checks3, ...checks4, ...checks5, ...checks6, ...checks7, ...checks8, ...checks9, ...checks10].some(([, ok]) => !ok)) process.exit(1);
 })();

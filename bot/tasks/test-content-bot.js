@@ -99,6 +99,8 @@ async function main() {
     },
   });
   const U = 444; // کاربر عادی تست منو
+  // /start — کپشن رنگی + دکمه‌های رنگی
+  await bot2.handleUpdate(upd('/start', U, 'Menu'));
   // متا و MPL
   await bot2.handleUpdate(updCb('menu_meta', U, 'Menu'));
   await bot2.handleUpdate(updCb('menu_mpl', U, 'Menu'));
@@ -145,6 +147,19 @@ async function main() {
   // متن آزاد وسط جلسهٔ /player به مربی نمی‌رسد
   await bot2.handleUpdate(upd('/player', 555, 'Player'));
   await bot2.handleUpdate(updText('12345678', 555, 'Player'));
+  const aiCallsAfterPlayer = aiCalls2.length;
+  // مربی: سؤال Masha — هم‌تیمی‌ها + بیلد + آمار در پرامپت
+  await bot2.handleUpdate(upd('/ask بهترین هم‌تیمی‌های Masha کیان؟', U, 'Menu'));
+  // آیتم‌ها: دسته‌ها → آیتم‌ها → جزئیات
+  await bot2.handleUpdate(updCb('menu_items', U, 'Menu'));
+  await bot2.handleUpdate(updCb('itemcat:Attack', U, 'Menu'));
+  await bot2.handleUpdate(updCb('item:a001', U, 'Menu'));
+  await bot2.handleUpdate(upd('/item', U, 'Menu'));
+  await bot2.handleUpdate(upd('/item Berserker', U, 'Menu'));
+  // امبلم‌ها و اسپل‌ها: دکمه‌ها → جزئیات
+  await bot2.handleUpdate(updCb('menu_emblems', U, 'Menu'));
+  await bot2.handleUpdate(updCb('emblem:002', U, 'Menu'));
+  await bot2.handleUpdate(updCb('spell:0', U, 'Menu'));
 
   const textOf = (pred) => {
     const c = captured.find((x) => pred(x.payload.text || x.payload.caption || ''));
@@ -258,6 +273,21 @@ async function main() {
   const coachHint = textOf2((t) => t.includes('سؤالت را همین‌جا بنویس'));
   const freeCoachMsg = textOf2((t) => t.includes('پاسخ تستی مربی'));
   const playerZoneMsg = textOf2((t) => t.includes('Zone ID'));
+  const startCaption = textOf2((t) => t.includes('Persian Mlbb') && t.includes('هیروها و متا'));
+  const startKbEntry = kbOf2((k) => k.includes('menu_heroes') && k.includes('menu_items'));
+  const startKb = startKbEntry ? JSON.stringify(startKbEntry.payload.reply_markup || {}) : null;
+  const askSys = aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages);
+  const mashaAsk = aiCalls2[1] && JSON.stringify(aiCalls2[1].opts.messages);
+  const itemCatsKb = kbOf2((k) => k.includes('itemcat:Attack') && k.includes('itemcat:Magic'));
+  const itemListKb = kbOf2((k) => k.includes('item:a001'));
+  const itemDetailMsg = textOf2((t) => t.includes("Berserker's Fury") && t.includes('دسته:'));
+  const itemDetailCount = captured2.filter((x) => (x.payload.text || '').includes("Berserker's Fury")).length;
+  const itemNoArgKb = kbOf2((k) => k.includes('itemcat:Defense'));
+  const emblemKb = kbOf2((k) => k.includes('emblem:001') && k.includes('emblem:002'));
+  const emblemHasSpells = !!kbOf2((k) => k.includes('spell:0'));
+  const emblemDetailMsg = textOf2((t) => t.includes('Tank') && t.includes('تلنت‌ها'));
+  const spellDetailMsg = captured2.find((x) => (x.payload.text || '').startsWith('🪄 <b>'));
+  const allRepliesText = [...captured, ...captured2].map((x) => `${x.payload.text || ''} ${x.payload.caption || ''}`).join('\n');
   const menuChecks = [
     ['منو: متا جدول را نشان می‌دهد', !!menuMetaMsg],
     ['منو: متا هیچ دستوری نمی‌گوید', menuMetaMsg && !menuMetaMsg.includes('/meta')],
@@ -276,7 +306,23 @@ async function main() {
     ['منو: دکمهٔ داستان، داستان را باز می‌کند', !!loreViaBtn],
     ['منو: راهنمای مربی بدون /ask', coachHint && !coachHint.includes('/ask')],
     ['منو: متن آزاد به مربی می‌رسد', !!freeCoachMsg && aiCallsAfterFreeText === 1],
-    ['منو: متن آزاد وسط /player به مربی نمی‌رسد', !!playerZoneMsg && aiCalls2.length === 1],
+    ['منو: متن آزاد وسط /player به مربی نمی‌رسد', !!playerZoneMsg && aiCallsAfterPlayer === 1],
+    ['منو: کپشن /start خط‌های رنگی دارد', startCaption && startCaption.includes('🟡') && startCaption.includes('هیروها و متا') && startCaption.includes('🟣') && startCaption.includes('مربی') && startCaption.includes('🟤') && startCaption.includes('آیتم‌ها و امبلم‌ها') && startCaption.includes('🔵') && startCaption.includes('وین‌ریت و MPL')],
+    ['منو: دکمه‌ها پیشوند رنگی دارند', startKb && startKb.includes('🟡 🦸 هیروها') && startKb.includes('🟢 ⚔️ کانتر') && startKb.includes('🟤 🧰 آیتم‌ها') && startKb.includes('🟤 🛡️ امبلم‌ها') && startKb.includes('🔵 🧮 ماشین وین‌ریت') && startKb.includes('🟠 📰 اخبار') && startKb.includes('🔴 🏆 تیرلیست') && startKb.includes('⚪ 📖 داستان‌ها') && startKb.includes('🟣 🧠 مربی هوش مصنوعی')],
+    ['منو: callbackها همان قبلی‌اند', startKb && startKb.includes('menu_meta') && startKb.includes('menu_news') && startKb.includes('menu_items') && startKb.includes('menu_emblems') && !!captured.find((x) => JSON.stringify(x.payload.reply_markup || {}).includes('admin_users'))],
+    ['منو: /ask ساختار مربی را دارد', askSys && askSys.includes('خلاصه') && askSys.includes('چرا') && askSys.includes('چیکار کن')],
+    ['منو: /ask مربی Masha هم‌تیمی دارد', mashaAsk && mashaAsk.includes('هم‌تیمی') && mashaAsk.includes('Bruno')],
+    ['منو: /ask مربی Masha بیلد و آمار دارد', mashaAsk && mashaAsk.includes('بیلد ۶ آیتمی') && mashaAsk.includes('اسپل: Flicker') && mashaAsk.includes('امبلم: Fighter') && mashaAsk.includes('آمار ۷ روز اخیر')],
+    ['منو: /ask جهت کانتر Masha صریح است', mashaAsk && mashaAsk.includes('این هیروها Masha را کانتر می‌کنند') && mashaAsk.includes('Masha این هیروها را کانتر می‌کند')],
+    ['منو: آیتم‌ها دسته‌ها را نشان می‌دهد', !!itemCatsKb],
+    ['منو: دسته Attack آیتم‌ها را نشان می‌دهد', !!itemListKb],
+    ['منو: جزئیات Berserker', itemDetailMsg && itemDetailMsg.includes('Attack') && itemDetailMsg.includes('قیمت')],
+    ['منو: /item بدون نام دسته‌ها را می‌دهد', !!itemNoArgKb],
+    ['منو: /item Berserker جزئیات می‌دهد', itemDetailCount >= 2],
+    ['منو: امبلم‌ها دکمه دارند', !!emblemKb],
+    ['منو: جزئیات Tank تلنت دارد', emblemDetailMsg && emblemDetailMsg.includes('Tank')],
+    ['منو: اسپل جزئیات می‌دهد', !emblemHasSpells || !!spellDetailMsg],
+    ['منو: هیچ پاسخی /item یا /items نمی‌گوید', !allRepliesText.includes('/item')],
   ];
   for (const [name, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + name);
   for (const [name, ok] of menuChecks) console.log((ok ? 'PASS ' : 'FAIL ') + name);

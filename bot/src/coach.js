@@ -6,7 +6,7 @@ const sd = require('./staticData');
 const { faNum, pct, roleFa, laneFa } = require('./fa');
 
 const COACH_MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
-const COACH_DAILY_CAP = 400;
+const COACH_DAILY_CAP = 350; // سقف روزانهٔ کل جواب‌ها — با جواب‌های بلندتر (~۲۵–۳۰ نورون)، ۳۵۰ جواب ≈ ۱۰هزار نورون بودجهٔ رایگان
 const COACH_DEFAULT_LIMIT = 3;
 const COACH_CAP_MSG = 'سهم امروز مربی تمام شد، فردا دوباره بپرس';
 const COACH_UNAVAILABLE_MSG = 'مربی الان در دسترس نیست، کمی بعد دوباره بپرس';
@@ -125,7 +125,7 @@ async function askCoach(env, deps, question, userId) {
         { role: 'user', content: userText },
       ],
       temperature: 0.3,
-      max_tokens: 400,
+      max_tokens: 700,
     });
     const answer = res && typeof res.response === 'string' ? res.response.trim() : '';
     if (!answer) throw new Error('empty model response');
@@ -146,7 +146,7 @@ async function askCoach(env, deps, question, userId) {
 
 module.exports = { askCoach, detectHeroes, coachIsAdmin, coachUserCapMsg, coachLimitFromOverride, getCoachUsage, setCoachLimit, COACH_MODEL, COACH_DAILY_CAP, COACH_DEFAULT_LIMIT, COACH_CAP_MSG, COACH_UNAVAILABLE_MSG, COACH_NO_AI_MSG };
 
-const SYSTEM_PROMPT = 'تو «مربی هوش مصنوعی» ربات Persian MLBB هستی. فقط به فارسی جواب بده؛ کوتاه و کاربردی (حداکثر حدود ۳۰۰ کلمه). برای هر واقعیتی دربارهٔ هیروها، آیتم‌ها، بیلد، کانتر و متا فقط از داده‌هایی که در پیام کاربر داده شده استفاده کن؛ هیچ عدد، بیلد یا کانتری را از خودت نساز و اگر داده‌ای نداری، بگو نمی‌دانی. جهت کانتر را قاطی نکن: «این هیروها X را کانتر می‌کنند» یعنی آن هیروها جلوی X قوی‌ترند، و «X این هیروها را کانتر می‌کند» یعنی X جلوی آن‌ها قوی‌تر است. اگر سؤال ربطی به موبایل لجندز ندارد، خیلی کوتاه بگو فقط دربارهٔ این بازی جواب می‌دهی. هیچ‌وقت از منبع داده حرف نزن و هیچ لینکی نده.';
+const SYSTEM_PROMPT = 'تو «مربی هوش مصنوعی» ربات Persian MLBB هستی — یک مربی شخصی موبایل لجندز که مستقیم با «تو» حرف می‌زند: گرم، صمیمی و رک، مثل مربی واقعی که کنار تو نشسته. به فارسی جواب بده. ساختار هر جواب همیشه همین است: اول یک خط «خلاصه: ...» — حکم نهایی در یک جمله؛ بعد «چرا» — دلیلش را با همان داده‌هایی که در پیام کاربر داده شده توضیح بده؛ بعد «چیکار کن» — قدم‌های مشخص و کاربردی، به ترتیب اولویت؛ در پایان یک نکتهٔ کوتاه مربی‌گونه. فقط وقتی سؤال اطلاعات لازم را ندارد (مثلاً لین یا نقش یا رنک مشخص نیست و بدون آن نمی‌شود جواب درست داد) به‌جای نکتهٔ آخر یک سؤال کوتاه بپرس؛ وگرنه سؤال نپرس. حداکثر حدود ۴۵۰ کلمه. برای هر واقعیتی دربارهٔ هیروها، آیتم‌ها، بیلد، کانتر و متا فقط از داده‌هایی که در پیام کاربر داده شده استفاده کن؛ هیچ عدد، بیلد یا کانتری را از خودت نساز و اگر داده‌ای نداری، بگو نمی‌دانم. جهت کانتر را قاطی نکن: «این هیروها X را کانتر می‌کنند» یعنی آن هیروها جلوی X قوی‌ترند، و «X این هیروها را کانتر می‌کند» یعنی X جلوی آن‌ها قوی‌تر است. اگر سؤال ربطی به موبایل لجندز ندارد، خیلی کوتاه بگو فقط دربارهٔ این بازی جواب می‌دهی. هیچ‌وقت از منبع داده حرف نزن و هیچ لینکی نده.';
 
 function norm(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -195,6 +195,12 @@ function heroGrounding(hero) {
     if ((mu.counters || []).length) {
       lines.push(`${hero.hero_name} این هیروها را کانتر می‌کند: ` + mu.counters.slice(0, 3).map((c) => c.name).join('، '));
     }
+  }
+  // هم‌تیمی‌های خوب: اگر هیرو در یکی از ترکیب‌های تیمی هست، ۴ هم‌تیمی دیگرش
+  const comp = (sd.teamComps || []).find((c) => (c.heroes || []).some((x) => norm(x.name) === norm(hero.hero_name)));
+  if (comp) {
+    const mates = (comp.heroes || []).filter((x) => norm(x.name) !== norm(hero.hero_name));
+    if (mates.length) lines.push(`هم‌تیمی‌های خوب (${comp.title_fa || comp.title}): ` + mates.map((x) => `${x.name}${x.lane ? ` (${laneFa([x.lane])})` : ''}`).join('، '));
   }
   return lines.join('\n');
 }

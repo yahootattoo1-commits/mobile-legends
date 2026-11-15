@@ -39,6 +39,12 @@ globalThis.fetch = async (url, init) => {
     if (u.includes('/academy/meta/version')) {
       return jsonRes({ code: 0, message: 'OK', data: { records: [{ data: { game_version: '2.1.18' } }] } });
     }
+    if (u.includes('/academy/spells')) {
+      return jsonRes({ code: 0, message: 'OK', data: { records: [
+        { data: { __data: { skillname: 'Flicker', skilldesc: 'Blink a short distance.', skillicon: 'https://example.com/flicker.png' } } },
+        { data: { __data: { skillname: 'Retribution', skilldesc: 'Deal true damage to creeps.', skillicon: 'https://example.com/retribution.png' } } },
+      ] } });
+    }
     return jsonRes({ code: 0, message: 'OK', data: { records: [] } });
   }
   if (u.startsWith(TG_BASE + '/bot')) {
@@ -266,6 +272,13 @@ await postMenu(cbUpd('pick:heroes:role:Marksman'));
 await postMenu(cbUpd('pick:heroes:hero:1'));
 await postMenu(cbUpd('hero:lore:1'));
 await postMenu(cbUpd('coach'));
+await postMenu(cbUpd('menu_home'));
+await postMenu(cbUpd('menu_items'));
+await postMenu(cbUpd('itemcat:Attack'));
+await postMenu(cbUpd('item:a001'));
+await postMenu(cbUpd('menu_emblems'));
+await postMenu(cbUpd('emblem:002'));
+await postMenu(cbUpd('spell:0'));
 const aiBeforeFree = aiCalls.length;
 await postMenu(txtUpd('بهترین بیلد Miya چیه؟'));
 const menuCalls = captured.slice(menuBefore);
@@ -282,12 +295,16 @@ checks.push(['منو (ورکر): دکمهٔ داستان در جزئیات هی�
 checks.push(['منو (ورکر): داستان با دکمه باز می‌شود', menuText.includes('داستان Miya')]);
 checks.push(['منو (ورکر): راهنمای مربی بدون /ask', menuText.includes('سؤالت را همین‌جا بنویس') && !menuText.includes('/ask')]);
 checks.push(['منو (ورکر): متن آزاد به مربی می‌رسد', menuText.includes('پاسخ تستی مربی') && aiCalls.length === aiBeforeFree + 1]);
+checks.push(['منو (ورکر): دکمه‌ها پیشوند رنگی دارند', menuKb.includes('🟡 🦸 هیروها') && menuKb.includes('🟤 🧰 آیتم‌ها') && menuKb.includes('🟣 🧠 مربی هوش مصنوعی') && menuKb.includes('⚪ 📖 داستان‌ها')]);
+checks.push(['منو (ورکر): آیتم‌ها دسته → آیتم → جزئیات', menuKb.includes('itemcat:Attack') && menuKb.includes('item:a001') && menuText.includes("Berserker's Fury") && menuText.includes('دسته: Attack')]);
+checks.push(['منو (ورکر): امبلم‌ها و اسپل دکمه دارند', menuKb.includes('emblem:001') && menuKb.includes('spell:0')]);
+checks.push(['منو (ورکر): جزئیات Tank و اسپل', menuText.includes('Tank') && menuText.includes('تلنت‌ها') && menuText.includes('Flicker')]);
 
-// سقف روزانه: شمارندهٔ سراسری را روی ۴۰۰ می‌گذاریم — مدل نباید صدا بخورد
+// سقف روزانه: شمارندهٔ سراسری را روی ۳۵۰ می‌گذاریم — مدل نباید صدا بخورد
 // (سطل ناشناس را صفر می‌کنیم تا سقف سراسری دیده شود؛ سطل ناشناس پر است)
 kvStore.set(`coach:anon:${today}`, '0');
 const callsBeforeCap = aiCalls.length;
-kvStore.set('coach:' + today, '400');
+kvStore.set('coach:' + today, '350');
 const askCap = await postAsk({ question: 'بهترین بیلد Miya چیست؟' });
 const askCapJson = await askCap.json();
 checks.push(['/api/ask: سقف روزانه پیام ثابت می‌دهد', askCap.status === 200 && askCapJson.answer === 'سهم امروز مربی تمام شد، فردا دوباره بپرس']);

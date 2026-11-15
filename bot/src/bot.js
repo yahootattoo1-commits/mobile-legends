@@ -197,18 +197,22 @@ function createBot(env, deps) {
 
   function webAppButton() {
     if (!miniappUrl) return null;
-    return Markup.button.webApp('🎮 باز کردن مینی‌اپ', miniappUrl);
+    return Markup.button.webApp('⚪ 🎮 باز کردن مینی‌اپ', miniappUrl);
   }
 
+  // رنگ هر بخش در منو — دکمه‌های تلگرام رنگ پس‌زمینه نمی‌گیرند، پس دایرهٔ رنگی
+  // جای رنگ را می‌گیرد: 🟡 هیروها/متا 🟢 کانتر/بیلد 🟤 آیتم‌ها/امبلم‌ها
+  // 🔵 وین‌ریت/MPL 🟠 اخبار/پچ 🔴 تیرلیست/ترکیب تیمی ⚪ داستان‌ها/مینی‌اپ 🟣 مربی
   function mainMenuKeyboard(isAdminUser = false) {
     const rows = [
-      [Markup.button.callback('🦸 هیروها', 'menu_heroes'), Markup.button.callback('📊 متا', 'menu_meta')],
-      [Markup.button.callback('⚔️ کانتر', 'menu_counter'), Markup.button.callback('🛠️ بیلد', 'menu_build')],
-      [Markup.button.callback('🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🏆 MPL', 'menu_mpl')],
-      [Markup.button.callback('📰 اخبار', 'menu_news'), Markup.button.callback('🏆 تیرلیست', 'menu_tier')],
-      [Markup.button.callback('👥 ترکیب تیمی', 'menu_comps'), Markup.button.callback('📖 داستان‌ها', 'menu_lore')],
-      [Markup.button.callback('📝 پچ‌نوت‌ها', 'menu_patch')],
-      [Markup.button.callback('🧠 مربی هوش مصنوعی', 'coach')],
+      [Markup.button.callback('🟡 🦸 هیروها', 'menu_heroes'), Markup.button.callback('🟡 📊 متا', 'menu_meta')],
+      [Markup.button.callback('🟢 ⚔️ کانتر', 'menu_counter'), Markup.button.callback('🟢 🛠️ بیلد', 'menu_build')],
+      [Markup.button.callback('🟤 🧰 آیتم‌ها', 'menu_items'), Markup.button.callback('🟤 🛡️ امبلم‌ها', 'menu_emblems')],
+      [Markup.button.callback('🔵 🧮 ماشین وین‌ریت', 'menu_wr'), Markup.button.callback('🔵 🏆 MPL', 'menu_mpl')],
+      [Markup.button.callback('🟠 📰 اخبار', 'menu_news'), Markup.button.callback('🔴 🏆 تیرلیست', 'menu_tier')],
+      [Markup.button.callback('🔴 👥 ترکیب تیمی', 'menu_comps'), Markup.button.callback('⚪ 📖 داستان‌ها', 'menu_lore')],
+      [Markup.button.callback('🟠 📝 پچ‌نوت‌ها', 'menu_patch')],
+      [Markup.button.callback('🟣 🧠 مربی هوش مصنوعی', 'coach')],
     ];
     if (isAdminUser) rows.push([Markup.button.callback('🛠️ پنل مدیریت', 'menu_admin')]);
     const wa = webAppButton();
@@ -220,19 +224,21 @@ function createBot(env, deps) {
 
 همهٔ بخش‌ها با دکمه‌ها در دسترس‌اند — فقط بزن و انتخاب کن، چیزی لازم نیست بنویسی:
 
-🦸 <b>هیروها</b> — لیست ۱۳۳ هیرو بر اساس نقش؛ روی هر هیرو بزن تا اطلاعات، اسکیل‌ها و وین‌ریت زنده‌اش را ببینی
-📊 <b>متا</b> — برترین هیروهای متا در ۷ روز اخیر
-⚔️ <b>کانتر</b> — بهترین کانتر برای یک هیرو، یا برای کل تیم حریف (۲ تا ۵ هیرو)
-🛠️ <b>بیلد</b> — بیلد پیشنهادی (۶ آیتم) + بیلد هر لین
-🧮 <b>ماشین وین‌ریت</b> — چند برد پشت سر هم لازم است تا به وین‌ریت هدفت برسی؟
-🏆 <b>MPL</b> — جدول لیگ‌های اندونزی، فیلیپین، مالزی و کامبوج
-📰 <b>اخبار</b> — اخبار، ایونت‌ها و گفتگوهای تازه
-🏆 <b>تیرلیست</b> — رتبه‌بندی هیروها
-👥 <b>ترکیب تیمی</b> — ترکیب‌های پیشنهادی + راهنما
-📖 <b>داستان‌ها</b> — داستان کامل هر هیرو به فارسی
-📝 <b>پچ‌نوت‌ها</b> — متن کامل پچ‌ها به فارسی
-🧠 <b>مربی هوش مصنوعی</b> — سؤالت را همین‌جا بنویس؛ بدون دستور، فقط سؤال را بنویس (روزانه ۳ جواب برای هر کاربر)
-🎮 <b>مینی‌اپ</b> — با دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود
+🟡 🦸 <b>هیروها</b> — لیست ۱۳۳ هیرو بر اساس نقش؛ روی هر هیرو بزن تا اطلاعات، اسکیل‌ها و وین‌ریت زنده‌اش را ببینی
+🟡 📊 <b>متا</b> — برترین هیروهای متا در ۷ روز اخیر
+🟢 ⚔️ <b>کانتر</b> — بهترین کانتر برای یک هیرو، یا برای کل تیم حریف (۲ تا ۵ هیرو)
+🟢 🛠️ <b>بیلد</b> — بیلد پیشنهادی (۶ آیتم) + بیلد هر لین
+🟤 🧰 <b>آیتم‌ها</b> — همهٔ آیتم‌ها بر اساس دسته؛ روی هر آیتم بزن تا جزییاتش را ببینی
+🟤 🛡️ <b>امبلم‌ها</b> — ۷ امبلم و ۱۲ اسپل؛ روی هر کدام بزن تا جزییاتش را ببینی
+🔵 🧮 <b>ماشین وین‌ریت</b> — چند برد پشت سر هم لازم است تا به وین‌ریت هدفت برسی؟
+🔵 🏆 <b>MPL</b> — جدول لیگ‌های اندونزی، فیلیپین، مالزی و کامبوج
+🟠 📰 <b>اخبار</b> — اخبار، ایونت‌ها و گفتگوهای تازه
+🔴 🏆 <b>تیرلیست</b> — رتبه‌بندی هیروها
+🔴 👥 <b>ترکیب تیمی</b> — ترکیب‌های پیشنهادی + راهنما
+⚪ 📖 <b>داستان‌ها</b> — داستان کامل هر هیرو به فارسی
+🟠 📝 <b>پچ‌نوت‌ها</b> — متن کامل پچ‌ها به فارسی
+🟣 🧠 <b>مربی هوش مصنوعی</b> — سؤالت را همین‌جا بنویس؛ بدون دستور، فقط سؤال را بنویس (روزانه ۳ جواب برای هر کاربر)
+⚪ 🎮 <b>مینی‌اپ</b> — با دکمهٔ «باز کردن مینی‌اپ» در /start باز می‌شود
 
 👤 اتصال پروفایل بازی با دستور /player انجام می‌شود (Game ID و کد تایید داخل بازی را خودت می‌نویسی)؛ برای لغو /cancel.
 
@@ -247,13 +253,16 @@ function createBot(env, deps) {
   }
   function heroDetailKeyboard(id) {
     return Markup.inlineKeyboard([
-      [Markup.button.callback('⚔️ کانتر', `hero:counter:${id}`), Markup.button.callback('🛠️ بیلد', `hero:build:${id}`)],
-      [Markup.button.callback('📖 داستان', `hero:lore:${id}`), Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+      [Markup.button.callback('🟢 ⚔️ کانتر', `hero:counter:${id}`), Markup.button.callback('🟢 🛠️ بیلد', `hero:build:${id}`)],
+      [Markup.button.callback('⚪ 📖 داستان', `hero:lore:${id}`), Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
   }
   // انتخاب‌کنندهٔ هیرو بر اساس هدف: heroes | build | counter | counterTeam | lore
+  // — رنگ دکمه‌های نقش، رنگ بخش همان هدف است (🟡 هیروها، 🟢 کانتر/بیلد، ⚪ داستان)
+  const PICK_COLOR = { heroes: '🟡', build: '🟢', counter: '🟢', counterTeam: '🟢', lore: '⚪' };
   function rolePickerKeyboard(purpose) {
-    const rows = sd.heroesByRole().map((g) => [Markup.button.callback(`${g.emoji} ${g.en} (${faNum(g.count)})`, `pick:${purpose}:role:${g.en}`)]);
+    const dot = PICK_COLOR[purpose] || '';
+    const rows = sd.heroesByRole().map((g) => [Markup.button.callback(`${dot} ${g.emoji} ${g.en} (${faNum(g.count)})`, `pick:${purpose}:role:${g.en}`)]);
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
   }
@@ -271,8 +280,8 @@ function createBot(env, deps) {
   // ---------- کانتر: انتخاب تک‌هیرو یا تیم حریف ----------
   function counterModeKeyboard() {
     return Markup.inlineKeyboard([
-      [Markup.button.callback('⚔️ یک هیرو', 'counter:mode:single')],
-      [Markup.button.callback('🛡️ تیم حریف (۲ تا ۵ هیرو)', 'counter:mode:team')],
+      [Markup.button.callback('🟢 ⚔️ یک هیرو', 'counter:mode:single')],
+      [Markup.button.callback('🟢 🛡️ تیم حریف (۲ تا ۵ هیرو)', 'counter:mode:team')],
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
   }
@@ -284,8 +293,8 @@ function createBot(env, deps) {
     const names = picks.heroes.map((id) => sd.heroById(id)?.hero_name).filter(Boolean);
     const t = `🛡️ <b>تیم حریف</b>\n\nانتخاب شده: ${names.length ? names.map((n) => `<b>${esc(n)}</b>`).join('، ') : '—'} (${faNum(names.length)} هیرو)\n\nهیروهای تیم حریف را یکی‌یکی انتخاب کن (۲ تا ۵ هیرو).` + FOOTER;
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('➕ اضافه کردن هیروی دیگر', 'counter:addmore')],
-      [Markup.button.callback('✅ محاسبه', 'counter:calc'), Markup.button.callback('❌ پاک‌کردن', 'counter:clear')],
+      [Markup.button.callback('🟢 ➕ اضافه کردن هیروی دیگر', 'counter:addmore')],
+      [Markup.button.callback('🟢 ✅ محاسبه', 'counter:calc'), Markup.button.callback('🟢 ❌ پاک‌کردن', 'counter:clear')],
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML(t, kb);
@@ -315,7 +324,7 @@ function createBot(env, deps) {
     const prefix = step === 'm' ? 'wr:m' : step === 'now' ? 'wr:now' : 'wr:tgt';
     const rows = [];
     for (let i = 0; i < values.length; i += 2) {
-      rows.push(values.slice(i, i + 2).map((v) => Markup.button.callback(step === 'm' ? faNum(v) : `${faNum(v)}٪`, `${prefix}:${v}`)));
+      rows.push(values.slice(i, i + 2).map((v) => Markup.button.callback(`🔵 ${step === 'm' ? faNum(v) : `${faNum(v)}٪`}`, `${prefix}:${v}`)));
     }
     rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
     return Markup.inlineKeyboard(rows);
@@ -343,7 +352,7 @@ function createBot(env, deps) {
       ? '🎮 با دکمهٔ زیر مینی‌اپ فارسی را باز کن:'
       : '⚠️ مینی‌اپ هنوز روی هاست HTTPS تنظیم نشده است (MINIAPP_URL خالی است) — دستورهای زیر بدون مینی‌اپ هم کار می‌کنند.';
     const caption =
-      `👋 سلام! به <b>Persian Mlbb</b> خوش آمدی.\n\nربات فارسی Mobile Legends: Bang Bang — هیروها بر اساس نقش، متا، کانتر، بیلد، آیتم، امبلم، اخبار و تیرلیست و جدول MPL، همه به فارسی و با دادهٔ زنده.\n\n${waNote}\n\nبرای راهنما: /help` +
+      `👋 سلام! به <b>Persian Mlbb</b> خوش آمدی.\n\nربات فارسی Mobile Legends: Bang Bang — همه‌چیز با دکمه، به فارسی و با دادهٔ زنده:\n\n🟡 <b>هیروها و متا</b> — همهٔ هیروها و برترین‌های متا\n🟢 <b>کانتر و بیلد</b> — کانتر حریف و بهترین بیلد\n🟤 <b>آیتم‌ها و امبلم‌ها</b> — همهٔ آیتم‌ها، امبلم‌ها و اسپل‌ها\n🔵 <b>وین‌ریت و MPL</b> — ماشین وین‌ریت و جدول لیگ‌ها\n🟠 <b>اخبار و پچ</b> — تازه‌ترین اخبار و پچ‌نوت‌ها\n🔴 <b>تیرلیست و ترکیب تیمی</b> — رتبه‌بندی و بهترین ترکیب‌ها\n⚪ <b>داستان‌ها و مینی‌اپ</b> — داستان هیروها و مینی‌اپ فارسی\n🟣 <b>مربی</b> — سؤالت را همین‌جا بنویس، جواب مربی می‌گیری\n\n${waNote}\n\nبرای راهنما: /help` +
       (isAdmin(ctx) ? '\n\n🛠️ تو مدیر ربات هستی — /admin برای پنل مدیریت.' : '') + FOOTER;
     // پیام ورود با عکس خوشامد — Node: فایل assets/welcome.jpg (وگرنه logo.jpg)؛ Workers: URL عمومی
     if (welcomePhoto) {
@@ -560,7 +569,7 @@ function createBot(env, deps) {
   // ---------- /build ----------
   async function askLane(ctx, hero) {
     const kb = Markup.inlineKeyboard([
-      ...LANES.map((l) => [Markup.button.callback(l.fa, `build:${hero.mlid}:${l.v}`)]),
+      ...LANES.map((l) => [Markup.button.callback(`🟢 ${l.fa}`, `build:${hero.mlid}:${l.v}`)]),
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML(`🛠️ بیلد <b>${esc(hero.hero_name)}</b> برای کدام لین؟` + FOOTER, kb);
@@ -681,7 +690,7 @@ function createBot(env, deps) {
     const titles = patchTitles();
     if (!titles.length) return ctx.replyWithHTML('پچ‌نوتی فعلاً در دسترس نیست.' + FOOTER, homeKeyboard());
     const kb = Markup.inlineKeyboard([
-      ...titles.map((title, i) => [Markup.button.callback((((sd.faContent || {}).patches || {})[title] || {}).title_fa || title, `patch:${i}`)]),
+      ...titles.map((title, i) => [Markup.button.callback(`🟠 ${(((sd.faContent || {}).patches || {})[title] || {}).title_fa || title}`, `patch:${i}`)]),
       [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
     ]);
     return ctx.replyWithHTML('📝 <b>پچ‌نوت‌ها</b>\n\nکدام پچ را می‌خواهی ببینی؟' + FOOTER, kb);
@@ -760,31 +769,40 @@ function createBot(env, deps) {
   bot.command('tier', async (ctx) => sendTier(ctx));
 
   // ---------- /items و /item ----------
-  bot.command('items', async (ctx) => {
+  // ---------- آیتم‌ها و امبلم‌ها: دکمه‌ای ----------
+  // دسته‌های آیتم از خود داده خوانده می‌شوند (Attack / Magic / Defense / ...)
+  function itemCategories() {
     const byCat = {};
     for (const it of sd.items) {
       const c = it.item_category || 'سایر';
       (byCat[c] = byCat[c] || []).push(it);
     }
-    let t = `🧰 <b>آیتم‌ها (${faNum(sd.items.length)} آیتم)</b>\n`;
-    for (const [cat, list] of Object.entries(byCat)) {
-      t += `\n<b>${esc(cat)}:</b> ` + list.slice(0, 12).map((i) => esc(i.item_name)).join('، ');
-      if (list.length > 12) t += ` و ${faNum(list.length - 12)} تای دیگر…`;
+    return Object.entries(byCat).sort((a, b) => b[1].length - a[1].length);
+  }
+  function itemCategoryKeyboard() {
+    const rows = itemCategories().map(([c, list]) => [Markup.button.callback(`🟤 ${c} (${faNum(list.length)})`, `itemcat:${c}`)]);
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  function sendItemCategories(ctx) {
+    return ctx.replyWithHTML(`🧰 <b>آیتم‌ها (${faNum(sd.items.length)} آیتم)</b>\n\nدسته را انتخاب کن:` + FOOTER, itemCategoryKeyboard());
+  }
+  function itemListKeyboard(cat) {
+    const list = sd.items.filter((it) => (it.item_category || 'سایر') === cat);
+    const rows = [];
+    for (let i = 0; i < list.length; i += 2) {
+      rows.push(list.slice(i, i + 2).map((it) => Markup.button.callback(it.item_name, `item:${it.id}`)));
     }
-    t += '\n\nبرای جزییات یک آیتم: <code>/item Berserker</code>';
-    t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
-  bot.command('item', async (ctx) => {
-    const q = ctx.message.text.replace(/^\/item(@\S+)?\s*/i, '').trim();
-    if (!q) return ctx.replyWithHTML('نام آیتم را بنویس؛ مثلاً: <code>/item Berserker</code>' + FOOTER);
-    const it = sd.findItem(q);
-    if (!it) {
-      const sug = sd.searchItems(q, 5);
-      let t = `❌ آیتمی با نام «${q}» پیدا نشد.`;
-      if (sug.length) t += '\n\nشاید منظورت این‌هاست:\n' + sug.map((x) => `• ${x.item_name}`).join('\n');
-      return ctx.replyWithHTML(esc(t) + FOOTER);
-    }
+    rows.push([Markup.button.callback('← دسته‌ها', 'menu_items')]);
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  async function sendItemList(ctx, cat) {
+    const list = sd.items.filter((it) => (it.item_category || 'سایر') === cat);
+    if (!list.length) return ctx.replyWithHTML('❌ دسته‌ای با این نام پیدا نشد.' + FOOTER, itemCategoryKeyboard());
+    return ctx.replyWithHTML(`🧰 <b>${esc(cat)}</b> (${faNum(list.length)} آیتم)\n\nآیتم را انتخاب کن:` + FOOTER, itemListKeyboard(cat));
+  }
+  async function sendItemDetail(ctx, it) {
     const p = sd.itemPublic(it);
     let t = `🧰 <b>${esc(p.name)}</b>`;
     t += `\nدسته: ${esc(p.category)} | تیر: ${faNum(p.tier)}`;
@@ -803,26 +821,88 @@ function createBot(env, deps) {
       for (const a of p.actives) t += `\n• <b>${esc(a.name)}:</b> ${esc(truncate(cleanText(a.desc), 300))}`;
     }
     t += FOOTER;
-    return ctx.replyWithHTML(t);
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback('← دسته‌ها', 'menu_items')],
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+    return ctx.replyWithHTML(t, kb);
+  }
+  bot.command('items', async (ctx) => sendItemCategories(ctx));
+  bot.command('item', async (ctx) => {
+    const q = ctx.message.text.replace(/^\/item(@\S+)?\s*/i, '').trim();
+    if (!q) return sendItemCategories(ctx);
+    const it = sd.findItem(q);
+    if (!it) {
+      const sug = sd.searchItems(q, 5);
+      let t = `❌ آیتمی با نام «${q}» پیدا نشد.`;
+      if (!sug.length) return ctx.replyWithHTML(esc(t) + FOOTER, itemCategoryKeyboard());
+      t += '\n\nشاید منظورت این‌هاست:';
+      const kb = Markup.inlineKeyboard([
+        ...sug.map((x) => [Markup.button.callback(`🧰 ${x.item_name}`, `item:${x.id}`)]),
+        [Markup.button.callback('← دسته‌ها', 'menu_items')],
+        [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+      ]);
+      return ctx.replyWithHTML(esc(t) + FOOTER, kb);
+    }
+    return sendItemDetail(ctx, it);
   });
 
   // ---------- /emblems ----------
-  bot.command('emblems', async (ctx) => {
-    let t = `🛡️ <b>امبلم‌ها (${faNum(sd.emblems.length)})</b>\n`;
-    for (const e of sd.emblems) {
-      t += `\n<b>${esc(e.emblem_name)}</b>${e.emblem_role ? ` (${esc(e.emblem_role)})` : ''}`;
-      const mods = (e.modifiers || []).flatMap((m) => Object.entries(m).map(([k, v]) => `${k}: ${v}`));
-      if (mods.length) t += `\n  ${esc(mods.join('، '))}`;
+  // اسپل‌ها (Battle Spells) از دادهٔ زنده خوانده می‌شوند؛ مثل مینی‌اپ
+  async function getSpells() {
+    const r = await roneGet('/academy/spells?size=20&index=1');
+    if (!r.ok) return [];
+    return (r.records || []).map((rec) => {
+      const d = rec?.data?.__data || rec?.data || {};
+      const name = d.skillname || d.name || '';
+      const desc = String(d.skilldesc || '').replace(/<[^>]+>/g, '');
+      return { name, desc: sd.faSpell(name) || desc };
+    }).filter((s) => s.name);
+  }
+  function emblemPickerKeyboard(spells) {
+    const rows = sd.emblems.map((e) => [Markup.button.callback(`🟤 🛡️ ${e.emblem_name}`, `emblem:${e.id}`)]);
+    for (let i = 0; i < spells.length; i += 2) {
+      rows.push(spells.slice(i, i + 2).map((s, j) => Markup.button.callback(`🟤 🪄 ${s.name}`, `spell:${i + j}`)));
     }
+    rows.push([Markup.button.callback('🏠 منوی اصلی', 'menu_home')]);
+    return Markup.inlineKeyboard(rows);
+  }
+  async function sendEmblemPicker(ctx) {
+    const spells = await getSpells();
+    const t = `🛡️ <b>امبلم‌ها (${faNum(sd.emblems.length)}) و اسپل‌ها (${faNum(spells.length)})</b>\n\nیکی را انتخاب کن:` + FOOTER;
+    return ctx.replyWithHTML(t, emblemPickerKeyboard(spells));
+  }
+  async function sendEmblemDetail(ctx, e) {
+    let t = `🛡️ <b>${esc(e.emblem_name)}</b>${e.emblem_role ? ` (${esc(e.emblem_role)})` : ''}`;
+    const mods = (e.modifiers || []).flatMap((m) => Object.entries(m).map(([k, v]) => `${k}: ${v}`));
+    if (mods.length) t += `\n\n📈 ${esc(mods.join('، '))}`;
     const tiers = sd.talents || {};
     const allTalents = [...(tiers.tier1 || []), ...(tiers.tier2 || []), ...(tiers.tier3 || [])];
     if (allTalents.length) {
       t += `\n\n⭐ <b>تلنت‌ها (${faNum(allTalents.length)}):</b>\n` + allTalents.map((x) => `• <b>${esc(x.name)}</b> — ${esc(sd.faTalent(x.id) || x.description)}`).join('\n');
     }
-    t += '\n\n⚠️ اسپل‌ها (Battle Spells) از دادهٔ زنده خوانده می‌شوند؛ در مینی‌اپ تب «امبلم/اسپل» را ببین.';
     t += FOOTER;
-    return ctx.replyWithHTML(t);
-  });
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback('← امبلم‌ها', 'menu_emblems')],
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+    return ctx.replyWithHTML(t, kb);
+  }
+  async function sendSpellDetail(ctx, idx) {
+    const spells = await getSpells();
+    const s = spells[Number(idx)];
+    if (!s) return ctx.replyWithHTML('❌ اسپل پیدا نشد.' + FOOTER, homeKeyboard());
+    let t = `🪄 <b>${esc(s.name)}</b>`;
+    if (s.desc) t += `\n\n${esc(truncate(cleanText(s.desc), 400))}`;
+    t += FOOTER;
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback('← امبلم‌ها', 'menu_emblems')],
+      [Markup.button.callback('🏠 منوی اصلی', 'menu_home')],
+    ]);
+    return ctx.replyWithHTML(t, kb);
+  }
+  bot.command('emblems', async (ctx) => sendEmblemPicker(ctx));
+
 
   // ---------- /wr ----------
   function wrNeeded(matchNow, wrNow, wrFuture) {
@@ -852,7 +932,7 @@ function createBot(env, deps) {
 
   // ---------- /mpl ----------
   async function sendMplLeagues(ctx) {
-    const kb = Markup.inlineKeyboard([...LEAGUES.map((l) => [Markup.button.callback(l.fa, `mpl:${l.v}`)]), [Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
+    const kb = Markup.inlineKeyboard([...LEAGUES.map((l) => [Markup.button.callback(`🔵 ${l.fa}`, `mpl:${l.v}`)]), [Markup.button.callback('🏠 منوی اصلی', 'menu_home')]]);
     return ctx.replyWithHTML('🏆 کدام لیگ MPL؟' + FOOTER, kb);
   }
   bot.command('mpl', async (ctx) => sendMplLeagues(ctx));
@@ -1154,6 +1234,22 @@ function createBot(env, deps) {
     return ctx.replyWithHTML('📖 <b>داستان‌ها</b>\n\nهیرویی را انتخاب کن:' + FOOTER, rolePickerKeyboard('lore'));
   });
   bot.action('menu_patch', async (ctx) => { await ctx.answerCbQuery(); return sendPatchList(ctx); });
+  bot.action('menu_items', async (ctx) => { await ctx.answerCbQuery(); return sendItemCategories(ctx); });
+  bot.action('menu_emblems', async (ctx) => { await ctx.answerCbQuery(); return sendEmblemPicker(ctx); });
+  bot.action(/^itemcat:(.+)$/, async (ctx) => { await ctx.answerCbQuery(); return sendItemList(ctx, ctx.match[1]); });
+  bot.action(/^item:([a-zA-Z0-9]+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const it = (sd.items || []).find((x) => String(x.id) === ctx.match[1]);
+    if (!it) return ctx.replyWithHTML('❌ آیتم پیدا نشد.' + FOOTER, itemCategoryKeyboard());
+    return sendItemDetail(ctx, it);
+  });
+  bot.action(/^emblem:([a-zA-Z0-9]+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const e = (sd.emblems || []).find((x) => String(x.id) === ctx.match[1]);
+    if (!e) return ctx.replyWithHTML('❌ امبلم پیدا نشد.' + FOOTER, homeKeyboard());
+    return sendEmblemDetail(ctx, e);
+  });
+  bot.action(/^spell:(\d+)$/, async (ctx) => { await ctx.answerCbQuery(); return sendSpellDetail(ctx, ctx.match[1]); });
   bot.action('menu_home', async (ctx) => { await ctx.answerCbQuery(); return sendMainMenu(ctx); });
   bot.action('coach', async (ctx) => {
     await ctx.answerCbQuery();
