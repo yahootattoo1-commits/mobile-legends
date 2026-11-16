@@ -1,5 +1,5 @@
 {
- "fetched_at": "2026-11-14T22:21:50.495608+00:00",
+ "fetched_at": "2026-11-16T13:03:17.961713+00:00",
  "derived_from": "hero-stats.json (ALL ranks, past 7 days) — top hero per lane",
  "month": "November 2026",
  "comps": [
@@ -12,44 +12,44 @@
      "name": "Bruno",
      "slug": "bruno",
      "lane": "gold",
-     "win_rate": 54.16,
-     "pick_rate": 0.65,
-     "ban_rate": 0.37
+     "win_rate": 54.08,
+     "pick_rate": 0.67,
+     "ban_rate": 0.4
     },
     {
      "name": "Masha",
      "slug": "masha",
      "lane": "exp",
-     "win_rate": 58.28,
-     "pick_rate": 0.48,
-     "ban_rate": 41.9
+     "win_rate": 58.31,
+     "pick_rate": 0.47,
+     "ban_rate": 41.24
     },
     {
      "name": "Valir",
      "slug": "valir",
      "lane": "mid",
-     "win_rate": 53.82,
+     "win_rate": 53.77,
      "pick_rate": 1.16,
-     "ban_rate": 4.08
+     "ban_rate": 4.13
     },
     {
      "name": "Marcel",
      "slug": "marcel",
      "lane": "roam",
-     "win_rate": 57.35,
+     "win_rate": 57.37,
      "pick_rate": 0.28,
-     "ban_rate": 42.74
+     "ban_rate": 42.56
     },
     {
      "name": "Sun",
      "slug": "sun",
      "lane": "jungle",
-     "win_rate": 54.02,
-     "pick_rate": 1.69,
-     "ban_rate": 41.78
+     "win_rate": 54.0,
+     "pick_rate": 1.71,
+     "ban_rate": 42.89
     }
    ],
-   "avg_win_rate": 55.53
+   "avg_win_rate": 55.51
   },
   {
    "id": "most_picked",
@@ -60,44 +60,44 @@
      "name": "Hanabi",
      "slug": "hanabi",
      "lane": "gold",
-     "win_rate": 52.74,
-     "pick_rate": 2.33,
-     "ban_rate": 4.07
+     "win_rate": 52.79,
+     "pick_rate": 2.35,
+     "ban_rate": 4.12
     },
     {
      "name": "Sun",
      "slug": "sun",
      "lane": "exp",
-     "win_rate": 54.02,
-     "pick_rate": 1.69,
-     "ban_rate": 41.78
+     "win_rate": 54.0,
+     "pick_rate": 1.71,
+     "ban_rate": 42.89
     },
     {
      "name": "Eudora",
      "slug": "eudora",
      "lane": "mid",
-     "win_rate": 50.11,
+     "win_rate": 50.18,
      "pick_rate": 1.66,
-     "ban_rate": 43.71
+     "ban_rate": 43.17
     },
     {
      "name": "Tigreal",
      "slug": "tigreal",
      "lane": "roam",
-     "win_rate": 45.56,
-     "pick_rate": 2.01,
-     "ban_rate": 7.64
+     "win_rate": 45.52,
+     "pick_rate": 2.03,
+     "ban_rate": 7.77
     },
     {
      "name": "Nolan",
      "slug": "nolan",
      "lane": "jungle",
-     "win_rate": 49.72,
-     "pick_rate": 2.61,
-     "ban_rate": 21.15
+     "win_rate": 49.74,
+     "pick_rate": 2.48,
+     "ban_rate": 23.0
     }
    ],
-   "avg_win_rate": 50.43
+   "avg_win_rate": 50.45
   },
   {
    "id": "most_banned",
@@ -108,44 +108,44 @@
      "name": "Obsidia",
      "slug": "obsidia",
      "lane": "gold",
-     "win_rate": 53.09,
-     "pick_rate": 2.09,
-     "ban_rate": 51.99
+     "win_rate": 53.13,
+     "pick_rate": 2.07,
+     "ban_rate": 52.51
     },
     {
-     "name": "Gloo",
-     "slug": "gloo",
+     "name": "Sun",
+     "slug": "sun",
      "lane": "exp",
-     "win_rate": 51.37,
-     "pick_rate": 0.71,
-     "ban_rate": 42.07
+     "win_rate": 54.0,
+     "pick_rate": 1.71,
+     "ban_rate": 42.89
     },
     {
      "name": "Eudora",
      "slug": "eudora",
      "lane": "mid",
-     "win_rate": 50.11,
+     "win_rate": 50.18,
      "pick_rate": 1.66,
-     "ban_rate": 43.71
+     "ban_rate": 43.17
     },
     {
      "name": "Belerick",
      "slug": "belerick",
      "lane": "roam",
-     "win_rate": 51.71,
-     "pick_rate": 1.67,
-     "ban_rate": 55.89
+     "win_rate": 51.77,
+     "pick_rate": 1.64,
+     "ban_rate": 55.97
     },
     {
      "name": "Hirara",
      "slug": "hirara",
      "lane": "jungle",
-     "win_rate": 49.9,
+     "win_rate": 49.86,
      "pick_rate": 0.61,
-     "ban_rate": 67.62
+     "ban_rate": 67.16
     }
    ],
-   "avg_win_rate": 51.24
+   "avg_win_rate": 51.79
   }
  ]
 }

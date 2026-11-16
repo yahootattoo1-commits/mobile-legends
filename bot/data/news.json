@@ -1,5 +1,5 @@
 {
- "fetched_at": "2026-11-15T05:55:24.293805+00:00",
+ "fetched_at": "2026-11-16T13:02:19.185028+00:00",
  "patch_notes": [
   {
    "title": "Patch Notes 2.2.16",
@@ -84,6 +84,48 @@
  ],
  "wiki_recent": [
   {
+   "title": "Eudora",
+   "timestamp": "2026-11-16T06:40:10Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Eudora",
+   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/a/ab/Hero151-portrait.png/revision/latest?cb=20260129103005"
+  },
+  {
+   "title": "Lunox/Guide",
+   "timestamp": "2026-11-16T00:34:18Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Lunox/Guide",
+   "image_url": null
+  },
+  {
+   "title": "Valentina",
+   "timestamp": "2026-11-15T15:53:35Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Valentina",
+   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/1/12/Hero1101-portrait.png/revision/latest?cb=20241021143333"
+  },
+  {
+   "title": "Valentina/Mastery Code",
+   "timestamp": "2026-11-15T15:40:17Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Valentina/Mastery_Code",
+   "image_url": null
+  },
+  {
+   "title": "Roamer",
+   "timestamp": "2026-11-15T09:15:04Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Roamer",
+   "image_url": null
+  },
+  {
+   "title": "Jungler",
+   "timestamp": "2026-11-15T09:12:38Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Jungler",
+   "image_url": null
+  },
+  {
    "title": "Harley",
    "timestamp": "2026-11-14T23:49:40Z",
    "comment": "",
@@ -144,48 +186,6 @@
    "timestamp": "2026-11-13T17:36:10Z",
    "comment": "Adding categories",
    "url": "https://mobile-legends.fandom.com/wiki/Patch_Notes_1.3.56",
-   "image_url": null
-  },
-  {
-   "title": "Patch Notes 1.3.32",
-   "timestamp": "2026-11-13T17:35:44Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Patch_Notes_1.3.32",
-   "image_url": null
-  },
-  {
-   "title": "Lukas/Mastery Code",
-   "timestamp": "2026-11-13T17:24:37Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Lukas/Mastery_Code",
-   "image_url": null
-  },
-  {
-   "title": "Marcel/Mastery Code",
-   "timestamp": "2026-11-13T17:23:49Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Marcel/Mastery_Code",
-   "image_url": null
-  },
-  {
-   "title": "Hirara",
-   "timestamp": "2026-11-13T17:22:08Z",
-   "comment": "",
-   "url": "https://mobile-legends.fandom.com/wiki/Hirara",
-   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/1/19/Hero1331-portrait.png/revision/latest?cb=20260618091411"
-  },
-  {
-   "title": "Zilong/Guide",
-   "timestamp": "2026-11-13T16:55:18Z",
-   "comment": "",
-   "url": "https://mobile-legends.fandom.com/wiki/Zilong/Guide",
-   "image_url": null
-  },
-  {
-   "title": "Zilong/Mastery Code",
-   "timestamp": "2026-11-13T16:55:10Z",
-   "comment": "",
-   "url": "https://mobile-legends.fandom.com/wiki/Zilong/Mastery_Code",
    "image_url": null
   }
  ]

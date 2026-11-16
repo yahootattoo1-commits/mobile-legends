@@ -8,7 +8,7 @@
 const RONE_BASE = 'https://arena.rone.dev/api';
 const STATIC_BASE = 'data/';
 const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
-const DATA_VERSION = '20261115-0926'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const DATA_VERSION = '20261116-2005'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 

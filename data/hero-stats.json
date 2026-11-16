@@ -7,11 +7,11 @@
    "position": 1,
    "name": "Masha",
    "slug": "masha",
-   "win_rate": 58.28,
+   "win_rate": 58.31,
    "win_label": "High",
-   "pick_rate": 0.48,
+   "pick_rate": 0.47,
    "pick_label": "Rare",
-   "ban_rate": 41.9,
+   "ban_rate": 41.24,
    "ban_label": "Often Banned",
    "roles": [
     "Fighter",
@@ -29,11 +29,11 @@
    "position": 2,
    "name": "Marcel",
    "slug": "marcel",
-   "win_rate": 57.35,
+   "win_rate": 57.37,
    "win_label": "High",
    "pick_rate": 0.28,
    "pick_label": "Rare",
-   "ban_rate": 42.74,
+   "ban_rate": 42.56,
    "ban_label": "Often Banned",
    "roles": [
     "Support"
@@ -50,11 +50,11 @@
    "position": 3,
    "name": "Argus",
    "slug": "argus",
-   "win_rate": 56.96,
+   "win_rate": 56.85,
    "win_label": "High",
-   "pick_rate": 0.51,
+   "pick_rate": 0.52,
    "pick_label": "Rare",
-   "ban_rate": 1.0,
+   "ban_rate": 1.03,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -71,11 +71,11 @@
    "position": 4,
    "name": "Diggie",
    "slug": "diggie",
-   "win_rate": 54.75,
+   "win_rate": 54.85,
    "win_label": null,
-   "pick_rate": 0.19,
+   "pick_rate": 0.2,
    "pick_label": "Rare",
-   "ban_rate": 3.84,
+   "ban_rate": 3.76,
    "ban_label": null,
    "roles": [
     "Support"
@@ -92,11 +92,11 @@
    "position": 5,
    "name": "Khufra",
    "slug": "khufra",
-   "win_rate": 54.75,
+   "win_rate": 54.64,
    "win_label": null,
    "pick_rate": 0.36,
    "pick_label": "Rare",
-   "ban_rate": 2.11,
+   "ban_rate": 2.18,
    "ban_label": null,
    "roles": [
     "Tank"
@@ -111,34 +111,13 @@
   },
   {
    "position": 6,
-   "name": "Bruno",
-   "slug": "bruno",
-   "win_rate": 54.16,
-   "win_label": null,
-   "pick_rate": 0.65,
-   "pick_label": "Rare",
-   "ban_rate": 0.37,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Burst"
-   ]
-  },
-  {
-   "position": 7,
    "name": "Rafaela",
    "slug": "rafaela",
-   "win_rate": 54.16,
+   "win_rate": 54.24,
    "win_label": null,
-   "pick_rate": 0.77,
+   "pick_rate": 0.76,
    "pick_label": "Rare",
-   "ban_rate": 10.74,
+   "ban_rate": 10.4,
    "ban_label": null,
    "roles": [
     "Support"
@@ -152,14 +131,35 @@
    ]
   },
   {
+   "position": 7,
+   "name": "Bruno",
+   "slug": "bruno",
+   "win_rate": 54.08,
+   "win_label": null,
+   "pick_rate": 0.67,
+   "pick_label": "Rare",
+   "ban_rate": 0.4,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Burst"
+   ]
+  },
+  {
    "position": 8,
    "name": "Floryn",
    "slug": "floryn",
-   "win_rate": 54.06,
+   "win_rate": 54.08,
    "win_label": null,
-   "pick_rate": 0.98,
+   "pick_rate": 0.99,
    "pick_label": "Rare",
-   "ban_rate": 13.38,
+   "ban_rate": 13.37,
    "ban_label": null,
    "roles": [
     "Support"
@@ -176,11 +176,11 @@
    "position": 9,
    "name": "Sun",
    "slug": "sun",
-   "win_rate": 54.02,
+   "win_rate": 54.0,
    "win_label": null,
-   "pick_rate": 1.69,
+   "pick_rate": 1.71,
    "pick_label": null,
-   "ban_rate": 41.78,
+   "ban_rate": 42.89,
    "ban_label": "Often Banned",
    "roles": [
     "Fighter"
@@ -198,11 +198,11 @@
    "position": 10,
    "name": "Minotaur",
    "slug": "minotaur",
-   "win_rate": 53.87,
+   "win_rate": 53.86,
    "win_label": null,
-   "pick_rate": 1.05,
+   "pick_rate": 1.02,
    "pick_label": null,
-   "ban_rate": 8.15,
+   "ban_rate": 8.28,
    "ban_label": null,
    "roles": [
     "Support",
@@ -219,11 +219,11 @@
    "position": 11,
    "name": "Valir",
    "slug": "valir",
-   "win_rate": 53.82,
+   "win_rate": 53.77,
    "win_label": null,
    "pick_rate": 1.16,
    "pick_label": null,
-   "ban_rate": 4.08,
+   "ban_rate": 4.13,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -240,11 +240,11 @@
    "position": 12,
    "name": "Edith",
    "slug": "edith",
-   "win_rate": 53.7,
+   "win_rate": 53.68,
    "win_label": null,
-   "pick_rate": 0.26,
+   "pick_rate": 0.27,
    "pick_label": "Rare",
-   "ban_rate": 0.11,
+   "ban_rate": 0.12,
    "ban_label": null,
    "roles": [
     "Marksman",
@@ -260,34 +260,13 @@
   },
   {
    "position": 13,
-   "name": "Xavier",
-   "slug": "xavier",
-   "win_rate": 53.42,
-   "win_label": null,
-   "pick_rate": 1.14,
-   "pick_label": null,
-   "ban_rate": 0.9,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Damage",
-    "Burst"
-   ]
-  },
-  {
-   "position": 14,
    "name": "Lolita",
    "slug": "lolita",
-   "win_rate": 53.31,
+   "win_rate": 53.36,
    "win_label": null,
    "pick_rate": 0.07,
    "pick_label": "Rare",
-   "ban_rate": 0.2,
+   "ban_rate": 0.21,
    "ban_label": null,
    "roles": [
     "Support",
@@ -302,12 +281,54 @@
    ]
   },
   {
+   "position": 14,
+   "name": "Xavier",
+   "slug": "xavier",
+   "win_rate": 53.36,
+   "win_label": null,
+   "pick_rate": 1.15,
+   "pick_label": null,
+   "ban_rate": 0.89,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Damage",
+    "Burst"
+   ]
+  },
+  {
    "position": 15,
+   "name": "Obsidia",
+   "slug": "obsidia",
+   "win_rate": 53.13,
+   "win_label": null,
+   "pick_rate": 2.07,
+   "pick_label": null,
+   "ban_rate": 52.51,
+   "ban_label": "Most BannedOften Banned",
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Damage"
+   ]
+  },
+  {
+   "position": 16,
    "name": "Irithel",
    "slug": "irithel",
-   "win_rate": 53.22,
+   "win_rate": 53.12,
    "win_label": null,
-   "pick_rate": 0.4,
+   "pick_rate": 0.41,
    "pick_label": "Rare",
    "ban_rate": 0.27,
    "ban_label": null,
@@ -323,14 +344,14 @@
    ]
   },
   {
-   "position": 16,
+   "position": 17,
    "name": "Aldous",
    "slug": "aldous",
-   "win_rate": 53.15,
+   "win_rate": 53.1,
    "win_label": null,
-   "pick_rate": 0.51,
+   "pick_rate": 0.52,
    "pick_label": "Rare",
-   "ban_rate": 0.71,
+   "ban_rate": 0.72,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -344,14 +365,14 @@
    ]
   },
   {
-   "position": 17,
+   "position": 18,
    "name": "Carmilla",
    "slug": "carmilla",
-   "win_rate": 53.14,
+   "win_rate": 53.09,
    "win_label": null,
-   "pick_rate": 1.29,
+   "pick_rate": 1.27,
    "pick_label": null,
-   "ban_rate": 22.58,
+   "ban_rate": 22.7,
    "ban_label": null,
    "roles": [
     "Support",
@@ -366,56 +387,14 @@
    ]
   },
   {
-   "position": 18,
-   "name": "Obsidia",
-   "slug": "obsidia",
-   "win_rate": 53.09,
-   "win_label": null,
-   "pick_rate": 2.09,
-   "pick_label": null,
-   "ban_rate": 51.99,
-   "ban_label": "Most BannedOften Banned",
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Damage"
-   ]
-  },
-  {
    "position": 19,
-   "name": "Minsitthar",
-   "slug": "minsitthar",
-   "win_rate": 53.0,
-   "win_label": null,
-   "pick_rate": 0.56,
-   "pick_label": "Rare",
-   "ban_rate": 3.48,
-   "ban_label": null,
-   "roles": [
-    "Fighter"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Initiator"
-   ]
-  },
-  {
-   "position": 20,
    "name": "Aulus",
    "slug": "aulus",
-   "win_rate": 52.98,
+   "win_rate": 52.94,
    "win_label": null,
-   "pick_rate": 0.68,
+   "pick_rate": 0.66,
    "pick_label": "Rare",
-   "ban_rate": 22.93,
+   "ban_rate": 21.38,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -430,14 +409,35 @@
    ]
   },
   {
+   "position": 20,
+   "name": "Minsitthar",
+   "slug": "minsitthar",
+   "win_rate": 52.88,
+   "win_label": null,
+   "pick_rate": 0.57,
+   "pick_label": "Rare",
+   "ban_rate": 3.51,
+   "ban_label": null,
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "exp"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Initiator"
+   ]
+  },
+  {
    "position": 21,
    "name": "Estes",
    "slug": "estes",
-   "win_rate": 52.86,
+   "win_rate": 52.83,
    "win_label": null,
    "pick_rate": 0.61,
    "pick_label": "Rare",
-   "ban_rate": 46.71,
+   "ban_rate": 46.82,
    "ban_label": "Most BannedOften Banned",
    "roles": [
     "Support"
@@ -454,11 +454,11 @@
    "position": 22,
    "name": "Hanabi",
    "slug": "hanabi",
-   "win_rate": 52.74,
+   "win_rate": 52.79,
    "win_label": null,
-   "pick_rate": 2.33,
+   "pick_rate": 2.35,
    "pick_label": null,
-   "ban_rate": 4.07,
+   "ban_rate": 4.12,
    "ban_label": null,
    "roles": [
     "Marksman"
@@ -475,11 +475,11 @@
    "position": 23,
    "name": "Zhask",
    "slug": "zhask",
-   "win_rate": 52.53,
+   "win_rate": 52.57,
    "win_label": null,
-   "pick_rate": 0.31,
+   "pick_rate": 0.32,
    "pick_label": "Rare",
-   "ban_rate": 0.41,
+   "ban_rate": 0.42,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -494,9 +494,30 @@
   },
   {
    "position": 24,
+   "name": "Gord",
+   "slug": "gord",
+   "win_rate": 52.34,
+   "win_label": null,
+   "pick_rate": 0.55,
+   "pick_label": "Rare",
+   "ban_rate": 0.54,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 25,
    "name": "Ling",
    "slug": "ling",
-   "win_rate": 52.38,
+   "win_rate": 52.22,
    "win_label": null,
    "pick_rate": 0.64,
    "pick_label": "Rare",
@@ -514,35 +535,14 @@
    ]
   },
   {
-   "position": 25,
-   "name": "Gord",
-   "slug": "gord",
-   "win_rate": 52.36,
-   "win_label": null,
-   "pick_rate": 0.55,
-   "pick_label": "Rare",
-   "ban_rate": 0.53,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
    "position": 26,
    "name": "Lunox",
    "slug": "lunox",
-   "win_rate": 52.05,
+   "win_rate": 52.14,
    "win_label": null,
    "pick_rate": 0.62,
    "pick_label": "Rare",
-   "ban_rate": 1.42,
+   "ban_rate": 1.48,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -557,73 +557,9 @@
   },
   {
    "position": 27,
-   "name": "Benedetta",
-   "slug": "benedetta",
-   "win_rate": 51.87,
-   "win_label": null,
-   "pick_rate": 0.43,
-   "pick_label": "Rare",
-   "ban_rate": 0.39,
-   "ban_label": null,
-   "roles": [
-    "Assassin",
-    "Fighter"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Burst",
-    "Chase"
-   ]
-  },
-  {
-   "position": 28,
-   "name": "Melissa",
-   "slug": "melissa",
-   "win_rate": 51.84,
-   "win_label": null,
-   "pick_rate": 0.53,
-   "pick_label": "Rare",
-   "ban_rate": 1.17,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Damage"
-   ]
-  },
-  {
-   "position": 29,
-   "name": "Cyclops",
-   "slug": "cyclops",
-   "win_rate": 51.82,
-   "win_label": null,
-   "pick_rate": 0.94,
-   "pick_label": "Rare",
-   "ban_rate": 1.86,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Control",
-    "Damage"
-   ]
-  },
-  {
-   "position": 30,
    "name": "Yve",
    "slug": "yve",
-   "win_rate": 51.75,
+   "win_rate": 52.0,
    "win_label": null,
    "pick_rate": 0.06,
    "pick_label": "Rare",
@@ -641,14 +577,99 @@
    ]
   },
   {
+   "position": 28,
+   "name": "Benedetta",
+   "slug": "benedetta",
+   "win_rate": 51.92,
+   "win_label": null,
+   "pick_rate": 0.44,
+   "pick_label": "Rare",
+   "ban_rate": 0.4,
+   "ban_label": null,
+   "roles": [
+    "Assassin",
+    "Fighter"
+   ],
+   "lanes": [
+    "exp"
+   ],
+   "specialities": [
+    "Burst",
+    "Chase"
+   ]
+  },
+  {
+   "position": 29,
+   "name": "Cyclops",
+   "slug": "cyclops",
+   "win_rate": 51.88,
+   "win_label": null,
+   "pick_rate": 0.89,
+   "pick_label": "Rare",
+   "ban_rate": 1.62,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Control",
+    "Damage"
+   ]
+  },
+  {
+   "position": 30,
+   "name": "Belerick",
+   "slug": "belerick",
+   "win_rate": 51.77,
+   "win_label": null,
+   "pick_rate": 1.64,
+   "pick_label": null,
+   "ban_rate": 55.97,
+   "ban_label": "Most BannedOften Banned",
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Regen"
+   ]
+  },
+  {
    "position": 31,
+   "name": "Melissa",
+   "slug": "melissa",
+   "win_rate": 51.7,
+   "win_label": null,
+   "pick_rate": 0.51,
+   "pick_label": "Rare",
+   "ban_rate": 1.14,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Damage"
+   ]
+  },
+  {
+   "position": 32,
    "name": "Barats",
    "slug": "barats",
-   "win_rate": 51.72,
+   "win_rate": 51.63,
    "win_label": null,
-   "pick_rate": 0.69,
+   "pick_rate": 0.67,
    "pick_label": "Rare",
-   "ban_rate": 2.92,
+   "ban_rate": 2.86,
    "ban_label": null,
    "roles": [
     "Fighter",
@@ -663,76 +684,12 @@
    ]
   },
   {
-   "position": 32,
-   "name": "Belerick",
-   "slug": "belerick",
-   "win_rate": 51.71,
-   "win_label": null,
-   "pick_rate": 1.67,
-   "pick_label": null,
-   "ban_rate": 55.89,
-   "ban_label": "Most BannedOften Banned",
-   "roles": [
-    "Tank"
-   ],
-   "lanes": [
-    "roam"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Regen"
-   ]
-  },
-  {
    "position": 33,
-   "name": "Fredrinn",
-   "slug": "fredrinn",
-   "win_rate": 51.59,
-   "win_label": null,
-   "pick_rate": 0.38,
-   "pick_label": "Rare",
-   "ban_rate": 1.54,
-   "ban_label": null,
-   "roles": [
-    "Fighter",
-    "Tank"
-   ],
-   "lanes": [
-    "jungle"
-   ],
-   "specialities": [
-    "Damage",
-    "Chase"
-   ]
-  },
-  {
-   "position": 34,
-   "name": "Natan",
-   "slug": "natan",
-   "win_rate": 51.52,
-   "win_label": null,
-   "pick_rate": 0.3,
-   "pick_label": "Rare",
-   "ban_rate": 0.12,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Magic Damage",
-    "Burst"
-   ]
-  },
-  {
-   "position": 35,
    "name": "Bane",
    "slug": "bane",
-   "win_rate": 51.47,
+   "win_rate": 51.59,
    "win_label": null,
-   "pick_rate": 0.28,
+   "pick_rate": 0.29,
    "pick_label": "Rare",
    "ban_rate": 0.19,
    "ban_label": null,
@@ -750,35 +707,14 @@
    ]
   },
   {
-   "position": 36,
-   "name": "Silvanna",
-   "slug": "silvanna",
-   "win_rate": 51.39,
-   "win_label": null,
-   "pick_rate": 0.95,
-   "pick_label": "Rare",
-   "ban_rate": 2.13,
-   "ban_label": null,
-   "roles": [
-    "Fighter"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Magic Damage",
-    "Initiator"
-   ]
-  },
-  {
-   "position": 37,
+   "position": 34,
    "name": "Gloo",
    "slug": "gloo",
-   "win_rate": 51.37,
+   "win_rate": 51.56,
    "win_label": null,
-   "pick_rate": 0.71,
+   "pick_rate": 0.7,
    "pick_label": "Rare",
-   "ban_rate": 42.07,
+   "ban_rate": 41.59,
    "ban_label": "Often Banned",
    "roles": [
     "Tank"
@@ -793,14 +729,14 @@
    ]
   },
   {
-   "position": 38,
-   "name": "Guinevere",
-   "slug": "guinevere",
-   "win_rate": 51.29,
+   "position": 35,
+   "name": "Silvanna",
+   "slug": "silvanna",
+   "win_rate": 51.49,
    "win_label": null,
-   "pick_rate": 0.79,
+   "pick_rate": 0.96,
    "pick_label": "Rare",
-   "ban_rate": 1.75,
+   "ban_rate": 2.18,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -810,18 +746,62 @@
    ],
    "specialities": [
     "Magic Damage",
-    "Burst"
+    "Initiator"
    ]
   },
   {
-   "position": 39,
+   "position": 36,
+   "name": "Saber",
+   "slug": "saber",
+   "win_rate": 51.43,
+   "win_label": null,
+   "pick_rate": 0.99,
+   "pick_label": "Rare",
+   "ban_rate": 25.46,
+   "ban_label": null,
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "jungle",
+    "roam"
+   ],
+   "specialities": [
+    "Finisher",
+    "Charge"
+   ]
+  },
+  {
+   "position": 37,
+   "name": "Fredrinn",
+   "slug": "fredrinn",
+   "win_rate": 51.4,
+   "win_label": null,
+   "pick_rate": 0.39,
+   "pick_label": "Rare",
+   "ban_rate": 1.57,
+   "ban_label": null,
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "jungle"
+   ],
+   "specialities": [
+    "Damage",
+    "Chase"
+   ]
+  },
+  {
+   "position": 38,
    "name": "Hilda",
    "slug": "hilda",
-   "win_rate": 51.23,
+   "win_rate": 51.35,
    "win_label": null,
    "pick_rate": 0.55,
    "pick_label": "Rare",
-   "ban_rate": 13.6,
+   "ban_rate": 13.95,
    "ban_label": null,
    "roles": [
     "Fighter",
@@ -837,36 +817,56 @@
    ]
   },
   {
-   "position": 40,
-   "name": "Saber",
-   "slug": "saber",
-   "win_rate": 51.22,
+   "position": 39,
+   "name": "Natan",
+   "slug": "natan",
+   "win_rate": 51.31,
    "win_label": null,
-   "pick_rate": 0.97,
+   "pick_rate": 0.31,
    "pick_label": "Rare",
-   "ban_rate": 25.1,
+   "ban_rate": 0.12,
    "ban_label": null,
    "roles": [
-    "Assassin"
+    "Marksman"
    ],
    "lanes": [
-    "jungle",
-    "roam"
+    "gold"
    ],
    "specialities": [
-    "Finisher",
-    "Charge"
+    "Magic Damage",
+    "Burst"
+   ]
+  },
+  {
+   "position": 40,
+   "name": "Guinevere",
+   "slug": "guinevere",
+   "win_rate": 51.25,
+   "win_label": null,
+   "pick_rate": 0.79,
+   "pick_label": "Rare",
+   "ban_rate": 1.77,
+   "ban_label": null,
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "exp"
+   ],
+   "specialities": [
+    "Magic Damage",
+    "Burst"
    ]
   },
   {
    "position": 41,
    "name": "Natalia",
    "slug": "natalia",
-   "win_rate": 51.02,
+   "win_rate": 51.08,
    "win_label": null,
    "pick_rate": 0.31,
    "pick_label": "Rare",
-   "ban_rate": 2.16,
+   "ban_rate": 2.17,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -884,11 +884,11 @@
    "position": 42,
    "name": "Lukas",
    "slug": "lukas",
-   "win_rate": 50.96,
+   "win_rate": 50.86,
    "win_label": null,
    "pick_rate": 0.78,
    "pick_label": "Rare",
-   "ban_rate": 29.28,
+   "ban_rate": 28.2,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -904,9 +904,117 @@
   },
   {
    "position": 43,
+   "name": "Kadita",
+   "slug": "kadita",
+   "win_rate": 50.8,
+   "win_label": null,
+   "pick_rate": 0.79,
+   "pick_label": "Rare",
+   "ban_rate": 2.81,
+   "ban_label": null,
+   "roles": [
+    "Assassin",
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Charge",
+    "Burst"
+   ]
+  },
+  {
+   "position": 44,
+   "name": "Terizla",
+   "slug": "terizla",
+   "win_rate": 50.8,
+   "win_label": null,
+   "pick_rate": 0.37,
+   "pick_label": "Rare",
+   "ban_rate": 0.2,
+   "ban_label": null,
+   "roles": [
+    "Fighter",
+    "Tank"
+   ],
+   "lanes": [
+    "exp"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Burst"
+   ]
+  },
+  {
+   "position": 45,
+   "name": "Zetian",
+   "slug": "zetian",
+   "win_rate": 50.75,
+   "win_label": null,
+   "pick_rate": 1.56,
+   "pick_label": null,
+   "ban_rate": 4.68,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Damage"
+   ]
+  },
+  {
+   "position": 46,
+   "name": "Cecilion",
+   "slug": "cecilion",
+   "win_rate": 50.67,
+   "win_label": null,
+   "pick_rate": 0.64,
+   "pick_label": "Rare",
+   "ban_rate": 0.17,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 47,
+   "name": "Kalea",
+   "slug": "kalea",
+   "win_rate": 50.67,
+   "win_label": null,
+   "pick_rate": 0.72,
+   "pick_label": "Rare",
+   "ban_rate": 8.32,
+   "ban_label": null,
+   "roles": [
+    "Fighter",
+    "Support"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Control",
+    "Regen"
+   ]
+  },
+  {
+   "position": 48,
    "name": "Faramis",
    "slug": "faramis",
-   "win_rate": 50.84,
+   "win_rate": 50.63,
    "win_label": null,
    "pick_rate": 0.1,
    "pick_label": "Rare",
@@ -926,122 +1034,35 @@
    ]
   },
   {
-   "position": 44,
-   "name": "Kadita",
-   "slug": "kadita",
-   "win_rate": 50.83,
+   "position": 49,
+   "name": "Akai",
+   "slug": "akai",
+   "win_rate": 50.48,
    "win_label": null,
-   "pick_rate": 0.78,
+   "pick_rate": 0.32,
    "pick_label": "Rare",
-   "ban_rate": 2.77,
+   "ban_rate": 1.1,
    "ban_label": null,
    "roles": [
-    "Assassin",
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Charge",
-    "Burst"
-   ]
-  },
-  {
-   "position": 45,
-   "name": "Terizla",
-   "slug": "terizla",
-   "win_rate": 50.7,
-   "win_label": null,
-   "pick_rate": 0.36,
-   "pick_label": "Rare",
-   "ban_rate": 0.19,
-   "ban_label": null,
-   "roles": [
-    "Fighter",
     "Tank"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Burst"
-   ]
-  },
-  {
-   "position": 46,
-   "name": "Cecilion",
-   "slug": "cecilion",
-   "win_rate": 50.66,
-   "win_label": null,
-   "pick_rate": 0.63,
-   "pick_label": "Rare",
-   "ban_rate": 0.17,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
-   "position": 47,
-   "name": "Zetian",
-   "slug": "zetian",
-   "win_rate": 50.66,
-   "win_label": null,
-   "pick_rate": 1.56,
-   "pick_label": null,
-   "ban_rate": 4.66,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Damage"
-   ]
-  },
-  {
-   "position": 48,
-   "name": "Kalea",
-   "slug": "kalea",
-   "win_rate": 50.57,
-   "win_label": null,
-   "pick_rate": 0.76,
-   "pick_label": "Rare",
-   "ban_rate": 9.08,
-   "ban_label": null,
-   "roles": [
-    "Fighter",
-    "Support"
    ],
    "lanes": [
     "roam"
    ],
    "specialities": [
-    "Control",
-    "Regen"
+    "Crowd Control",
+    "Guard"
    ]
   },
   {
-   "position": 49,
+   "position": 50,
    "name": "Ixia",
    "slug": "ixia",
-   "win_rate": 50.39,
+   "win_rate": 50.41,
    "win_label": null,
-   "pick_rate": 0.74,
+   "pick_rate": 0.75,
    "pick_label": "Rare",
-   "ban_rate": 0.8,
+   "ban_rate": 0.82,
    "ban_label": null,
    "roles": [
     "Marksman"
@@ -1055,35 +1076,14 @@
    ]
   },
   {
-   "position": 50,
-   "name": "Aamon",
-   "slug": "aamon",
-   "win_rate": 50.36,
-   "win_label": null,
-   "pick_rate": 0.6,
-   "pick_label": "Rare",
-   "ban_rate": 2.45,
-   "ban_label": null,
-   "roles": [
-    "Assassin"
-   ],
-   "lanes": [
-    "jungle"
-   ],
-   "specialities": [
-    "Magic Damage",
-    "Chase"
-   ]
-  },
-  {
    "position": 51,
    "name": "Badang",
    "slug": "badang",
-   "win_rate": 50.34,
+   "win_rate": 50.38,
    "win_label": null,
    "pick_rate": 1.36,
    "pick_label": null,
-   "ban_rate": 3.49,
+   "ban_rate": 3.59,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1099,55 +1099,34 @@
   },
   {
    "position": 52,
-   "name": "Kagura",
-   "slug": "kagura",
-   "win_rate": 50.3,
+   "name": "Aamon",
+   "slug": "aamon",
+   "win_rate": 50.36,
    "win_label": null,
-   "pick_rate": 0.87,
+   "pick_rate": 0.62,
    "pick_label": "Rare",
-   "ban_rate": 1.32,
+   "ban_rate": 2.52,
    "ban_label": null,
    "roles": [
-    "Mage"
+    "Assassin"
    ],
    "lanes": [
-    "mid"
+    "jungle"
    ],
    "specialities": [
-    "Finisher",
-    "Poke"
+    "Magic Damage",
+    "Chase"
    ]
   },
   {
    "position": 53,
-   "name": "Akai",
-   "slug": "akai",
-   "win_rate": 50.28,
-   "win_label": null,
-   "pick_rate": 0.32,
-   "pick_label": "Rare",
-   "ban_rate": 1.08,
-   "ban_label": null,
-   "roles": [
-    "Tank"
-   ],
-   "lanes": [
-    "roam"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Guard"
-   ]
-  },
-  {
-   "position": 54,
    "name": "Alice",
    "slug": "alice",
-   "win_rate": 50.25,
+   "win_rate": 50.27,
    "win_label": null,
-   "pick_rate": 0.95,
+   "pick_rate": 0.9,
    "pick_label": "Rare",
-   "ban_rate": 13.28,
+   "ban_rate": 13.63,
    "ban_label": null,
    "roles": [
     "Tank",
@@ -1163,14 +1142,14 @@
    ]
   },
   {
-   "position": 55,
+   "position": 54,
    "name": "Freya",
    "slug": "freya",
-   "win_rate": 50.22,
+   "win_rate": 50.26,
    "win_label": null,
-   "pick_rate": 1.25,
+   "pick_rate": 1.24,
    "pick_label": null,
-   "ban_rate": 9.12,
+   "ban_rate": 9.32,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1185,56 +1164,14 @@
    ]
   },
   {
-   "position": 56,
-   "name": "Beatrix",
-   "slug": "beatrix",
-   "win_rate": 50.14,
-   "win_label": null,
-   "pick_rate": 0.64,
-   "pick_label": "Rare",
-   "ban_rate": 0.42,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Damage"
-   ]
-  },
-  {
-   "position": 57,
-   "name": "Clint",
-   "slug": "clint",
-   "win_rate": 50.14,
-   "win_label": null,
-   "pick_rate": 0.75,
-   "pick_label": "Rare",
-   "ban_rate": 0.61,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Burst"
-   ]
-  },
-  {
-   "position": 58,
+   "position": 55,
    "name": "Eudora",
    "slug": "eudora",
-   "win_rate": 50.11,
+   "win_rate": 50.18,
    "win_label": null,
    "pick_rate": 1.66,
    "pick_label": null,
-   "ban_rate": 43.71,
+   "ban_rate": 43.17,
    "ban_label": "Often Banned",
    "roles": [
     "Mage"
@@ -1248,36 +1185,77 @@
    ]
   },
   {
-   "position": 59,
-   "name": "Khaleed",
-   "slug": "khaleed",
-   "win_rate": 50.07,
+   "position": 56,
+   "name": "Kagura",
+   "slug": "kagura",
+   "win_rate": 50.18,
    "win_label": null,
-   "pick_rate": 0.13,
+   "pick_rate": 0.89,
    "pick_label": "Rare",
-   "ban_rate": 0.09,
+   "ban_rate": 1.4,
    "ban_label": null,
    "roles": [
-    "Fighter"
+    "Mage"
    ],
    "lanes": [
-    "exp",
-    "roam"
+    "mid"
    ],
    "specialities": [
-    "Damage",
-    "Regen"
+    "Finisher",
+    "Poke"
    ]
   },
   {
-   "position": 60,
+   "position": 57,
+   "name": "Beatrix",
+   "slug": "beatrix",
+   "win_rate": 50.13,
+   "win_label": null,
+   "pick_rate": 0.64,
+   "pick_label": "Rare",
+   "ban_rate": 0.43,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Damage"
+   ]
+  },
+  {
+   "position": 58,
+   "name": "Clint",
+   "slug": "clint",
+   "win_rate": 50.12,
+   "win_label": null,
+   "pick_rate": 0.74,
+   "pick_label": "Rare",
+   "ban_rate": 0.64,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Burst"
+   ]
+  },
+  {
+   "position": 59,
    "name": "X.Borg",
    "slug": "xborg",
-   "win_rate": 50.06,
+   "win_rate": 50.12,
    "win_label": null,
    "pick_rate": 0.55,
    "pick_label": "Rare",
-   "ban_rate": 1.88,
+   "ban_rate": 1.92,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1291,14 +1269,14 @@
    ]
   },
   {
-   "position": 61,
+   "position": 60,
    "name": "Moskov",
    "slug": "moskov",
    "win_rate": 50.05,
    "win_label": null,
    "pick_rate": 0.89,
    "pick_label": "Rare",
-   "ban_rate": 0.27,
+   "ban_rate": 0.28,
    "ban_label": null,
    "roles": [
     "Marksman"
@@ -1312,7 +1290,7 @@
    ]
   },
   {
-   "position": 62,
+   "position": 61,
    "name": "Vale",
    "slug": "vale",
    "win_rate": 50.04,
@@ -1333,96 +1311,34 @@
    ]
   },
   {
-   "position": 63,
-   "name": "Odette",
-   "slug": "odette",
+   "position": 62,
+   "name": "Khaleed",
+   "slug": "khaleed",
    "win_rate": 50.01,
    "win_label": null,
-   "pick_rate": 0.55,
+   "pick_rate": 0.13,
    "pick_label": "Rare",
-   "ban_rate": 0.27,
+   "ban_rate": 0.1,
    "ban_label": null,
    "roles": [
-    "Mage"
+    "Fighter"
    ],
    "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
-   "position": 64,
-   "name": "Kaja",
-   "slug": "kaja",
-   "win_rate": 49.98,
-   "win_label": null,
-   "pick_rate": 0.69,
-   "pick_label": "Rare",
-   "ban_rate": 19.57,
-   "ban_label": null,
-   "roles": [
-    "Support"
-   ],
-   "lanes": [
+    "exp",
     "roam"
    ],
    "specialities": [
-    "Initiator",
-    "Charge"
+    "Damage",
+    "Regen"
    ]
   },
   {
-   "position": 65,
-   "name": "Angela",
-   "slug": "angela",
-   "win_rate": 49.96,
-   "win_label": null,
-   "pick_rate": 1.76,
-   "pick_label": null,
-   "ban_rate": 12.14,
-   "ban_label": null,
-   "roles": [
-    "Support"
-   ],
-   "lanes": [
-    "roam"
-   ],
-   "specialities": [
-    "Support",
-    "Guard"
-   ]
-  },
-  {
-   "position": 66,
-   "name": "Hanzo",
-   "slug": "hanzo",
-   "win_rate": 49.95,
-   "win_label": null,
-   "pick_rate": 0.32,
-   "pick_label": "Rare",
-   "ban_rate": 4.77,
-   "ban_label": null,
-   "roles": [
-    "Assassin"
-   ],
-   "lanes": [
-    "jungle"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
-   "position": 67,
+   "position": 63,
    "name": "Brody",
    "slug": "brody",
-   "win_rate": 49.92,
+   "win_rate": 50.0,
    "win_label": null,
-   "pick_rate": 0.79,
+   "pick_rate": 0.78,
    "pick_label": "Rare",
    "ban_rate": 1.33,
    "ban_label": null,
@@ -1438,12 +1354,96 @@
    ]
   },
   {
+   "position": 64,
+   "name": "Hanzo",
+   "slug": "hanzo",
+   "win_rate": 49.96,
+   "win_label": null,
+   "pick_rate": 0.32,
+   "pick_label": "Rare",
+   "ban_rate": 4.73,
+   "ban_label": null,
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "jungle"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 65,
+   "name": "Angela",
+   "slug": "angela",
+   "win_rate": 49.95,
+   "win_label": null,
+   "pick_rate": 1.78,
+   "pick_label": null,
+   "ban_rate": 12.32,
+   "ban_label": null,
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Support",
+    "Guard"
+   ]
+  },
+  {
+   "position": 66,
+   "name": "Odette",
+   "slug": "odette",
+   "win_rate": 49.92,
+   "win_label": null,
+   "pick_rate": 0.55,
+   "pick_label": "Rare",
+   "ban_rate": 0.28,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 67,
+   "name": "Kaja",
+   "slug": "kaja",
+   "win_rate": 49.9,
+   "win_label": null,
+   "pick_rate": 0.67,
+   "pick_label": "Rare",
+   "ban_rate": 19.46,
+   "ban_label": null,
+   "roles": [
+    "Support"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Initiator",
+    "Charge"
+   ]
+  },
+  {
    "position": 68,
    "name": "Miya",
    "slug": "miya",
-   "win_rate": 49.91,
+   "win_rate": 49.87,
    "win_label": null,
-   "pick_rate": 2.09,
+   "pick_rate": 2.1,
    "pick_label": null,
    "ban_rate": 4.17,
    "ban_label": null,
@@ -1462,11 +1462,11 @@
    "position": 69,
    "name": "Hirara",
    "slug": "hirara",
-   "win_rate": 49.9,
+   "win_rate": 49.86,
    "win_label": null,
    "pick_rate": 0.61,
    "pick_label": "Rare",
-   "ban_rate": 67.62,
+   "ban_rate": 67.16,
    "ban_label": "Most BannedOften Banned",
    "roles": [
     "Assassin"
@@ -1481,11 +1481,33 @@
   },
   {
    "position": 70,
+   "name": "Johnson",
+   "slug": "johnson",
+   "win_rate": 49.84,
+   "win_label": null,
+   "pick_rate": 0.7,
+   "pick_label": "Rare",
+   "ban_rate": 1.91,
+   "ban_label": null,
+   "roles": [
+    "Support",
+    "Tank"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Support"
+   ]
+  },
+  {
+   "position": 71,
    "name": "Julian",
    "slug": "julian",
-   "win_rate": 49.83,
+   "win_rate": 49.82,
    "win_label": null,
-   "pick_rate": 0.65,
+   "pick_rate": 0.67,
    "pick_label": "Rare",
    "ban_rate": 0.78,
    "ban_label": null,
@@ -1503,14 +1525,35 @@
    ]
   },
   {
-   "position": 71,
-   "name": "Paquito",
-   "slug": "paquito",
+   "position": 72,
+   "name": "Leomord",
+   "slug": "leomord",
    "win_rate": 49.82,
    "win_label": null,
-   "pick_rate": 1.18,
+   "pick_rate": 0.32,
+   "pick_label": "Rare",
+   "ban_rate": 0.69,
+   "ban_label": null,
+   "roles": [
+    "Fighter"
+   ],
+   "lanes": [
+    "jungle"
+   ],
+   "specialities": [
+    "Burst",
+    "Chase"
+   ]
+  },
+  {
+   "position": 73,
+   "name": "Paquito",
+   "slug": "paquito",
+   "win_rate": 49.81,
+   "win_label": null,
+   "pick_rate": 1.17,
    "pick_label": null,
-   "ban_rate": 14.14,
+   "ban_rate": 13.86,
    "ban_label": null,
    "roles": [
     "Assassin",
@@ -1526,57 +1569,14 @@
    ]
   },
   {
-   "position": 72,
-   "name": "Johnson",
-   "slug": "johnson",
-   "win_rate": 49.77,
-   "win_label": null,
-   "pick_rate": 0.69,
-   "pick_label": "Rare",
-   "ban_rate": 1.88,
-   "ban_label": null,
-   "roles": [
-    "Support",
-    "Tank"
-   ],
-   "lanes": [
-    "roam"
-   ],
-   "specialities": [
-    "Crowd Control",
-    "Support"
-   ]
-  },
-  {
-   "position": 73,
-   "name": "Layla",
-   "slug": "layla",
-   "win_rate": 49.72,
-   "win_label": null,
-   "pick_rate": 1.77,
-   "pick_label": null,
-   "ban_rate": 1.87,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Damage"
-   ]
-  },
-  {
    "position": 74,
    "name": "Nolan",
    "slug": "nolan",
-   "win_rate": 49.72,
+   "win_rate": 49.74,
    "win_label": null,
-   "pick_rate": 2.61,
+   "pick_rate": 2.48,
    "pick_label": null,
-   "ban_rate": 21.15,
+   "ban_rate": 23.0,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -1591,13 +1591,55 @@
   },
   {
    "position": 75,
+   "name": "Layla",
+   "slug": "layla",
+   "win_rate": 49.73,
+   "win_label": null,
+   "pick_rate": 1.77,
+   "pick_label": null,
+   "ban_rate": 1.88,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Damage"
+   ]
+  },
+  {
+   "position": 76,
+   "name": "Atlas",
+   "slug": "atlas",
+   "win_rate": 49.65,
+   "win_label": null,
+   "pick_rate": 0.88,
+   "pick_label": "Rare",
+   "ban_rate": 9.04,
+   "ban_label": null,
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Crowd Control",
+    "Initiator"
+   ]
+  },
+  {
+   "position": 77,
    "name": "Yin",
    "slug": "yin",
-   "win_rate": 49.72,
+   "win_rate": 49.62,
    "win_label": null,
-   "pick_rate": 0.49,
+   "pick_rate": 0.51,
    "pick_label": "Rare",
-   "ban_rate": 1.69,
+   "ban_rate": 1.73,
    "ban_label": null,
    "roles": [
     "Assassin",
@@ -1613,16 +1655,17 @@
    ]
   },
   {
-   "position": 76,
-   "name": "Leomord",
-   "slug": "leomord",
-   "win_rate": 49.69,
+   "position": 78,
+   "name": "Suyou",
+   "slug": "suyou",
+   "win_rate": 49.52,
    "win_label": null,
-   "pick_rate": 0.33,
-   "pick_label": "Rare",
-   "ban_rate": 0.66,
+   "pick_rate": 1.2,
+   "pick_label": null,
+   "ban_rate": 1.7,
    "ban_label": null,
    "roles": [
+    "Assassin",
     "Fighter"
    ],
    "lanes": [
@@ -1634,31 +1677,32 @@
    ]
   },
   {
-   "position": 77,
-   "name": "Atlas",
-   "slug": "atlas",
-   "win_rate": 49.64,
+   "position": 79,
+   "name": "Sora",
+   "slug": "sora",
+   "win_rate": 49.49,
    "win_label": null,
-   "pick_rate": 0.9,
+   "pick_rate": 0.7,
    "pick_label": "Rare",
-   "ban_rate": 9.23,
+   "ban_rate": 4.52,
    "ban_label": null,
    "roles": [
-    "Tank"
+    "Assassin",
+    "Fighter"
    ],
    "lanes": [
-    "roam"
+    "exp"
    ],
    "specialities": [
-    "Crowd Control",
-    "Initiator"
+    "Charge",
+    "Burst"
    ]
   },
   {
-   "position": 78,
+   "position": 80,
    "name": "Uranus",
    "slug": "uranus",
-   "win_rate": 49.64,
+   "win_rate": 49.47,
    "win_label": null,
    "pick_rate": 0.29,
    "pick_label": "Rare",
@@ -1675,56 +1719,12 @@
    ]
   },
   {
-   "position": 79,
-   "name": "Suyou",
-   "slug": "suyou",
-   "win_rate": 49.63,
-   "win_label": null,
-   "pick_rate": 1.18,
-   "pick_label": null,
-   "ban_rate": 1.65,
-   "ban_label": null,
-   "roles": [
-    "Assassin",
-    "Fighter"
-   ],
-   "lanes": [
-    "jungle"
-   ],
-   "specialities": [
-    "Burst",
-    "Chase"
-   ]
-  },
-  {
-   "position": 80,
-   "name": "Sora",
-   "slug": "sora",
-   "win_rate": 49.48,
-   "win_label": null,
-   "pick_rate": 0.7,
-   "pick_label": "Rare",
-   "ban_rate": 4.38,
-   "ban_label": null,
-   "roles": [
-    "Assassin",
-    "Fighter"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Charge",
-    "Burst"
-   ]
-  },
-  {
    "position": 81,
    "name": "Alucard",
    "slug": "alucard",
-   "win_rate": 49.38,
+   "win_rate": 49.36,
    "win_label": null,
-   "pick_rate": 0.47,
+   "pick_rate": 0.48,
    "pick_label": "Rare",
    "ban_rate": 0.32,
    "ban_label": null,
@@ -1742,13 +1742,13 @@
   },
   {
    "position": 82,
-   "name": "Novaria",
-   "slug": "novaria",
-   "win_rate": 49.33,
+   "name": "Vexana",
+   "slug": "vexana",
+   "win_rate": 49.35,
    "win_label": null,
-   "pick_rate": 1.09,
+   "pick_rate": 1.58,
    "pick_label": null,
-   "ban_rate": 3.71,
+   "ban_rate": 1.17,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -1757,7 +1757,7 @@
     "mid"
    ],
    "specialities": [
-    "Burst",
+    "Control",
     "Poke"
    ]
   },
@@ -1765,11 +1765,11 @@
    "position": 83,
    "name": "Cici",
    "slug": "cici",
-   "win_rate": 49.32,
+   "win_rate": 49.31,
    "win_label": null,
    "pick_rate": 0.76,
    "pick_label": "Rare",
-   "ban_rate": 1.28,
+   "ban_rate": 1.34,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1784,13 +1784,13 @@
   },
   {
    "position": 84,
-   "name": "Vexana",
-   "slug": "vexana",
-   "win_rate": 49.27,
+   "name": "Novaria",
+   "slug": "novaria",
+   "win_rate": 49.28,
    "win_label": null,
-   "pick_rate": 1.61,
+   "pick_rate": 1.09,
    "pick_label": null,
-   "ban_rate": 1.15,
+   "ban_rate": 3.65,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -1799,40 +1799,19 @@
     "mid"
    ],
    "specialities": [
-    "Control",
+    "Burst",
     "Poke"
    ]
   },
   {
    "position": 85,
-   "name": "Karrie",
-   "slug": "karrie",
-   "win_rate": 49.19,
-   "win_label": null,
-   "pick_rate": 0.59,
-   "pick_label": "Rare",
-   "ban_rate": 0.94,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Damage"
-   ]
-  },
-  {
-   "position": 86,
    "name": "Alpha",
    "slug": "alpha",
-   "win_rate": 49.16,
+   "win_rate": 49.18,
    "win_label": null,
-   "pick_rate": 1.38,
+   "pick_rate": 1.39,
    "pick_label": null,
-   "ban_rate": 0.74,
+   "ban_rate": 0.76,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1847,14 +1826,14 @@
    ]
   },
   {
-   "position": 87,
+   "position": 86,
    "name": "Dyrroth",
    "slug": "dyrroth",
-   "win_rate": 49.16,
+   "win_rate": 49.12,
    "win_label": null,
-   "pick_rate": 1.59,
+   "pick_rate": 1.61,
    "pick_label": null,
-   "ban_rate": 1.69,
+   "ban_rate": 1.72,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -1869,14 +1848,35 @@
    ]
   },
   {
+   "position": 87,
+   "name": "Karrie",
+   "slug": "karrie",
+   "win_rate": 49.09,
+   "win_label": null,
+   "pick_rate": 0.59,
+   "pick_label": "Rare",
+   "ban_rate": 0.97,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Damage"
+   ]
+  },
+  {
    "position": 88,
    "name": "Karina",
    "slug": "karina",
-   "win_rate": 49.11,
+   "win_rate": 49.05,
    "win_label": null,
    "pick_rate": 0.91,
    "pick_label": "Rare",
-   "ban_rate": 5.25,
+   "ban_rate": 5.28,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -1891,51 +1891,30 @@
   },
   {
    "position": 89,
-   "name": "Joy",
-   "slug": "joy",
-   "win_rate": 49.08,
+   "name": "Ruby",
+   "slug": "ruby",
+   "win_rate": 49.05,
    "win_label": null,
-   "pick_rate": 0.14,
+   "pick_rate": 0.32,
    "pick_label": "Rare",
-   "ban_rate": 0.17,
+   "ban_rate": 0.33,
    "ban_label": null,
    "roles": [
-    "Assassin"
+    "Fighter"
    ],
    "lanes": [
-    "jungle"
+    "exp"
    ],
    "specialities": [
-    "Damage",
-    "Chase"
+    "Crowd Control",
+    "Regen"
    ]
   },
   {
    "position": 90,
-   "name": "Lylia",
-   "slug": "lylia",
-   "win_rate": 49.06,
-   "win_label": null,
-   "pick_rate": 0.47,
-   "pick_label": "Rare",
-   "ban_rate": 0.4,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Damage",
-    "Push"
-   ]
-  },
-  {
-   "position": 91,
    "name": "Yi Sun-shin",
    "slug": "yi-sun-shin",
-   "win_rate": 49.06,
+   "win_rate": 49.04,
    "win_label": null,
    "pick_rate": 0.87,
    "pick_label": "Rare",
@@ -1954,35 +1933,35 @@
    ]
   },
   {
-   "position": 92,
-   "name": "Yu Zhong",
-   "slug": "yu-zhong",
-   "win_rate": 48.89,
+   "position": 91,
+   "name": "Lylia",
+   "slug": "lylia",
+   "win_rate": 48.97,
    "win_label": null,
-   "pick_rate": 0.7,
+   "pick_rate": 0.48,
    "pick_label": "Rare",
-   "ban_rate": 0.77,
+   "ban_rate": 0.42,
    "ban_label": null,
    "roles": [
-    "Fighter"
+    "Mage"
    ],
    "lanes": [
-    "exp"
+    "mid"
    ],
    "specialities": [
     "Damage",
-    "Regen"
+    "Push"
    ]
   },
   {
-   "position": 93,
+   "position": 92,
    "name": "Claude",
    "slug": "claude",
-   "win_rate": 48.88,
+   "win_rate": 48.91,
    "win_label": null,
-   "pick_rate": 0.77,
+   "pick_rate": 0.78,
    "pick_label": "Rare",
-   "ban_rate": 0.22,
+   "ban_rate": 0.23,
    "ban_label": null,
    "roles": [
     "Marksman"
@@ -1996,14 +1975,14 @@
    ]
   },
   {
-   "position": 94,
+   "position": 93,
    "name": "Thamuz",
    "slug": "thamuz",
-   "win_rate": 48.88,
+   "win_rate": 48.91,
    "win_label": null,
-   "pick_rate": 0.78,
+   "pick_rate": 0.8,
    "pick_label": "Rare",
-   "ban_rate": 1.61,
+   "ban_rate": 1.63,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -2018,14 +1997,36 @@
    ]
   },
   {
-   "position": 95,
-   "name": "Ruby",
-   "slug": "ruby",
-   "win_rate": 48.76,
+   "position": 94,
+   "name": "Popol and Kupa",
+   "slug": "popol-and-kupa",
+   "win_rate": 48.77,
    "win_label": null,
-   "pick_rate": 0.32,
+   "pick_rate": 0.59,
    "pick_label": "Rare",
-   "ban_rate": 0.31,
+   "ban_rate": 2.72,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold",
+    "jungle"
+   ],
+   "specialities": [
+    "Control",
+    "Burst"
+   ]
+  },
+  {
+   "position": 95,
+   "name": "Yu Zhong",
+   "slug": "yu-zhong",
+   "win_rate": 48.77,
+   "win_label": null,
+   "pick_rate": 0.68,
+   "pick_label": "Rare",
+   "ban_rate": 0.78,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -2034,7 +2035,7 @@
     "exp"
    ],
    "specialities": [
-    "Crowd Control",
+    "Damage",
     "Regen"
    ]
   },
@@ -2042,11 +2043,11 @@
    "position": 96,
    "name": "Aurora",
    "slug": "aurora",
-   "win_rate": 48.73,
+   "win_rate": 48.72,
    "win_label": null,
    "pick_rate": 0.64,
    "pick_label": "Rare",
-   "ban_rate": 0.38,
+   "ban_rate": 0.39,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -2061,35 +2062,34 @@
   },
   {
    "position": 97,
-   "name": "Selena",
-   "slug": "selena",
-   "win_rate": 48.67,
+   "name": "Phoveus",
+   "slug": "phoveus",
+   "win_rate": 48.62,
    "win_label": null,
-   "pick_rate": 1.26,
-   "pick_label": null,
-   "ban_rate": 4.99,
+   "pick_rate": 0.28,
+   "pick_label": "Rare",
+   "ban_rate": 0.95,
    "ban_label": null,
    "roles": [
-    "Assassin",
-    "Mage"
+    "Fighter"
    ],
    "lanes": [
-    "mid"
+    "exp"
    ],
    "specialities": [
-    "Initiator",
-    "Finisher"
+    "Damage",
+    "Regen"
    ]
   },
   {
    "position": 98,
    "name": "Gusion",
    "slug": "gusion",
-   "win_rate": 48.64,
+   "win_rate": 48.61,
    "win_label": null,
    "pick_rate": 1.23,
    "pick_label": null,
-   "ban_rate": 3.12,
+   "ban_rate": 3.09,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -2105,120 +2105,32 @@
   },
   {
    "position": 99,
-   "name": "Harley",
-   "slug": "harley",
-   "win_rate": 48.57,
+   "name": "Joy",
+   "slug": "joy",
+   "win_rate": 48.58,
    "win_label": null,
-   "pick_rate": 0.78,
+   "pick_rate": 0.14,
    "pick_label": "Rare",
-   "ban_rate": 3.0,
+   "ban_rate": 0.18,
    "ban_label": null,
    "roles": [
-    "Assassin",
-    "Mage"
+    "Assassin"
    ],
    "lanes": [
-    "mid",
     "jungle"
    ],
    "specialities": [
-    "Burst",
-    "Poke"
+    "Damage",
+    "Chase"
    ]
   },
   {
    "position": 100,
-   "name": "Hylos",
-   "slug": "hylos",
-   "win_rate": 48.52,
-   "win_label": null,
-   "pick_rate": 0.26,
-   "pick_label": "Rare",
-   "ban_rate": 0.24,
-   "ban_label": null,
-   "roles": [
-    "Tank"
-   ],
-   "lanes": [
-    "roam"
-   ],
-   "specialities": [
-    "Initiator",
-    "Guard"
-   ]
-  },
-  {
-   "position": 101,
-   "name": "Popol and Kupa",
-   "slug": "popol-and-kupa",
-   "win_rate": 48.51,
-   "win_label": null,
-   "pick_rate": 0.64,
-   "pick_label": "Rare",
-   "ban_rate": 3.38,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold",
-    "jungle"
-   ],
-   "specialities": [
-    "Control",
-    "Burst"
-   ]
-  },
-  {
-   "position": 102,
-   "name": "Phoveus",
-   "slug": "phoveus",
-   "win_rate": 48.45,
-   "win_label": null,
-   "pick_rate": 0.27,
-   "pick_label": "Rare",
-   "ban_rate": 0.9,
-   "ban_label": null,
-   "roles": [
-    "Fighter"
-   ],
-   "lanes": [
-    "exp"
-   ],
-   "specialities": [
-    "Damage",
-    "Regen"
-   ]
-  },
-  {
-   "position": 103,
-   "name": "Lesley",
-   "slug": "lesley",
-   "win_rate": 48.29,
-   "win_label": null,
-   "pick_rate": 1.87,
-   "pick_label": null,
-   "ban_rate": 8.6,
-   "ban_label": null,
-   "roles": [
-    "Assassin",
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Burst"
-   ]
-  },
-  {
-   "position": 104,
    "name": "Zhuxin",
    "slug": "zhuxin",
-   "win_rate": 48.28,
+   "win_rate": 48.58,
    "win_label": null,
-   "pick_rate": 0.31,
+   "pick_rate": 0.29,
    "pick_label": "Rare",
    "ban_rate": 0.48,
    "ban_label": null,
@@ -2234,33 +2146,76 @@
    ]
   },
   {
-   "position": 105,
-   "name": "Kimmy",
-   "slug": "kimmy",
-   "win_rate": 48.25,
+   "position": 101,
+   "name": "Harley",
+   "slug": "harley",
+   "win_rate": 48.57,
    "win_label": null,
-   "pick_rate": 0.86,
+   "pick_rate": 0.79,
    "pick_label": "Rare",
-   "ban_rate": 0.76,
+   "ban_rate": 3.05,
    "ban_label": null,
    "roles": [
-    "Marksman",
+    "Assassin",
     "Mage"
    ],
    "lanes": [
-    "gold",
-    "mid"
+    "mid",
+    "jungle"
    ],
    "specialities": [
-    "Magic Damage",
-    "Damage"
+    "Burst",
+    "Poke"
    ]
   },
   {
-   "position": 106,
+   "position": 102,
+   "name": "Selena",
+   "slug": "selena",
+   "win_rate": 48.55,
+   "win_label": null,
+   "pick_rate": 1.24,
+   "pick_label": null,
+   "ban_rate": 4.82,
+   "ban_label": null,
+   "roles": [
+    "Assassin",
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Initiator",
+    "Finisher"
+   ]
+  },
+  {
+   "position": 103,
+   "name": "Hylos",
+   "slug": "hylos",
+   "win_rate": 48.52,
+   "win_label": null,
+   "pick_rate": 0.26,
+   "pick_label": "Rare",
+   "ban_rate": 0.25,
+   "ban_label": null,
+   "roles": [
+    "Tank"
+   ],
+   "lanes": [
+    "roam"
+   ],
+   "specialities": [
+    "Initiator",
+    "Guard"
+   ]
+  },
+  {
+   "position": 104,
    "name": "Roger",
    "slug": "roger",
-   "win_rate": 48.23,
+   "win_rate": 48.25,
    "win_label": null,
    "pick_rate": 0.27,
    "pick_label": "Rare",
@@ -2279,33 +2234,34 @@
    ]
   },
   {
-   "position": 107,
-   "name": "Hayabusa",
-   "slug": "hayabusa",
-   "win_rate": 48.0,
+   "position": 105,
+   "name": "Lesley",
+   "slug": "lesley",
+   "win_rate": 48.24,
    "win_label": null,
-   "pick_rate": 0.67,
-   "pick_label": "Rare",
-   "ban_rate": 1.51,
+   "pick_rate": 1.88,
+   "pick_label": null,
+   "ban_rate": 8.75,
    "ban_label": null,
    "roles": [
-    "Assassin"
+    "Assassin",
+    "Marksman"
    ],
    "lanes": [
-    "jungle"
+    "gold"
    ],
    "specialities": [
-    "Burst",
-    "Chase"
+    "Finisher",
+    "Burst"
    ]
   },
   {
-   "position": 108,
+   "position": 106,
    "name": "Chang'e",
    "slug": "change",
-   "win_rate": 47.96,
+   "win_rate": 48.22,
    "win_label": null,
-   "pick_rate": 0.56,
+   "pick_rate": 0.57,
    "pick_label": "Rare",
    "ban_rate": 0.31,
    "ban_label": null,
@@ -2321,14 +2277,58 @@
    ]
   },
   {
+   "position": 107,
+   "name": "Hayabusa",
+   "slug": "hayabusa",
+   "win_rate": 48.16,
+   "win_label": null,
+   "pick_rate": 0.69,
+   "pick_label": "Rare",
+   "ban_rate": 1.54,
+   "ban_label": null,
+   "roles": [
+    "Assassin"
+   ],
+   "lanes": [
+    "jungle"
+   ],
+   "specialities": [
+    "Burst",
+    "Chase"
+   ]
+  },
+  {
+   "position": 108,
+   "name": "Kimmy",
+   "slug": "kimmy",
+   "win_rate": 48.15,
+   "win_label": null,
+   "pick_rate": 0.85,
+   "pick_label": "Rare",
+   "ban_rate": 0.74,
+   "ban_label": null,
+   "roles": [
+    "Marksman",
+    "Mage"
+   ],
+   "lanes": [
+    "gold",
+    "mid"
+   ],
+   "specialities": [
+    "Magic Damage",
+    "Damage"
+   ]
+  },
+  {
    "position": 109,
    "name": "Helcurt",
    "slug": "helcurt",
-   "win_rate": 47.96,
+   "win_rate": 47.88,
    "win_label": null,
-   "pick_rate": 0.6,
+   "pick_rate": 0.61,
    "pick_label": "Rare",
-   "ban_rate": 4.67,
+   "ban_rate": 4.7,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -2344,30 +2344,31 @@
   },
   {
    "position": 110,
-   "name": "Lapu-Lapu",
-   "slug": "lapu-lapu",
-   "win_rate": 47.82,
+   "name": "Chip",
+   "slug": "chip",
+   "win_rate": 47.85,
    "win_label": null,
-   "pick_rate": 0.34,
+   "pick_rate": 0.04,
    "pick_label": "Rare",
-   "ban_rate": 0.29,
+   "ban_rate": 0.22,
    "ban_label": null,
    "roles": [
-    "Fighter"
+    "Support",
+    "Tank"
    ],
    "lanes": [
-    "exp"
+    "roam"
    ],
    "specialities": [
-    "Burst",
-    "Chase"
+    "Crowd Control",
+    "Support"
    ]
   },
   {
    "position": 111,
    "name": "Jawhead",
    "slug": "jawhead",
-   "win_rate": 47.73,
+   "win_rate": 47.79,
    "win_label": null,
    "pick_rate": 0.33,
    "pick_label": "Rare",
@@ -2387,31 +2388,30 @@
   },
   {
    "position": 112,
-   "name": "Chip",
-   "slug": "chip",
-   "win_rate": 47.58,
+   "name": "Lapu-Lapu",
+   "slug": "lapu-lapu",
+   "win_rate": 47.77,
    "win_label": null,
-   "pick_rate": 0.04,
+   "pick_rate": 0.34,
    "pick_label": "Rare",
-   "ban_rate": 0.22,
+   "ban_rate": 0.3,
    "ban_label": null,
    "roles": [
-    "Support",
-    "Tank"
+    "Fighter"
    ],
    "lanes": [
-    "roam"
+    "exp"
    ],
    "specialities": [
-    "Crowd Control",
-    "Support"
+    "Burst",
+    "Chase"
    ]
   },
   {
    "position": 113,
    "name": "Harith",
    "slug": "harith",
-   "win_rate": 47.57,
+   "win_rate": 47.66,
    "win_label": null,
    "pick_rate": 0.15,
    "pick_label": "Rare",
@@ -2432,11 +2432,11 @@
    "position": 114,
    "name": "Arlott",
    "slug": "arlott",
-   "win_rate": 47.38,
+   "win_rate": 47.52,
    "win_label": null,
-   "pick_rate": 0.5,
+   "pick_rate": 0.51,
    "pick_label": "Rare",
-   "ban_rate": 0.66,
+   "ban_rate": 0.67,
    "ban_label": null,
    "roles": [
     "Assassin",
@@ -2452,13 +2452,34 @@
   },
   {
    "position": 115,
+   "name": "Wanwan",
+   "slug": "wanwan",
+   "win_rate": 47.38,
+   "win_label": null,
+   "pick_rate": 0.14,
+   "pick_label": "Rare",
+   "ban_rate": 0.14,
+   "ban_label": null,
+   "roles": [
+    "Marksman"
+   ],
+   "lanes": [
+    "gold"
+   ],
+   "specialities": [
+    "Finisher",
+    "Burst"
+   ]
+  },
+  {
+   "position": 116,
    "name": "Martis",
    "slug": "martis",
-   "win_rate": 47.25,
+   "win_rate": 47.37,
    "win_label": null,
-   "pick_rate": 0.64,
+   "pick_rate": 0.65,
    "pick_label": "Rare",
-   "ban_rate": 0.44,
+   "ban_rate": 0.45,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -2473,14 +2494,56 @@
    ]
   },
   {
-   "position": 116,
+   "position": 117,
+   "name": "Nana",
+   "slug": "nana",
+   "win_rate": 47.22,
+   "win_label": null,
+   "pick_rate": 1.58,
+   "pick_label": null,
+   "ban_rate": 3.61,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 118,
+   "name": "Pharsa",
+   "slug": "pharsa",
+   "win_rate": 47.11,
+   "win_label": null,
+   "pick_rate": 0.3,
+   "pick_label": "Rare",
+   "ban_rate": 0.19,
+   "ban_label": null,
+   "roles": [
+    "Mage"
+   ],
+   "lanes": [
+    "mid"
+   ],
+   "specialities": [
+    "Burst",
+    "Poke"
+   ]
+  },
+  {
+   "position": 119,
    "name": "Esmeralda",
    "slug": "esmeralda",
-   "win_rate": 47.18,
+   "win_rate": 47.1,
    "win_label": null,
    "pick_rate": 0.81,
    "pick_label": "Rare",
-   "ban_rate": 2.22,
+   "ban_rate": 2.24,
    "ban_label": null,
    "roles": [
     "Tank",
@@ -2496,73 +2559,10 @@
    ]
   },
   {
-   "position": 117,
-   "name": "Wanwan",
-   "slug": "wanwan",
-   "win_rate": 47.17,
-   "win_label": null,
-   "pick_rate": 0.14,
-   "pick_label": "Rare",
-   "ban_rate": 0.13,
-   "ban_label": null,
-   "roles": [
-    "Marksman"
-   ],
-   "lanes": [
-    "gold"
-   ],
-   "specialities": [
-    "Finisher",
-    "Burst"
-   ]
-  },
-  {
-   "position": 118,
-   "name": "Nana",
-   "slug": "nana",
-   "win_rate": 47.16,
-   "win_label": null,
-   "pick_rate": 1.57,
-   "pick_label": null,
-   "ban_rate": 3.58,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
-   "position": 119,
-   "name": "Pharsa",
-   "slug": "pharsa",
-   "win_rate": 46.96,
-   "win_label": null,
-   "pick_rate": 0.3,
-   "pick_label": "Rare",
-   "ban_rate": 0.18,
-   "ban_label": null,
-   "roles": [
-    "Mage"
-   ],
-   "lanes": [
-    "mid"
-   ],
-   "specialities": [
-    "Burst",
-    "Poke"
-   ]
-  },
-  {
    "position": 120,
    "name": "Luo Yi",
    "slug": "luo-yi",
-   "win_rate": 46.72,
+   "win_rate": 46.85,
    "win_label": null,
    "pick_rate": 0.19,
    "pick_label": "Rare",
@@ -2583,11 +2583,11 @@
    "position": 121,
    "name": "Grock",
    "slug": "grock",
-   "win_rate": 46.69,
+   "win_rate": 46.76,
    "win_label": null,
-   "pick_rate": 0.33,
+   "pick_rate": 0.34,
    "pick_label": "Rare",
-   "ban_rate": 0.73,
+   "ban_rate": 0.74,
    "ban_label": null,
    "roles": [
     "Fighter",
@@ -2605,9 +2605,9 @@
    "position": 122,
    "name": "Balmond",
    "slug": "balmond",
-   "win_rate": 46.42,
+   "win_rate": 46.59,
    "win_label": null,
-   "pick_rate": 0.59,
+   "pick_rate": 0.6,
    "pick_label": "Rare",
    "ban_rate": 0.4,
    "ban_label": null,
@@ -2627,11 +2627,11 @@
    "position": 123,
    "name": "Zilong",
    "slug": "zilong",
-   "win_rate": 46.39,
+   "win_rate": 46.46,
    "win_label": null,
    "pick_rate": 0.72,
    "pick_label": "Rare",
-   "ban_rate": 0.51,
+   "ban_rate": 0.52,
    "ban_label": null,
    "roles": [
     "Assassin",
@@ -2649,11 +2649,11 @@
    "position": 124,
    "name": "Baxia",
    "slug": "baxia",
-   "win_rate": 46.17,
+   "win_rate": 45.87,
    "win_label": null,
    "pick_rate": 0.05,
    "pick_label": "Rare",
-   "ban_rate": 0.11,
+   "ban_rate": 0.1,
    "ban_label": null,
    "roles": [
     "Tank"
@@ -2671,11 +2671,11 @@
    "position": 125,
    "name": "Gatotkaca",
    "slug": "gatotkaca",
-   "win_rate": 45.57,
+   "win_rate": 45.75,
    "win_label": null,
-   "pick_rate": 0.57,
+   "pick_rate": 0.58,
    "pick_label": "Rare",
-   "ban_rate": 0.32,
+   "ban_rate": 0.33,
    "ban_label": null,
    "roles": [
     "Fighter",
@@ -2694,11 +2694,11 @@
    "position": 126,
    "name": "Tigreal",
    "slug": "tigreal",
-   "win_rate": 45.56,
+   "win_rate": 45.52,
    "win_label": null,
-   "pick_rate": 2.01,
+   "pick_rate": 2.03,
    "pick_label": null,
-   "ban_rate": 7.64,
+   "ban_rate": 7.77,
    "ban_label": null,
    "roles": [
     "Tank"
@@ -2714,11 +2714,11 @@
    "position": 127,
    "name": "Chou",
    "slug": "chou",
-   "win_rate": 45.03,
+   "win_rate": 45.02,
    "win_label": null,
    "pick_rate": 1.0,
    "pick_label": "Rare",
-   "ban_rate": 3.13,
+   "ban_rate": 3.09,
    "ban_label": null,
    "roles": [
     "Fighter"
@@ -2736,11 +2736,11 @@
    "position": 128,
    "name": "Valentina",
    "slug": "valentina",
-   "win_rate": 44.49,
+   "win_rate": 44.33,
    "win_label": "Low",
    "pick_rate": 0.13,
    "pick_label": "Rare",
-   "ban_rate": 0.13,
+   "ban_rate": 0.12,
    "ban_label": null,
    "roles": [
     "Mage"
@@ -2757,9 +2757,9 @@
    "position": 129,
    "name": "Mathilda",
    "slug": "mathilda",
-   "win_rate": 44.03,
+   "win_rate": 44.19,
    "win_label": "Low",
-   "pick_rate": 0.13,
+   "pick_rate": 0.14,
    "pick_label": "Rare",
    "ban_rate": 0.19,
    "ban_label": null,
@@ -2779,11 +2779,11 @@
    "position": 130,
    "name": "Lancelot",
    "slug": "lancelot",
-   "win_rate": 43.25,
+   "win_rate": 42.95,
    "win_label": "Low",
-   "pick_rate": 0.46,
+   "pick_rate": 0.47,
    "pick_label": "Rare",
-   "ban_rate": 0.47,
+   "ban_rate": 0.49,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -2800,11 +2800,11 @@
    "position": 131,
    "name": "Fanny",
    "slug": "fanny",
-   "win_rate": 42.81,
+   "win_rate": 42.8,
    "win_label": "Low",
    "pick_rate": 0.63,
    "pick_label": "Rare",
-   "ban_rate": 1.99,
+   "ban_rate": 2.02,
    "ban_label": null,
    "roles": [
     "Assassin"
@@ -2821,11 +2821,11 @@
    "position": 132,
    "name": "Granger",
    "slug": "granger",
-   "win_rate": 42.66,
+   "win_rate": 42.65,
    "win_label": "Low",
    "pick_rate": 1.32,
    "pick_label": null,
-   "ban_rate": 1.65,
+   "ban_rate": 1.7,
    "ban_label": null,
    "roles": [
     "Marksman"
@@ -2842,11 +2842,11 @@
    "position": 133,
    "name": "Franco",
    "slug": "franco",
-   "win_rate": 41.89,
+   "win_rate": 41.92,
    "win_label": "Low",
-   "pick_rate": 0.9,
+   "pick_rate": 0.92,
    "pick_label": "Rare",
-   "ban_rate": 3.05,
+   "ban_rate": 3.12,
    "ban_label": null,
    "roles": [
     "Tank"
@@ -2860,5 +2860,5 @@
    ]
   }
  ],
- "fetched_at": "2026-11-14T22:21:50.495608+00:00"
+ "fetched_at": "2026-11-16T13:03:17.961713+00:00"
 }
