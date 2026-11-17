@@ -783,7 +783,7 @@ async function openHero(id) {
     const h = j.hero;
     const counters = await api('/api/counters/' + encodeURIComponent(id)).catch(() => null);
     box.innerHTML = `
-      <div class="detail-head">
+      <div class="detail-head" style="--hero-art:url('${esc(h.portrait || h.head_big || h.head || '')}')">
         ${h.portrait || h.head_big || h.head ? `<img src="${esc(h.portrait || h.head_big || h.head)}" alt="${esc(h.name)}">` : ''}
         <div><h2>${esc(h.name)}</h2><div>${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div></div>
       </div>
@@ -978,8 +978,9 @@ function tierCardsHtml(sd, filter) {
     if (filter !== 'ALL' && filter !== k) return '';
     const list = (tl.tiers || {})[k] || [];
     if (!list.length) return '';
-    return `<div class="tier-card glass-panel tier-${k.toLowerCase()}">
-      <div class="tier-head"><span class="tier-badge-lg tier-${k.toLowerCase()}">${k}</span><span class="tier-count">${faNum(list.length)} هیرو</span></div>
+    return `<div class="tier-card glass-panel tier-${k.toLowerCase()} tier-row">
+      <div class="tier-letter tier-${k.toLowerCase()}">${k}</div>
+      <div class="tier-row-body"><span class="tier-count">${faNum(list.length)} هیرو</span>
       <div class="tier-heroes">${list.map((h) => {
         const src = byName.get(normStr(h.name));
         const id = src && src.mlid ? String(src.mlid) : '';
@@ -987,7 +988,7 @@ function tierCardsHtml(sd, filter) {
         const st = stats.get(normStr(h.name));
         const wr = st && Number.isFinite(Number(st.win_rate)) ? pct(st.win_rate) : '';
         return `<div class="tier-hero"${id ? ` data-hero="${id}"` : ''}>${img ? `<img src="${esc(img)}" alt="${esc(h.name)}" loading="lazy">` : '<span class="tier-hero-noimg">🦸</span>'}<span class="tier-hero-name">${esc(h.name)}</span>${wr ? `<span class="tier-hero-wr">${esc(wr)}</span>` : ''}</div>`;
-      }).join('')}</div>
+      }).join('')}</div></div>
     </div>`;
   }).join('') || '<p class="hint">تیرلیست فعلاً در دسترس نیست.</p>';
 }
@@ -1136,7 +1137,7 @@ async function showLore(id) {
     const info = lore.info_fa || {};
     const infoBits = [info.title_fa, info.gender_fa, info.species_fa, info.occupation_fa, info.fighting_style_fa].filter(Boolean).join('، ');
     box.innerHTML = `<button class="back" id="loreBack">← بازگشت به داستان‌ها</button>
-      <div class="detail-head">${h.portrait ? `<img src="${esc(h.portrait)}" alt="${esc(h.name)}">` : ''}<div><h2>${esc(h.name)}</h2><div>${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div></div></div>
+      <div class="detail-head" style="--hero-art:url('${esc(h.portrait || '')}')">${h.portrait ? `<img src="${esc(h.portrait)}" alt="${esc(h.name)}">` : ''}<div><h2>${esc(h.name)}</h2><div>${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div></div></div>
       ${infoBits ? `<p class="hint">${esc(infoBits)}</p>` : ''}
       ${lore.bio_short_fa ? `<p>${esc(lore.bio_short_fa)}</p>` : ''}
       ${lore.bio_fa ? `<details open><summary>داستان کامل</summary><p>${esc(lore.bio_fa)}</p></details>` : ''}`;
@@ -1264,7 +1265,7 @@ async function renderSpotlight() {
       const { stat: s, pub: h } = items[i];
       const fa = (sd.faContent.stats.heroes || {})[s.slug] || {};
       const specs = (fa.specialities_fa || s.specialities || []).join('، ');
-      return `<div class="spot-main">
+      return `<div class="spot-art" style="background-image:url('${esc(h.portrait)}')"></div><div class="spot-main">
         <img src="${esc(h.portrait)}" alt="${esc(h.name)}">
         <div>
           <div class="spot-rank">رتبهٔ ${faNum(s.position)} وین‌ریت — ۷ روز اخیر</div>
