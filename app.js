@@ -1320,6 +1320,33 @@ async function renderSpotlight() {
   } catch { const card = box.closest ? box.closest('.spotlight-card') : null; if (card) card.style.display = 'none'; }
 }
 
+// ---------- 3D tilt for the spotlight card (fine pointers only) ----------
+(function () {
+  const wrap = document.querySelector('.spotlight-wrap');
+  const card = document.querySelector('.spotlight-card');
+  if (!wrap || !card) return;
+  if (!window.matchMedia('(pointer: fine)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let raf = null;
+  wrap.addEventListener('pointermove', (e) => {
+    const r = wrap.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      card.style.setProperty('--tilt-x', (-py * 6).toFixed(2) + 'deg');
+      card.style.setProperty('--tilt-y', (px * 7).toFixed(2) + 'deg');
+      card.classList.add('tilting');
+    });
+  });
+  wrap.addEventListener('pointerleave', () => {
+    if (raf) cancelAnimationFrame(raf);
+    card.classList.remove('tilting');
+    card.style.removeProperty('--tilt-x');
+    card.style.removeProperty('--tilt-y');
+  });
+})();
+
 // شروع
 loadHeroes();
 loadItems();

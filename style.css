@@ -362,32 +362,53 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 .news-thumb{width:100%;border-radius:16px;margin-bottom:6px;display:block;border:1px solid rgba(242,193,78,0.3)}
 
 /* ---------- Spotlight متا ---------- */
+/* 3D spotlight: the wrap supplies perspective; the card tilts in 3D
+   (idle sway + pointer tilt). overflow:hidden / backdrop-filter are gone
+   from the card on purpose: both force transform-style: flat. */
+.spotlight-wrap { position: relative; margin-top: 20px; padding-top: 15px; perspective: 1100px; }
 .spotlight-card {
-  position: relative; min-height: 220px; border-radius: 16px; overflow: hidden;
+  position: relative; min-height: 220px; border-radius: 16px;
   background: rgba(9, 14, 28, 0.55);
-  backdrop-filter: blur(var(--blur-md)); -webkit-backdrop-filter: blur(var(--blur-md));
   border: var(--glass-border);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  padding: 42px 14px 14px; text-align: right;
+  padding: 16px 14px 14px; text-align: right;
+  transform-style: preserve-3d; will-change: transform;
+  animation: spot-sway 9s ease-in-out infinite alternate;
 }
-.spot-art { position: absolute; inset: 0; background-size: cover; background-position: center 18%; opacity: 0.38; }
-.spotlight-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(7, 11, 20, 0.94), rgba(7, 11, 20, 0.55) 55%, rgba(7, 11, 20, 0.28)); pointer-events: none; }
-.spotlight-card > *:not(.spot-art) { position: relative; z-index: 1; }
+@keyframes spot-sway {
+  from { transform: rotateX(2.2deg) rotateY(-2.8deg) translateY(0); }
+  to { transform: rotateX(-1.4deg) rotateY(2.8deg) translateY(-4px); }
+}
+.spotlight-card.tilting { animation: none; transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); transition: transform 0.15s ease-out; }
+.spot-art { position: absolute; inset: 0; border-radius: inherit; background-size: cover; background-position: center 18%; opacity: 0.38; transform: translateZ(-50px) scale(1.08); }
+.spotlight-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(to top, rgba(7, 11, 20, 0.94), rgba(7, 11, 20, 0.55) 55%, rgba(7, 11, 20, 0.28)); pointer-events: none; }
+.spotlight-card > *:not(.spot-art) { position: relative; z-index: 1; transform: translateZ(30px); transform-style: preserve-3d; }
+/* Gold pill floating ABOVE the card's top edge (higher than before) */
 .spot-badge {
-  position: absolute; top: 12px; right: 12px; z-index: 2;
+  position: absolute; top: 0; inset-inline-start: 14px; z-index: 3;
   display: flex; align-items: center; gap: 6px;
-  padding: 5px 10px; border-radius: 8px;
-  background: rgba(9, 14, 28, 0.6);
-  backdrop-filter: blur(var(--blur-xs)); -webkit-backdrop-filter: blur(var(--blur-xs));
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--gold); font-size: 11px; font-weight: 700;
+  padding: 6px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, #ffe08a 0%, #f2b63d 45%, #c8862a 100%);
+  color: #241703; font-size: 12px; font-weight: 800;
+  border: 1px solid rgba(255, 224, 138, 0.65);
+  box-shadow: 0 8px 20px rgba(242, 193, 78, 0.45), 0 0 0 3px rgba(7, 11, 20, 0.55);
+  transform: translateZ(70px);
+  animation: spot-badge-float 4.5s ease-in-out infinite alternate;
 }
+@keyframes spot-badge-float {
+  from { transform: translateZ(70px) translateY(0); }
+  to { transform: translateZ(70px) translateY(-3px); }
+}
+/* Spotlight eyebrow: never squeeze/clip the "۷ روز اخیر" note */
+#spotlightBox .eyebrow { margin: 0 0 12px; flex-wrap: wrap; }
+#spotlightBox .eyebrow small { white-space: nowrap; flex-shrink: 0; }
+#spotlightBox .eyebrow-line { min-width: 28px; }
 .spot-time { margin-top: 10px; color: var(--muted); font-size: 11px; }
 .spot-loading { text-align: center; color: var(--muted); padding: 60px 0; font-size: 13px; }
 #spotlightBox { transition: opacity 0.25s; }
 #spotlightBox.fade { opacity: 0; }
-.spot-main { display: flex; gap: 14px; align-items: center; }
-.spot-main img { width: 110px; height: 110px; border-radius: 16px; border: 2px solid var(--gold); box-shadow: 0 0 18px rgba(242, 193, 78, 0.45); object-fit: cover; flex-shrink: 0; }
+.spot-main { display: flex; gap: 14px; align-items: center; transform: translateZ(30px); transform-style: preserve-3d; }
+.spot-main img { width: 110px; height: 110px; border-radius: 16px; border: 2px solid var(--gold); box-shadow: 0 0 18px rgba(242, 193, 78, 0.45); object-fit: cover; flex-shrink: 0; transform: translateZ(30px); }
 .spot-rank { font-size: 11px; color: var(--gold); font-weight: 700; }
 .spot-main h3 { margin: 2px 0; font-size: 24px; font-weight: 900; font-family: 'Space Grotesk', 'Vazirmatn', sans-serif; }
 .spot-tags { font-size: 12px; color: var(--muted); }
@@ -452,7 +473,7 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 @media (prefers-reduced-transparency: reduce) {
   * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
   .glass-panel, .feature-card, .hero-card, .item-card, .skill, .build, details, .result, .chip,
-  .tier-card, .tier-hero, .spotlight-card, .hero-badge, .spot-badge, .patch-chip,
+  .tier-card, .tier-hero, .spotlight-card, .hero-badge, .patch-chip,
   input, select, .tabs button, .role-chip, .lane-row button, .league-row button,
   .primary, .hero-cta .ghost { background: var(--surface); }
   .app-header, .tabs { background: var(--bg-low); }
@@ -463,6 +484,7 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 /* ---------- Reduced motion: no shimmer, no pulsing dots ---------- */
 @media (prefers-reduced-motion: reduce) {
   .skeleton, .patch-chip .dot, .hero-badge .dot, .tab.active { animation: none; }
+  .spotlight-card, .spot-badge { animation: none; transform: none; }
   .feature-card, .hero-card, .hero-img-wrap img, .spot-chip, .tier-hero, #spotlightBox { transition: none; }
 }
 
