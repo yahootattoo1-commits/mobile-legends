@@ -7,8 +7,12 @@
 // ======= DATA LAYER START (standalone: Rone direct + static JSON) =======
 const RONE_BASE = 'https://arena.rone.dev/api';
 const STATIC_BASE = 'data/';
+const WORKER_DATA_BASE = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/data';
+// ۱۰ فایل refreshable اول از ورکر (KV) خوانده می‌شوند؛ اگر ورکر در دسترس نبود،
+// fallback به data/ همین سایت با ?v=DATA_VERSION است — مکانیزم نسخه سر جایش است.
+const WORKER_DATA_FILES = new Set(['tierlist.json', 'news.json', 'discussions.json', 'events.json', 'hero-stats.json', 'matchups.json', 'team-comps.json', 'fa-content.json', 'patch-notes-full.json', 'builds-full.json']);
 const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
-const DATA_VERSION = '20261117-1857'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const DATA_VERSION = '20261117-2234'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 
@@ -95,6 +99,7 @@ async function ronePost(path, body, headers = {}) {
 // ---------- دیتای استاتیک (data/*.json — همان فایل‌های p3hndrx/MLBB-API) ----------
 let staticPromise = null;
 let tierByName = {}; // نام هیرو → حرف تیر (SS/S/A/B/C/D)
+let winByName = {}; // نام هیرو → وین‌ریت ۷ روزه (عدد)
 // ترجمهٔ فارسی توضیحات (data/fa-overrides.json) — اگر نباشد، متن انگلیسی نشان داده می‌شود
 let FA = { heroSkills: {}, items: {}, talents: {}, spells: {} };
 async function loadStatic() {
@@ -106,6 +111,13 @@ async function loadStatic() {
         return r.json();
       };
       const loadOptional = async (file) => {
+        // فایل‌های refreshable: اول ورکر (KV — دیتای تازهٔ ۳۰ دقیقه‌ای)، بعد Pages.
+        if (WORKER_DATA_FILES.has(file)) {
+          try {
+            const r = await fetch(WORKER_DATA_BASE + '/' + file);
+            if (r.ok) return r.json();
+          } catch { /* fallback به Pages پایین */ }
+        }
         try {
           const r = await fetch(STATIC_BASE + file + '?v=' + DATA_VERSION);
           if (!r.ok) return {};
@@ -142,6 +154,10 @@ async function loadStatic() {
       tierByName = {};
       for (const [letter, names] of Object.entries(tierFile.tiers || {})) {
         for (const n of names || []) if (n && n.name) tierByName[n.name] = letter;
+      }
+      winByName = {};
+      for (const s of heroStatsFile.heroes || []) {
+        if (s && s.name && Number.isFinite(Number(s.win_rate))) winByName[normStr(s.name)] = Number(s.win_rate);
       }
       return {
         heroes,
@@ -634,6 +650,7 @@ tabs.forEach((b) => b.addEventListener('click', () => {
   document.querySelectorAll('main .tab').forEach((s) => s.classList.remove('active'));
   document.getElementById('tab-' + b.dataset.tab).classList.add('active');
   if (b.dataset.tab === 'meta') loadMeta();
+  if (b.dataset.tab === 'tier') loadTier();
   if (b.dataset.tab === 'emblems') loadEmblems();
   if (b.dataset.tab === 'news') loadNews();
   if (b.dataset.tab === 'comps') loadComps();
@@ -658,6 +675,7 @@ function heroCard(h) {
   const tier = tierByName[h.name] || '';
   const tierCls = tier === 'SS' ? 'ss' : tier === 'S' ? 's' : tier === 'A' ? 'a' : tier === 'B' ? 'b' : '';
   const lane = laneFa(h.laning);
+  const wr = winByName[normStr(h.name)];
   return `
       <div class="hero-card" data-id="${h.id}" data-name="${esc(h.name)}">
         <div class="hero-img-wrap">
@@ -667,6 +685,7 @@ function heroCard(h) {
         </div>
         <div class="name">${esc(h.name)}</div>
         <div class="cls">${esc(roleFa(h.class))}</div>
+        ${wr !== undefined ? `<div class="wr">📊 وین‌ریت ${pct(wr)}</div>` : ''}
       </div>`;
 }
 
@@ -946,6 +965,64 @@ async function sendCoach() {
 document.getElementById('coachSend').addEventListener('click', sendCoach);
 document.getElementById('coachQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCoach(); });
 
+// ---------- تیرلیست (تب جدا + بخش اخبار — یک رندر مشترک) ----------
+const TIER_ORDER = ['SS', 'S', 'A', 'B', 'C', 'D'];
+let tierFilter = 'ALL';
+let lastTierSd = null;
+
+function tierCardsHtml(sd, filter) {
+  const tl = sd.tierlist || {};
+  const byName = new Map((sd.heroes || []).map((h) => [normStr(h.hero_name), h]));
+  const stats = new Map((sd.heroStats || []).map((s) => [normStr(s.name), s]));
+  return TIER_ORDER.map((k) => {
+    if (filter !== 'ALL' && filter !== k) return '';
+    const list = (tl.tiers || {})[k] || [];
+    if (!list.length) return '';
+    return `<div class="tier-card glass-panel tier-${k.toLowerCase()}">
+      <div class="tier-head"><span class="tier-badge-lg tier-${k.toLowerCase()}">${k}</span><span class="tier-count">${faNum(list.length)} هیرو</span></div>
+      <div class="tier-heroes">${list.map((h) => {
+        const src = byName.get(normStr(h.name));
+        const id = src && src.mlid ? String(src.mlid) : '';
+        const img = src ? (src.portrait || src.hero_icon || '') : '';
+        const st = stats.get(normStr(h.name));
+        const wr = st && Number.isFinite(Number(st.win_rate)) ? pct(st.win_rate) : '';
+        return `<div class="tier-hero"${id ? ` data-hero="${id}"` : ''}>${img ? `<img src="${esc(img)}" alt="${esc(h.name)}" loading="lazy">` : '<span class="tier-hero-noimg">🦸</span>'}<span class="tier-hero-name">${esc(h.name)}</span>${wr ? `<span class="tier-hero-wr">${esc(wr)}</span>` : ''}</div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('') || '<p class="hint">تیرلیست فعلاً در دسترس نیست.</p>';
+}
+
+function renderTierInto(container, sd, filter) {
+  container.innerHTML = tierCardsHtml(sd, filter);
+  container.querySelectorAll('[data-hero]').forEach((el) => el.addEventListener('click', () => openHero(el.dataset.hero)));
+}
+
+async function loadTier() {
+  const box = document.getElementById('tierList');
+  const st = document.getElementById('tierStatus');
+  const title = document.getElementById('tierTitle');
+  const sumEl = document.getElementById('tierSummary');
+  const filtersEl = document.getElementById('tierFilters');
+  st.textContent = '';
+  box.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+  try {
+    const sd = await loadStatic();
+    lastTierSd = sd;
+    const tl = sd.tierlist || {};
+    const total = Object.values(tl.counts || {}).reduce((a, b) => a + b, 0);
+    title.textContent = '🏆 تیرلیست' + (tl.month ? ' ' + monthFa(tl.month) : '') + (total ? ' — ' + faNum(total) + ' هیرو' : '');
+    sumEl.textContent = total ? `${faNum(total)} هیرو در ۶ تیر — روی هر هیرو بزن تا جزئیاتش باز شود.` : '';
+    const order = ['ALL', 'SS', 'S', 'A', 'B', 'C', 'D'];
+    filtersEl.innerHTML = order.map((k) => `<button class="role-chip${tierFilter === k ? ' active' : ''}" data-tier="${k}">${k === 'ALL' ? 'همه' : k}${k !== 'ALL' ? ' (' + faNum((tl.counts || {})[k] || 0) + ')' : ''}</button>`).join('');
+    filtersEl.querySelectorAll('[data-tier]').forEach((b) => b.addEventListener('click', () => {
+      tierFilter = b.dataset.tier;
+      filtersEl.querySelectorAll('[data-tier]').forEach((x) => x.classList.toggle('active', x === b));
+      if (lastTierSd) renderTierInto(box, lastTierSd, tierFilter);
+    }));
+    renderTierInto(box, sd, tierFilter);
+  } catch (e) { showError(box, e); }
+}
+
 // ---------- اخبار و تیرلیست ----------
 async function loadNews() {
   const box = document.getElementById('newsBox');
@@ -960,7 +1037,6 @@ async function loadNews() {
     const wr = (sd.news && sd.news.wikiRecent) || [];
     const dc = sd.discussions || [];
     const ev = sd.events || [];
-    const tl = sd.tierlist || {};
     const evStatusFa = { current: 'در حال اجرا', upcoming: 'به‌زودی', unknown: 'تاریخ مشخص نیست', ended: 'تمام‌شده' };
     // عکس‌های ویکی مستقیم در صفحه لود نمی‌شوند (هاست‌شان درخواست داخل صفحه را رد می‌کند؛ با curl و بازشدن مستقیم سالم‌اند) — پس از wsrv.nl رد می‌شوند، مثل آیکون آیتم‌ها
 const thumb = (u) => {
@@ -968,8 +1044,6 @@ const thumb = (u) => {
   const proxied = u.startsWith('https://static.wikia.nocookie.net/') ? 'https://wsrv.nl/?url=' + u.slice(8) : u;
   return `<img class="news-thumb" src="${esc(proxied)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`;
 };
-    const order = ['SS', 'S', 'A', 'B', 'C', 'D'];
-    const nameToId = new Map((sd.heroes || []).map((h) => [normStr(h.hero_name), String(h.mlid)]));
     box.innerHTML =
       (pn.length ? '<h2>📝 پچ‌نوت‌ها</h2>' + pn.slice(0, 10).map((p) => `<div class="item-card" data-patch="${esc(p.title)}" style="cursor:pointer">${thumb(p.image_url)}<b>${esc(p.title_fa || p.title)}</b><br><span class="sub">${esc(dateFa(p.updated))} — ${esc(p.title)}</span><br><span class="sub">👆 برای متن کامل پچ بزن</span></div>`).join('') : '') +
       (ev.length ? '<h2>🎉 ایونت‌ها</h2>' + ev.slice(0, 10).map((e) => {
@@ -984,17 +1058,8 @@ const thumb = (u) => {
       (dc.length ? '<h2>💬 گفتگوها</h2>' + dc.slice(0, 10).map((d) => { const fd = ((sd.faContent || {}).discussions || {})[d.title] || {}; return `<div class="item-card"><b>${esc(fd.title_fa || d.title)}</b><br><span class="sub">${esc(dateFa(d.date_iso))}${d.category_fa ? ' — ' + esc(d.category_fa) : ''}</span></div>`; }).join('') : '') ||
       '<p class="hint">خبری پیدا نشد.</p>';
     box.querySelectorAll('[data-patch]').forEach((el) => el.addEventListener('click', () => showPatchDetail(el.dataset.patch)));
-    tb.innerHTML =
-      (tl.month ? `<p class="hint">تیرلیست ${esc(monthFa(tl.month))} — ${faNum(Object.values(tl.counts || {}).reduce((a, b) => a + b, 0))} هیرو</p>` : '') +
-      (order.map((k) => {
-        const list = (tl.tiers || {})[k] || [];
-        if (!list.length) return '';
-        return `<div class="item-card"><b>${k}</b> <span class="sub">${faNum(list.length)} هیرو</span><br>${list.map((h) => {
-          const id = nameToId.get(normStr(h.name));
-          return id ? `<a href="#" data-hero="${id}">${esc(h.name)}</a>` : esc(h.name);
-        }).join('، ')}</div>`;
-      }).join('') || '<p class="hint">تیرلیست فعلاً در دسترس نیست.</p>');
-    tb.querySelectorAll('a[data-hero]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); openHero(a.dataset.hero); }));
+    // تیرلیست ته اخبار هم با همان رندر مشترک تب تیرلیست ساخته می‌شود
+    renderTierInto(tb, sd, 'ALL');
   } catch (e) { showError(box, e); }
 }
 

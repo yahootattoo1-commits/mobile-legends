@@ -75,6 +75,7 @@
   <nav class="tabs" id="tabs">
     <button data-tab="heroes" class="active">🦸 هیروها</button>
     <button data-tab="meta">📊 متا</button>
+    <button data-tab="tier">🏆 تیرلیست</button>
     <button data-tab="items">🧰 آیتم‌ها</button>
     <button data-tab="emblems">🛡️ امبلم</button>
     <button data-tab="wr">🧮 وین‌ریت</button>
@@ -123,6 +124,18 @@
       <button id="teamCounterBtn">🛡️</button>
     </div>
     <div id="teamCounterBox"></div>
+  </section>
+
+  <!-- تیرلیست -->
+  <section id="tab-tier" class="tab">
+    <div class="row-between">
+      <h2 id="tierTitle">🏆 تیرلیست هیروها</h2>
+      <span id="tierMonth" class="tier-month"></span>
+    </div>
+    <p class="hint" id="tierSummary"></p>
+    <div id="tierFilters" class="chips tier-filters"></div>
+    <div id="tierList"></div>
+    <div id="tierStatus" class="status"></div>
   </section>
 
   <!-- آیتم‌ها -->
@@ -223,6 +236,6 @@
   </footer>
 </main>
 
-<script src="app.js?v=20261117-1857"></script>
+<script src="app.js?v=20261117-2234"></script>
 </body>
 </html>
