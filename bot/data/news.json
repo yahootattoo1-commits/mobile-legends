@@ -1,5 +1,5 @@
 {
- "fetched_at": "2026-11-16T13:02:19.185028+00:00",
+ "fetched_at": "2026-11-17T15:19:49.700515+00:00",
  "patch_notes": [
   {
    "title": "Patch Notes 2.2.16",
@@ -83,6 +83,20 @@
   }
  ],
  "wiki_recent": [
+  {
+   "title": "Carmilla",
+   "timestamp": "2026-11-16T18:57:37Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Carmilla",
+   "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/3/30/Hero921-portrait.png/revision/latest?cb=20241021142902"
+  },
+  {
+   "title": "Carmilla/Mastery Code",
+   "timestamp": "2026-11-16T18:53:32Z",
+   "comment": "",
+   "url": "https://mobile-legends.fandom.com/wiki/Carmilla/Mastery_Code",
+   "image_url": null
+  },
   {
    "title": "Eudora",
    "timestamp": "2026-11-16T06:40:10Z",
@@ -173,20 +187,6 @@
    "comment": "",
    "url": "https://mobile-legends.fandom.com/wiki/Valir",
    "image_url": "https://static.wikia.nocookie.net/mobile-legends/images/9/9e/Hero571-portrait.png/revision/latest?cb=20241021142021"
-  },
-  {
-   "title": "Patch Notes 1.3.64",
-   "timestamp": "2026-11-13T17:36:24Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Patch_Notes_1.3.64",
-   "image_url": null
-  },
-  {
-   "title": "Patch Notes 1.3.56",
-   "timestamp": "2026-11-13T17:36:10Z",
-   "comment": "Adding categories",
-   "url": "https://mobile-legends.fandom.com/wiki/Patch_Notes_1.3.56",
-   "image_url": null
   }
  ]
 }
