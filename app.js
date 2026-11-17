@@ -781,23 +781,35 @@ async function openHero(id) {
   try {
     const j = await api('/api/heroes/' + encodeURIComponent(id));
     const h = j.hero;
+    const tierTag = (() => { const t = tierByName[h.name] || ''; const l = (h.laning || []).flatMap((x) => String(x).split(',')).map((x) => normLaneKey(x)).find(Boolean) || ''; return [t ? t + ' TIER' : '', l ? l.toUpperCase() + ' LANE' : ''].filter(Boolean).join(' • '); })();
     const counters = await api('/api/counters/' + encodeURIComponent(id)).catch(() => null);
     box.innerHTML = `
       <div class="detail-head" style="--hero-art:url('${esc(h.portrait || h.head_big || h.head || '')}')">
         ${h.portrait || h.head_big || h.head ? `<img src="${esc(h.portrait || h.head_big || h.head)}" alt="${esc(h.name)}">` : ''}
-        <div><h2>${esc(h.name)}</h2><div>${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div></div>
+        <div>${tierTag ? `<span class="tag tag-gold">${esc(tierTag)}</span>` : ''}<h2>${esc(h.name)}</h2><div>${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div></div>
       </div>
       ${h.rank ? `<div class="stat-chips">
         <span class="chip">وین‌ریت <b>${pct(h.rank.win)}</b></span>
         <span class="chip">بن‌ریت <b>${pct(h.rank.ban)}</b></span>
         <span class="chip">پیک‌ریت <b>${pct(h.rank.pick)}</b></span>
       </div>` : '<p class="hint">آمار زندهٔ این هیرو فعلاً در دسترس نیست.</p>'}
-      ${(h.skills || []).map((s) => `<div class="skill"><b>${esc(s.name)}</b> <span class="meta">${esc(s.type || '')}${s.cooldown && s.cooldown !== 'null' ? ' | کول‌داون: ' + faNum(s.cooldown) + ' ثانیه' : ''}</span><p>${esc(clean(s.description))}</p></div>`).join('')}
+      ${(h.skills || []).length ? `<div class="skill-grid">${(h.skills || []).map((s, si, arr) => { const ult = /ult/i.test(s.type || '') || (arr.length >= 4 && si === arr.length - 1); const romans = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ']; return `<button type="button" class="skill-cell${ult ? ' ultimate' : ''}" data-skill="${si}"><span class="skill-ic">${s.icon ? `<img src="${esc(s.icon)}" alt="" loading="lazy" onerror="this.style.display='none'">` : (ult ? '✦' : romans[si] || '✦')}</span><span class="skill-name">${esc(s.name)}</span></button>`; }).join('')}</div><div class="skill-detail" id="skillDetail"></div>` : ''}
       ${counters?.counters ? `
       <h2>✅ این هیرو این‌ها را کانتر می‌کند</h2>
       ${(counters.counters.counters || []).slice(0, 5).map((c) => `<div class="skill hrow">${c.head ? `<img class="h-ic" src="${esc(c.head)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}<div><b>${esc(c.name)}</b><br><span class="meta">وین‌ریت در برابر او: +${pct(c.delta)}</span></div></div>`).join('') || '<p class="hint">—</p>'}
       <h2>⚔️ جلوی این هیروها کانتر می‌شود</h2>
       ${(h.relation?.weak || []).map((w) => `<div class="skill hrow">${w.head ? `<img class="h-ic" src="${esc(w.head)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}<div><b>${esc(w.name)}</b></div></div>`).join('') || '<p class="hint">—</p>'}` : ''}`;
+    // مهارت‌ها: گرید ۴ ستونه — با زدن هر مهارت، توضیح فارسی‌اش پایین نمایش داده می‌شود
+    const skillCells = box.querySelectorAll('.skill-cell');
+    const skillDetail = box.querySelector('#skillDetail');
+    const showSkill = (idx) => {
+      const s = (h.skills || [])[idx];
+      if (!s || !skillDetail) return;
+      skillCells.forEach((c) => c.classList.toggle('active', Number(c.dataset.skill) === idx));
+      skillDetail.innerHTML = `<b>${esc(s.name)}</b> <span class="meta">${esc(s.type || '')}${s.cooldown && s.cooldown !== 'null' ? ' | کول‌داون: ' + faNum(s.cooldown) + ' ثانیه' : ''}</span><p>${esc(clean(s.description))}</p>`;
+    };
+    skillCells.forEach((c) => c.addEventListener('click', () => showSkill(Number(c.dataset.skill))));
+    if (skillCells.length) showSkill(0);
     const sd = await loadStatic();
     const stat = (sd.heroStats || []).find((x) => normStr(x.name) === normStr(h.name));
     const statFa = stat ? (((sd.faContent.stats || {}).heroes || {})[stat.slug] || {}) : {};
@@ -963,6 +975,11 @@ async function sendCoach() {
   } catch (e) { showError(box, e); }
 }
 document.getElementById('coachSend').addEventListener('click', sendCoach);
+document.querySelectorAll('.suggestions button').forEach((b) => b.addEventListener('click', () => {
+  const q = document.getElementById('coachQ');
+  q.value = b.textContent.trim();
+  q.focus();
+}));
 document.getElementById('coachQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCoach(); });
 
 // ---------- تیرلیست (تب جدا + بخش اخبار — یک رندر مشترک) ----------
@@ -1046,7 +1063,9 @@ const thumb = (u) => {
   return `<img class="news-thumb" src="${esc(proxied)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`;
 };
     box.innerHTML =
-      (pn.length ? '<h2>📝 پچ‌نوت‌ها</h2>' + pn.slice(0, 10).map((p) => `<div class="item-card" data-patch="${esc(p.title)}" style="cursor:pointer">${thumb(p.image_url)}<b>${esc(p.title_fa || p.title)}</b><br><span class="sub">${esc(dateFa(p.updated))} — ${esc(p.title)}</span><br><span class="sub">👆 برای متن کامل پچ بزن</span></div>`).join('') : '') +
+      (pn.length ? '<h2>📝 پچ‌نوت‌ها</h2>' + pn.slice(0, 10).map((p, i) => i === 0
+        ? `<div class="news-feature" data-patch="${esc(p.title)}">${thumb(p.image_url)}<div class="news-copy"><span class="tag tag-gold">پچ‌نوت</span><h3>${esc(p.title_fa || p.title)}</h3><small>${esc(dateFa(p.updated))} — ${esc(p.title)} • 👆 برای متن کامل بزن</small></div></div>`
+        : `<div class="item-card" data-patch="${esc(p.title)}" style="cursor:pointer">${thumb(p.image_url)}<b>${esc(p.title_fa || p.title)}</b><br><span class="sub">${esc(dateFa(p.updated))} — ${esc(p.title)}</span><br><span class="sub">👆 برای متن کامل پچ بزن</span></div>`).join('') : '') +
       (ev.length ? '<h2>🎉 ایونت‌ها</h2>' + ev.slice(0, 10).map((e) => {
         const fev = ((sd.faContent || {}).events || {})[e.title] || {};
         const d1 = e.start_date ? dateFa(e.start_date) : '';
@@ -1187,18 +1206,23 @@ async function loadEmblems() {
   } catch (e) { showError(eb, e); }
 }
 
-// ---------- ماشین وین‌ریت ----------
-document.getElementById('wrCalc').addEventListener('click', async () => {
-  const box = document.getElementById('wrResult');
-  const m = document.getElementById('wrMatch').value;
-  const now = document.getElementById('wrNow').value;
-  const fut = document.getElementById('wrFuture').value;
-  loading(box, '⏳ در حال محاسبه…');
-  try {
-    const j = await api(`/api/wr?match-now=${m}&wr-now=${now}&wr-future=${fut}`);
-    box.innerHTML = `برای رسیدن از ${pct(now)} به ${pct(fut)} با ${faInt(m)} مچ، باید <b>${faInt(j.required_no_lose_matches)} برد پشت سر هم</b> بدون باخت بگیری.`;
-  } catch (e) { showError(box, e); }
-});
+// ---------- ماشین وین‌ریت (اسلایدر + گیج زنده؛ محاسبهٔ محلی، همان فرمول قبلی) ----------
+function calcWr() {
+  const m = Number(document.getElementById('wrMatch').value) || 0;
+  const now = Number(document.getElementById('wrNow').value) || 0;
+  const fut = Number(document.getElementById('wrFuture').value) || 0;
+  document.getElementById('wrMatchVal').textContent = faNum(m);
+  document.getElementById('wrNowVal').textContent = faNum(now) + '٪';
+  document.getElementById('wrFutureVal').textContent = faNum(fut) + '٪';
+  document.getElementById('wrGaugeVal').textContent = faNum(now.toFixed(1)) + '٪';
+  document.getElementById('wrGauge').style.background = `conic-gradient(var(--cyan) 0 ${now}%, #26374b ${now}% 100%)`;
+  const need = fut <= now ? 0 : Math.max(0, Math.ceil(((fut / 100) * m - (now / 100) * m) / (1 - fut / 100) - 1e-9));
+  document.getElementById('wrNeeded').textContent = need === 0
+    ? 'به هدف تعیین‌شده رسیده‌ای!'
+    : `برای رسیدن از ${faNum(now)}٪ به ${faNum(fut)}٪ با ${faNum(m)} مچ، باید ${faNum(need)} برد پشت سر هم بدون باخت بگیری.`;
+}
+['wrMatch', 'wrNow', 'wrFuture'].forEach((id) => document.getElementById(id).addEventListener('input', calcWr));
+calcWr();
 
 // ---------- MPL ----------
 document.querySelectorAll('.league-row button').forEach((b) => b.addEventListener('click', async () => {
@@ -1265,16 +1289,18 @@ async function renderSpotlight() {
       const { stat: s, pub: h } = items[i];
       const fa = (sd.faContent.stats.heroes || {})[s.slug] || {};
       const specs = (fa.specialities_fa || s.specialities || []).join('، ');
-      return `<div class="spot-art" style="background-image:url('${esc(h.portrait)}')"></div><div class="spot-main">
+      return `<div class="spot-art" style="background-image:url('${esc(h.portrait)}')"></div>
+      <div class="eyebrow"><span class="live-dot"></span> TOP PICKS <span class="eyebrow-line"></span><small>۷ روز اخیر</small></div>
+      <div class="spot-main">
         <img src="${esc(h.portrait)}" alt="${esc(h.name)}">
         <div>
           <div class="spot-rank">رتبهٔ ${faNum(s.position)} وین‌ریت — ۷ روز اخیر</div>
           <h3>${esc(h.name)}</h3>
           <div class="spot-tags">${esc(roleFa(h.class))} — ${esc(laneFa(h.laning))}</div>
-          <div class="spot-win">وین‌ریت <b>${pct(s.win_rate)}</b> <span>(${esc(fa.win_label_fa || s.win_label || '')})</span></div>
-          <div class="spot-sub">پیک ${pct(s.pick_rate)} — بن ${pct(s.ban_rate)}${specs ? ' — ' + esc(specs) : ''}</div>
+          ${specs ? `<div class="spot-sub">${esc(specs)}</div>` : ''}
         </div>
       </div>
+      <div class="spot-bottom"><span>WIN RATE</span><strong>${pct(s.win_rate)}</strong><span class="spot-bottom-sub">${esc(fa.win_label_fa || s.win_label || '')} • پیک ${pct(s.pick_rate)} — بن ${pct(s.ban_rate)}</span></div>
       <div class="spot-strip">${items.map((it, j) => `<img src="${esc(it.pub.portrait)}" class="spot-chip${j === i ? ' active' : ''}" data-i="${j}" alt="${esc(it.pub.name)}">`).join('')}</div>`;
     };
     const show = (i) => {
