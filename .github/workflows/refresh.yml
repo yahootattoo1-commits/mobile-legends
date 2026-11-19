@@ -1,0 +1,63 @@
+# MLBB data refresh — every 30 min, no VM, no Muse in the loop.
+# Scrapes mlbb.io + Fandom, translates new items via the Worker /translate
+# endpoint, and POSTs only changed files to Worker KV (POST /data/*).
+# Auth: HMAC keyed by MLBB_DATA_SECRET (repo secret; the same value must be
+# set as DATA_SECRET in the Cloudflare dashboard for persian-mlbb-bot).
+# State (published baseline, runs log/status) lives in the runner temp dir
+# and is restored from the cache each run; on a cold cache the script falls
+# back to live KV content as the compare baseline. Nothing is committed.
+name: MLBB data refresh
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: mlbb-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TZ: Asia/Tehran
+      MLBB_STATE_DIR: ${{ runner.temp }}/mlbb-state
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore refresh state
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.MLBB_STATE_DIR }}
+          # Run-specific key so the state is saved fresh every run; the
+          # restore key falls back to the most recent saved state.
+          key: mlbb-refresh-state-v1-${{ github.run_id }}
+          restore-keys: |
+            mlbb-refresh-state-v1-
+
+      - name: Install Python deps
+        run: pip install -r scripts/requirements-actions.txt
+
+      - name: Install stealth-browser Chromium
+        # StealthyFetcher runs on patchright, so its Chromium must come from
+        # patchright's installer (playwright's would be a different revision
+        # that patchright never picks up).
+        run: python -m patchright install chromium --with-deps
+
+      - name: Refresh MLBB data
+        env:
+          MLBB_DATA_SECRET: ${{ secrets.MLBB_DATA_SECRET }}
+        run: python scripts/refresh_auto.py
