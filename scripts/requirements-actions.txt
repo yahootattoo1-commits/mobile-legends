@@ -1,0 +1,11 @@
+# Python deps for the GitHub Actions refresh (.github/workflows/refresh.yml).
+# Versions pinned to the ones proven on the VM (Nov 2026).
+# scrapling[fetchers] brings curl_cffi, playwright, patchright, browserforge,
+# apify-fingerprint-datapoints, msgspec, anyio and protego; the three below
+# are pinned explicitly to match the VM exactly. The stealth browser
+# (StealthyFetcher) runs on patchright, so the workflow installs its
+# Chromium with `python -m patchright install chromium --with-deps`.
+scrapling[fetchers]==0.5.1
+curl_cffi==0.17.0
+patchright==1.64.4
+playwright==1.65.2
