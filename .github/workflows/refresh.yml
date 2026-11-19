@@ -41,7 +41,7 @@ jobs:
       - name: Restore refresh state
         uses: actions/cache@v4
         with:
-                    path: /tmp/mlbb-state
+          path: /tmp/mlbb-state
           # Run-specific key so the state is saved fresh every run; the
           # restore key falls back to the most recent saved state.
           key: mlbb-refresh-state-v1-${{ github.run_id }}
