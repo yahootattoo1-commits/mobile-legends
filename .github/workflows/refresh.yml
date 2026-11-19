@@ -1,6 +1,7 @@
 # MLBB data refresh — every 30 min, no VM, no Muse in the loop.
 # Runs at :07 and :37 (not :00/:30): GitHub drops scheduled runs at the
 # top/half hour under load, and a fresh push to main re-registers the cron.
+# Resync 2026-11-19 23:20 — fresh push to re-register the cron after the Actions off/on toggle.
 # Scrapes mlbb.io + Fandom, translates new items via the Worker /translate
 # endpoint, and POSTs only changed files to Worker KV (POST /data/*).
 # Auth: HMAC keyed by MLBB_DATA_SECRET (repo secret; the same value must be
