@@ -500,12 +500,17 @@ async function getBot(env) {
       welcomePhoto: env.WELCOME_PHOTO_URL ? { kind: 'url', url: env.WELCOME_PHOTO_URL } : null,
       telegramClient: env.BOT_TOKEN ? new WorkerTelegram(env.BOT_TOKEN) : null,
       // دکمهٔ «بروزرسانی داده» در پنل مدیریت: ماشهٔ رفرش را می‌زند.
+      // ماشهٔ رفرش از طریق service binding (همان اکانت) — فراخوانی مستقیم
+      // workers.dev از داخل ورکر با خطای ۱۰۴۲ رد می‌شود، پس binding لازم است.
       triggerRefresh: async () => {
         try {
-          const r = await fetch('https://mlbb-refresh-trigger.yahootattoo1.workers.dev/', {
+          const init = {
             method: 'POST',
             headers: { 'X-Trigger-Auth': env.TRIGGER_SECRET || '' },
-          });
+          };
+          const r = env.TRIGGER
+            ? await env.TRIGGER.fetch('https://trigger/', init)
+            : await fetch('https://mlbb-refresh-trigger.yahootattoo1.workers.dev/', init);
           return { ok: r.ok, status: r.status };
         } catch {
           return { ok: false, status: 0 };
