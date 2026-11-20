@@ -269,6 +269,15 @@ def discussions_stealth(limit=20):
     from scrapling import StealthyFetcher
     fetch_kwargs = dict(headless=True, network_idle=True,
                         disable_resources=True, wait=5000)
+    # Force UTC for the browser: mlbb.io renders forum dates in the viewer's
+    # local timezone, so an Actions run (TZ=Asia/Tehran) and a VM run (UTC)
+    # stamped the SAME threads 3:30 apart — a spurious 'change' every switch,
+    # and date_iso labelled 'Z' while holding Tehran wall-clock time.
+    os.environ['TZ'] = 'UTC'
+    try:
+        time.tzset()
+    except Exception:  # noqa: BLE001
+        pass
     if USE_LOCAL_PROXY:
         if not ensure_local_proxy():
             raise RuntimeError("local proxy (127.0.0.1:18080) could not be started")
