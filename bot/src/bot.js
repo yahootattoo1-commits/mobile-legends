@@ -1156,7 +1156,7 @@ function createBot(env, deps) {
   // بروزرسانی دستی (فقط مدیر): ماشهٔ رفرش را می‌زند؛ گزارش اجرا بعداً همین‌جا می‌آید.
   bot.action('admin_refresh', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
-    await ctx.answerCbQuery();
+    try { await ctx.answerCbQuery(); } catch { /* شناسهٔ query منقضی — مهم نیست */ }
     const n = clearCache();
     const trigger = deps.triggerRefresh;
     if (typeof trigger !== 'function') {
