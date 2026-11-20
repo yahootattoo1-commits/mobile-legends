@@ -14,10 +14,23 @@ compatibility_flags = ["nodejs_compat"]
 binding = "USERS"
 id = "98443f4730874f0c9cec44db0b10d895"
 
+# KV برای دیتای تازهٔ ۳۰ دقیقه‌ای (۷ فایل refreshable) — POST /data/<file>
+# می‌نویسد، GET /data/<file> و مینی‌اپ/ربات از آن می‌خوانند؛ Pages فقط fallback است.
+[[kv_namespaces]]
+binding = "DATA"
+id = "2040e69470734b5488fb2992d9402728"
+
 # Workers AI برای مربی هوش مصنوعی (/ask و /api/ask) — همان اکانت،
 # سهمیهٔ رایگان ۱۰٬۰۰۰ نورون در روز؛ سکرتی لازم ندارد.
 [ai]
 binding = "AI"
+
+# Service binding به ورکر ماشهٔ رفرش (همان اکانت) — دکمهٔ «بروزرسانی داده»
+# در پنل مدیریت از این مسیر dispatch می‌گیرد؛ فراخوانی مستقیم workers.dev
+# از داخل ورکر با خطای ۱۰۴۲ رد می‌شود.
+[[services]]
+binding = "TRIGGER"
+service = "mlbb-refresh-trigger"
 
 [vars]
 MINIAPP_URL = "https://yahootattoo1-commits.github.io/mobile-legends/"
