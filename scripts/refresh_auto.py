@@ -560,6 +560,32 @@ def main():
                 log_line('ALERT sent to admin (3 consecutive failures)')
             except Exception as e:  # noqa: BLE001
                 log_line('ALERT failed: %s' % e)
+
+    # 9. report back to the admin inside Telegram (best-effort, never fails the run)
+    reported = False
+    try:
+        lines = ['🔄 گزارش بروزرسانی — %s' % ('✅ موفق' if ok else '❌ ناموفق')]
+        dur = int((now_tehran() - started).total_seconds())
+        lines.append('🕐 %s — %s ثانیه' % (started.strftime('%H:%M'), dur))
+        if changed:
+            lines.append('📥 تغییر: %s' % ', '.join(changed))
+        if posted:
+            lines.append('📤 پست شد: %s' % ', '.join(posted))
+        tr = ', '.join('%s:%d' % kv for kv in sorted(translated.items()) if kv[1])
+        if tr:
+            lines.append('🌐 ترجمه: %s' % tr)
+        if builds_ran:
+            lines.append('🧱 بیلد هفتگی: اجرا شد')
+        if errors:
+            lines.append('❌ خطا: %s' % errors[0][:200])
+        if not changed and not posted and ok:
+            lines.append('📭 چیز تازه‌ای نبود.')
+        msg = chr(10).join(lines)[:1500]
+        code, _body = kv_client.report({'message': msg})
+        reported = (code == 200)
+    except Exception:  # noqa: BLE001
+        reported = False
+    log_line('REPORT %s' % ('sent' if reported else 'failed'))
     return 0 if ok else 1
 
 

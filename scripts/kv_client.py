@@ -155,6 +155,24 @@ def alert(message, timeout=60):
     return code, body
 
 
+def report(payload, timeout=60):
+    """POST the run summary to /refresh-report (admin report in Telegram)."""
+    with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+        json.dump(payload, tmp, ensure_ascii=False)
+        tmp_path = tmp.name
+    try:
+        code, body = _curl('POST', '/refresh-report',
+                          headers={'X-Data-Auth': auth_for('persian-mlbb-bot-refresh-report'),
+                                   'Content-Type': 'application/json'},
+                          data_file=tmp_path, timeout=timeout)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+    return code, body
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__.strip().splitlines()[-8:])
