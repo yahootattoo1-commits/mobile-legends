@@ -134,7 +134,9 @@ function telegramProxyAgent() {
 // createBot(env, deps) — بدون آرگومان = رفتار امروز (process.env + fs)؛
 // روی Workers با env/debs صریح صدا می‌شود و هیچ ارجاعی به process یا fs ندارد.
 // env: { BOT_TOKEN, MINIAPP_URL, ADMIN_ID } — اولویت با env است، بعد process.env.
-// deps: { isWorker, userStore, sessionStore, recentLogs, welcomePhoto, telegramClient }
+// deps: { isWorker, userStore, sessionStore, recentLogs, welcomePhoto, telegramClient, triggerRefresh }
+//   triggerRefresh: () -> { ok, status } — fires the refresh (Workers only);
+//     when absent (VM bot) the admin button only clears the cache.
 //   userStore: { loadAll() -> Map, persist(map) } — Node: logs/users.json؛ Workers: KV کلید 'users'
 //   sessionStore: { get/set/delete(kind, chatId) } — kind: 'player' | 'broadcast'
 //   recentLogs: () -> { lines: [...] } | { note: '...' } | null
@@ -1151,11 +1153,21 @@ function createBot(env, deps) {
     return coachUserDetail(ctx, id);
   });
 
+  // بروزرسانی دستی (فقط مدیر): ماشهٔ رفرش را می‌زند؛ گزارش اجرا بعداً همین‌جا می‌آید.
   bot.action('admin_refresh', async (ctx) => {
     if (!requireAdmin(ctx)) return ctx.answerCbQuery();
     await ctx.answerCbQuery();
     const n = clearCache();
-    return ctx.replyWithHTML(`🔄 کش دادهٔ زنده پاک شد (${faNum(n)} مورد). درخواست‌های بعدی مستقیم از سرور زنده خوانده می‌شوند.\n\n` + (isWorker ? 'دیتای استاتیک هر ۱۰ دقیقه از مینی‌اپ تازه می‌شود؛ نیازی به ری‌استارت نیست.' : 'دیتای استاتیک (هیرو/آیتم) موقع بالا آمدن ربات خوانده می‌شود؛ برای تغییر آن ری‌استارت لازم است.') + FOOTER);
+    const trigger = deps.triggerRefresh;
+    if (typeof trigger !== 'function') {
+      return ctx.replyWithHTML(`🔄 کش دادهٔ زنده پاک شد (${faNum(n)} مورد).` + FOOTER);
+    }
+    let res = null;
+    try { res = await trigger(); } catch { res = { ok: false, status: 0 }; }
+    if (res && res.ok) {
+      return ctx.replyWithHTML(`🔄 بروزرسانی شروع شد (کش هم پاک شد: ${faNum(n)} مورد).\n\n⏳ چند دقیقه صبر کن — گزارشش همین‌جا می‌آید.` + FOOTER);
+    }
+    return ctx.replyWithHTML(`❌ شروع بروزرسانی نشد (وضعیت: ${res && res.status ? faNum(res.status) : 'نامشخص'}). دوباره تلاش کن.` + FOOTER);
   });
 
   bot.action('admin_logs', async (ctx) => {
