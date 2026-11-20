@@ -453,6 +453,35 @@ async function handleAlert(request, env) {
   }
 }
 
+// ---------- گزارش بروزرسانی: POST /refresh-report ----------
+// اسکریپت بعد از هر اجرا خلاصه را می‌فرستد و ورکر آن را برای ADMIN_ID تلگرام می‌کند.
+// احراز هویت مثل /alert با پیام 'persian-mlbb-bot-refresh-report'.
+async function handleRefreshReport(request, env) {
+  if (!env.WEBHOOK_SECRET && !env.DATA_SECRET) return new Response('Forbidden', { status: 403 });
+  if (!(await verifyDataAuth(request, env, 'persian-mlbb-bot-refresh-report'))) {
+    return new Response('Forbidden', { status: 403 });
+  }
+  let body = null;
+  try { body = await request.json(); } catch { return Response.json({ error: 'bad json' }, { status: 400 }); }
+  const message = typeof body?.message === 'string' ? body.message.trim().slice(0, 2000) : '';
+  if (!message) return Response.json({ error: 'message required' }, { status: 400 });
+  if (!env.BOT_TOKEN || !env.ADMIN_ID) {
+    return Response.json({ error: 'report not configured' }, { status: 503 });
+  }
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: env.ADMIN_ID, text: message }),
+    });
+    if (!r.ok) return Response.json({ ok: false }, { status: 502 });
+    return Response.json({ ok: true });
+  } catch (e) {
+    console.error('[worker] refresh report send failed', e && e.message ? e.message : e);
+    return Response.json({ ok: false }, { status: 502 });
+  }
+}
+
 let bot = null;
 
 async function getBot(env) {
@@ -470,6 +499,18 @@ async function getBot(env) {
       recentLogs: async () => ({ note: 'لاگ‌ها در داشبورد Cloudflare دیده می‌شوند؛ در این ربات لاگ فایل نیست.' }),
       welcomePhoto: env.WELCOME_PHOTO_URL ? { kind: 'url', url: env.WELCOME_PHOTO_URL } : null,
       telegramClient: env.BOT_TOKEN ? new WorkerTelegram(env.BOT_TOKEN) : null,
+      // دکمهٔ «بروزرسانی داده» در پنل مدیریت: ماشهٔ رفرش را می‌زند.
+      triggerRefresh: async () => {
+        try {
+          const r = await fetch('https://mlbb-refresh-trigger.yahootattoo1.workers.dev/', {
+            method: 'POST',
+            headers: { 'X-Trigger-Auth': env.TRIGGER_SECRET || '' },
+          });
+          return { ok: r.ok, status: r.status };
+        } catch {
+          return { ok: false, status: 0 };
+        }
+      },
     },
   );
   return bot;
@@ -493,7 +534,10 @@ export default {
     if (url.pathname === '/alert' && request.method === 'POST') {
       return handleAlert(request, env);
     }
-    if ((url.pathname === '/translate' || url.pathname === '/alert') && request.method !== 'POST') {
+    if (url.pathname === '/refresh-report' && request.method === 'POST') {
+      return handleRefreshReport(request, env);
+    }
+    if ((url.pathname === '/translate' || url.pathname === '/alert' || url.pathname === '/refresh-report') && request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
 
