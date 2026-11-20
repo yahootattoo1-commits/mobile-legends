@@ -205,6 +205,23 @@ def baseline_bytes(name):
     return None
 
 
+def baseline_json(name):
+    """Parsed baseline JSON (local published/ first, else live KV), or None."""
+    pub_file = PUBLISHED / name
+    try:
+        if pub_file.exists():
+            return load_json(pub_file)
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        code, body = kv_client.get_file(name)
+        if code == 200 and body:
+            return json.loads(body.decode('utf-8'))
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def kv_fetched_at(name):
     """fetched_at of the live KV copy of a file, or '' when unavailable."""
     try:
@@ -376,14 +393,199 @@ def translate_new_patches(fa, patch_entries, wanted_titles):
     return done, errors
 
 
+# --- Persian descriptions of what actually changed + the posting guard ---
+# The admin report must say WHAT was posted (real titles/names), not just a
+# filename — and clearly-wrong content must never go live at all.
+
+def _fa_title(fa, section, title):
+    """Persian title from fa-content when translated, else the English title."""
+    try:
+        entry = (fa or {}).get(section, {}).get(title) or {}
+        return entry.get('title_fa') or title
+    except Exception:  # noqa: BLE001
+        return title
+
+
+def _quoted_titles(titles, fa, section, limit=3):
+    """(text, extra) — up to `limit` quoted titles plus how many more."""
+    shown = ['«%s»' % _fa_title(fa, section, t) for t in titles[:limit]]
+    return '، '.join(shown), max(0, len(titles) - len(shown))
+
+
+def describe_change(name, old, new, fa):
+    """One Persian line saying WHAT changed in a file (real titles/names,
+    not the filename). old/new are parsed dicts; old may be None (no baseline).
+    Returns '' when nothing describable (caller falls back to the filename)."""
+    old = old or {}
+    new = new or {}
+    if name == 'discussions.json':
+        old_t = {t.get('title') for t in old.get('threads') or []}
+        new_t = [t.get('title') for t in new.get('threads') or [] if t.get('title')]
+        added = [t for t in new_t if t not in old_t]
+        if added:
+            text, extra = _quoted_titles(added, fa, 'discussions')
+            s = '💬 بحث تازه (%d): %s' % (len(added), text)
+            if extra:
+                s += ' و %d مورد دیگر' % extra
+            return s
+        if len(new_t) < len(old_t):
+            return '💬 بحث‌ها کم شد (%d حذف)' % (len(old_t) - len(new_t))
+        return '💬 بحث‌ها تازه شد (%d مورد)' % len(new_t)
+    if name == 'news.json':
+        old_p = {p.get('title') for p in old.get('patch_notes') or []}
+        added_p = [p.get('title') for p in new.get('patch_notes') or []
+                   if p.get('title') and p.get('title') not in old_p]
+        old_w = {w.get('title') for w in old.get('wiki_recent') or []}
+        added_w = [w.get('title') for w in new.get('wiki_recent') or []
+                   if w.get('title') and w.get('title') not in old_w]
+        parts = []
+        if added_p:
+            text, _extra = _quoted_titles(added_p, fa, 'patches', limit=2)
+            parts.append('📰 پچ تازه: %s' % text)
+        if added_w:
+            parts.append('📝 %d تغییر تازه در ویکی: %s' % (len(added_w), '، '.join(added_w[:3])))
+        return ' — '.join(parts) if parts else '📰 اخبار تازه شد'
+    if name == 'events.json':
+        old_t = {e.get('title') for e in old.get('events') or []}
+        added = [e.get('title') for e in new.get('events') or []
+                 if e.get('title') and e.get('title') not in old_t]
+        if added:
+            text, extra = _quoted_titles(added, fa, 'events')
+            s = '🎉 رویداد تازه (%d): %s' % (len(added), text)
+            if extra:
+                s += ' و %d مورد دیگر' % extra
+            return s
+        return '🎉 رویدادها تازه شد (%d مورد)' % len(new.get('events') or [])
+    if name == 'tierlist.json':
+        def tier_map(tl):
+            m = {}
+            for tier, heroes in ((tl or {}).get('tiers') or {}).items():
+                for h in heroes or []:
+                    m[h.get('slug') or h.get('name')] = (tier, h.get('name') or h.get('slug'))
+            return m
+        om, nm = tier_map(old), tier_map(new)
+        moves = []
+        for slug, (tier, hero_name) in nm.items():
+            if slug in om and om[slug][0] != tier:
+                moves.append((hero_name, om[slug][0], tier))
+        joined = [nm[s][1] for s in nm if s not in om]
+        parts = []
+        if moves:
+            parts.append('🏆 تغییر تیر: %s' % '، '.join('%s از %s به %s' % m for m in moves[:3]))
+        if joined:
+            parts.append('🆕 هیرو تازه: %s' % '، '.join(joined[:3]))
+        if parts:
+            return ' — '.join(parts)
+        total = sum(len(v or []) for v in (new.get('tiers') or {}).values())
+        return '🏆 تیرلیست تازه شد (%d هیرو)' % total
+    if name == 'patch-notes-full.json':
+        old_t = {p.get('title') for p in old.get('patches') or []}
+        added = [p.get('title') for p in new.get('patches') or []
+                 if p.get('title') and p.get('title') not in old_t]
+        if added:
+            text, _extra = _quoted_titles(added, fa, 'patches', limit=2)
+            return '📝 پچ تازه: %s' % text
+        return '📝 پچ‌ها تازه شد (%d مورد)' % len(new.get('patches') or [])
+    if name == 'hero-stats.json':
+        return '📊 آمار %d هیرو تازه شد' % len(new.get('heroes') or [])
+    if name == 'builds-full.json':
+        return '🧱 بیلد %d هیرو تازه شد' % len(new.get('heroes') or {})
+    if name == 'matchups.json':
+        return '⚔️ کانتر %d هیرو تازه شد' % len(new.get('heroes') or {})
+    if name == 'team-comps.json':
+        old_ids = {c.get('id') for c in old.get('comps') or []}
+        new_comps = [c for c in new.get('comps') or []]
+        titles = [c.get('title_fa') or c.get('title') or c.get('id')
+                  for c in new_comps if c.get('id') not in old_ids]
+        if titles:
+            return '👥 ترکیب تازه: %s' % '، '.join('«%s»' % t for t in titles[:2])
+        return '👥 ترکیب‌های تیم تازه شد (%d مورد)' % len(new_comps)
+    if name == 'fa-content.json':
+        return '🌐 ترجمه‌های فارسی تازه شد'
+    return ''
+
+
+def sane_to_post(name, new, old):
+    """(ok, reason) — refuse clearly-wrong content so junk never goes live.
+    Only blocks on structural breakage or a big count collapse vs baseline;
+    a first post (old is None) gets the structural checks only."""
+    if not isinstance(new, dict) or not new:
+        return False, 'فایل خالی یا خراب است'
+    if name == 'discussions.json':
+        th = new.get('threads')
+        if not isinstance(th, list):
+            return False, 'threads ندارد'
+        if not th and (old or {}).get('threads'):
+            return False, 'بحث‌ها خالی شد'
+        if old and len(th) * 2 < len(old.get('threads') or []):
+            return False, 'تعداد بحث‌ها نصف شد'
+    elif name == 'news.json':
+        pn = new.get('patch_notes')
+        if not isinstance(pn, list) or not pn:
+            return False, 'patch_notes خالی است'
+        if old and len(pn) * 2 < len(old.get('patch_notes') or []):
+            return False, 'پچ‌ها نصف شد'
+    elif name == 'events.json':
+        ev = new.get('events')
+        if not isinstance(ev, list):
+            return False, 'events ندارد'
+        if not ev and (old or {}).get('events'):
+            return False, 'رویدادها خالی شد'
+    elif name == 'tierlist.json':
+        tiers = new.get('tiers')
+        if not isinstance(tiers, dict):
+            return False, 'tiers ندارد'
+        total = sum(len(v or []) for v in tiers.values())
+        if total < 100 or total > 140:
+            return False, 'تعداد هیروها غیرعادی است (%d)' % total
+    elif name == 'patch-notes-full.json':
+        p = new.get('patches')
+        if not isinstance(p, list) or not p:
+            return False, 'patches خالی است'
+        if old and len(p) * 2 < len(old.get('patches') or []):
+            return False, 'پچ‌ها نصف شد'
+    elif name == 'hero-stats.json':
+        hs = new.get('heroes')
+        if not isinstance(hs, list):
+            return False, 'heroes ندارد'
+        if len(hs) < 100:
+            return False, 'آمار هیروها ناقص است (%d)' % len(hs)
+        if old and len(hs) * 5 < len(old.get('heroes') or []) * 4:
+            return False, 'آمار هیروها کم شد'
+    elif name == 'builds-full.json':
+        h = new.get('heroes')
+        if not isinstance(h, dict):
+            return False, 'heroes ندارد'
+        if len(h) < 100:
+            return False, 'بیلدها ناقص است (%d)' % len(h)
+    elif name == 'matchups.json':
+        h = new.get('heroes')
+        if not isinstance(h, dict):
+            return False, 'heroes ندارد'
+        if len(h) < 100:
+            return False, 'کانترها ناقص است (%d)' % len(h)
+    elif name == 'team-comps.json':
+        c = new.get('comps')
+        if not isinstance(c, list) or not c:
+            return False, 'comps خالی است'
+    elif name == 'fa-content.json':
+        for sec in ('lore', 'matchups', 'patches', 'events', 'discussions'):
+            old_n = len((old or {}).get(sec) or {})
+            new_n = len(new.get(sec) or {})
+            if old_n and new_n * 10 < old_n * 9:
+                return False, 'ترجمه‌های %s کم شد' % sec
+    return True, ''
+
+
 # --- main run ---
 
 def main():
     global HERO_NAMES, HERO_MLID
     started = now_tehran()
     errors = []
-    changed, posted, skipped = [], [], []
+    changed, posted, skipped, blocked, descriptions = [], [], [], [], []
     translated = {'events': 0, 'discussions': 0, 'patches': 0}
+    fa = {}
     builds_ran = False
     synced = 0
     status = load_status()
@@ -485,7 +687,9 @@ def main():
     except Exception as e:  # noqa: BLE001
         errors.append('translation step failed: %s' % e)
 
-    # 6. compare vs published/ and POST only changed files to KV
+    # 6. compare vs published/ and POST only changed files to KV.
+    # A file that fails the sanity guard is NEVER posted (and its baseline
+    # is not updated, so the next run retries it) — junk must not go live.
     try:
         PUBLISHED.mkdir(parents=True, exist_ok=True)
         # builds-full.json is compared every run (it only changes when the
@@ -502,6 +706,18 @@ def main():
             if base is not None and base == _comparable_bytes(src_file):
                 continue
             changed.append(name)
+            try:
+                new_obj = load_json(src_file)
+            except Exception as e:  # noqa: BLE001
+                blocked.append((name, 'فایل تازه خراب است'))
+                errors.append('%s: فایل تازه خراب است (%s)' % (name, e))
+                continue
+            old_obj = baseline_json(name)
+            ok_post, why = sane_to_post(name, new_obj, old_obj)
+            if not ok_post:
+                blocked.append((name, why))
+                errors.append('%s: پست نشد — %s' % (name, why))
+                continue
             if name in POSTABLE:
                 try:
                     code, body = kv_client.post_file(str(src_file))
@@ -516,6 +732,8 @@ def main():
                     continue
                 posted.append(name)
                 pub_file.write_bytes(src_file.read_bytes())
+                descriptions.append(describe_change(name, old_obj, new_obj, fa)
+                                    or '📄 %s تازه شد' % name)
             else:
                 # team-comp-guide.json: not in the KV allow-list — acknowledge only
                 skipped.append(name)
@@ -567,10 +785,12 @@ def main():
         lines = ['🔄 گزارش بروزرسانی — %s' % ('✅ موفق' if ok else '❌ ناموفق')]
         dur = int((now_tehran() - started).total_seconds())
         lines.append('🕐 %s — %s ثانیه' % (started.strftime('%H:%M'), dur))
-        if changed:
-            lines.append('📥 تغییر: %s' % ', '.join(changed))
-        if posted:
-            lines.append('📤 پست شد: %s' % ', '.join(posted))
+        if descriptions:
+            lines.extend(descriptions)
+        if blocked:
+            lines.append('⚠️ پست نشد: %s' % '، '.join('%s (%s)' % b for b in blocked))
+        if skipped:
+            lines.append('📖 فقط در فایل تازه شد (پست نمی‌شود): %s' % '، '.join(skipped))
         tr = ', '.join('%s:%d' % kv for kv in sorted(translated.items()) if kv[1])
         if tr:
             lines.append('🌐 ترجمه: %s' % tr)
