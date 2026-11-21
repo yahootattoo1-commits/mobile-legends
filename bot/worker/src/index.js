@@ -8,7 +8,7 @@
 // require از طریق createRequire در باندل جا می‌ماند و زمان‌اجرا خطا می‌دهد.
 import { createBot } from '../../src/bot.js';
 import sd from '../../src/staticData.js';
-import { askCoach } from '../../src/coach.js';
+import { askCoach, recordAiUsage, aiUsageTokens } from '../../src/coach.js';
 import { validateInitData } from '../../src/webappAuth.js';
 import { telegramLib } from './patch-telegram.cjs';
 
@@ -258,6 +258,7 @@ async function runTranslate(env, instruction, inputObj, maxTokens, validate, lab
         const v = validate(parsed);
         if (v !== true) throw new Error((label ? label + ': ' : '') + 'validation failed: ' + (typeof v === 'string' ? v : 'output'));
       }
+      await recordAiUsage(env.USERS, new Date().toISOString().slice(0, 10), aiUsageTokens(res), 'translate');
       return parsed;
     } catch (e) {
       lastErr = e;
@@ -504,7 +505,7 @@ async function getBot(env) {
   await refreshStatic(env);
   if (bot) return bot;
   bot = createBot(
-    { BOT_TOKEN: env.BOT_TOKEN, MINIAPP_URL: env.MINIAPP_URL, ADMIN_ID: env.ADMIN_ID, AI: env.AI, USERS: env.USERS },
+    { BOT_TOKEN: env.BOT_TOKEN, MINIAPP_URL: env.MINIAPP_URL, ADMIN_ID: env.ADMIN_ID, AI: env.AI, USERS: env.USERS, DATA: env.DATA },
     {
       isWorker: true,
       userStore: kvUserStore(env),
@@ -528,6 +529,16 @@ async function getBot(env) {
         } catch {
           return { ok: false, status: 0 };
         }
+      },
+      // وضعیت ماشهٔ رفرش برای پنل مدیریت — GET از طریق binding (fetch مستقیم
+      // workers.dev از داخل ورکر با خطای ۱۰۴۲ رد می‌شود).
+      triggerHealth: async () => {
+        try {
+          const r = env.TRIGGER
+            ? await env.TRIGGER.fetch('https://trigger/', { method: 'GET' })
+            : await fetch('https://mlbb-refresh-trigger.yahootattoo1.workers.dev/', { method: 'GET', signal: AbortSignal.timeout(5000) });
+          return r.ok;
+        } catch { return false; }
       },
     },
   );
