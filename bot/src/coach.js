@@ -13,6 +13,8 @@ const COACH_UNAVAILABLE_MSG = 'مربی الان در دسترس نیست، کم
 const COACH_NO_AI_MSG = 'مربی فقط روی ورکر فعال است';
 const COACH_MAX_QUESTION = 500;
 const COACH_LIMIT_TTL = 48 * 3600; // شمارنده‌های روزانه بعد از ۴۸ ساعت منقضی می‌شوند
+const AI_DAILY_NEURON_BUDGET = 10000; // بودجهٔ رایگان روزانهٔ Workers AI (نورون)
+const NEURONS_PER_TOKEN = 0.0244; // نورون به ازای هر توکن برای Gemma 4 26B — اندازه‌گیری‌شده: ۷٫۴ نورون برای ۳۰۴ توکن
 
 // پیام سقف روزانه برای یک کاربر — عدد سقف در پیام می‌آید (فارسی)
 function coachUserCapMsg(limit) {
@@ -30,6 +32,40 @@ function coachLimitKey(userId) { return `coach:limit:${userId}`; }
 function coachUserKey(userId, dateStr) { return `coach:user:${userId}:${dateStr}`; }
 function coachAnonKey(dateStr) { return `coach:anon:${dateStr}`; }
 function coachGlobalKey(dateStr) { return `coach:${dateStr}`; }
+function aiUsageKey(dateStr) { return `usage:ai:${dateStr}`; }
+
+// توکن‌های یک پاسخ AI از envelope (res.usage)؛ ۰ وقتی مدل گزارش نمی‌دهد.
+function aiUsageTokens(res) {
+  const u = res && res.usage;
+  if (!u) return 0;
+  const total = Number(u.total_tokens) || ((Number(u.prompt_tokens) || 0) + (Number(u.completion_tokens) || 0));
+  return Number.isFinite(total) && total > 0 ? Math.round(total) : 0;
+}
+
+// مصرف یک فراخوانی AI را در KV ثبت می‌کند (یک کلید JSON برای هر روز:
+// {calls, tokens, translate}) — فقط یک write اضافه به‌ازای هر فراخوانی، تا
+// شمارندهٔ نوشتن KV در پلن رایگان (۱۰۰۰ در روز) پر نشود.
+async function recordAiUsage(kv, dateStr, tokens, kind) {
+  if (!kv || !dateStr) return;
+  const key = aiUsageKey(dateStr);
+  try {
+    let cur = {};
+    try { cur = JSON.parse((await kv.get(key)) || '{}') || {}; } catch { cur = {}; }
+    cur.calls = (Number(cur.calls) || 0) + 1;
+    if (Number.isFinite(tokens) && tokens > 0) cur.tokens = (Number(cur.tokens) || 0) + tokens;
+    if (kind === 'translate') cur.translate = (Number(cur.translate) || 0) + 1;
+    await kv.put(key, JSON.stringify(cur), { expirationTtl: COACH_LIMIT_TTL });
+  } catch { /* شمارنده ذخیره نشد */ }
+}
+
+// مصرف امروز AI برای پنل مدیریت: {calls, tokens, translateCalls}
+async function getAiUsage(kv, dateStr) {
+  if (!kv || !dateStr) return { calls: 0, tokens: 0, translateCalls: 0 };
+  try {
+    const cur = JSON.parse((await kv.get(aiUsageKey(dateStr))) || '{}') || {};
+    return { calls: Number(cur.calls) || 0, tokens: Number(cur.tokens) || 0, translateCalls: Number(cur.translate) || 0 };
+  } catch { return { calls: 0, tokens: 0, translateCalls: 0 }; }
+}
 
 // مقدار خام override را به سقف تبدیل می‌کند: 'inf' → نامحدود، عدد مثبت → همان، بقیه → پیش‌فرض ۳
 function coachLimitFromOverride(raw) {
@@ -149,6 +185,7 @@ async function askCoach(env, deps, question, userId) {
       try {
         await kv.put(globalKey, String(globalCount + 1), { expirationTtl: COACH_LIMIT_TTL });
       } catch { /* شمارنده ذخیره نشد — جواب را داریم */ }
+      await recordAiUsage(kv, dateStr, aiUsageTokens(res), 'coach');
     }
     return answer;
   } catch (e) {
@@ -157,7 +194,7 @@ async function askCoach(env, deps, question, userId) {
   }
 }
 
-module.exports = { askCoach, detectHeroes, coachIsAdmin, coachUserCapMsg, coachLimitFromOverride, getCoachUsage, setCoachLimit, COACH_MODEL, COACH_DAILY_CAP, COACH_DEFAULT_LIMIT, COACH_CAP_MSG, COACH_UNAVAILABLE_MSG, COACH_NO_AI_MSG };
+module.exports = { askCoach, detectHeroes, coachIsAdmin, coachUserCapMsg, coachLimitFromOverride, getCoachUsage, setCoachLimit, recordAiUsage, getAiUsage, aiUsageTokens, COACH_MODEL, COACH_DAILY_CAP, COACH_DEFAULT_LIMIT, COACH_CAP_MSG, COACH_UNAVAILABLE_MSG, COACH_NO_AI_MSG, AI_DAILY_NEURON_BUDGET, NEURONS_PER_TOKEN };
 
 const SYSTEM_PROMPT = 'تو «مربی هوش مصنوعی» ربات Persian MLBB هستی — یک مربی شخصی موبایل لجندز که مستقیم با «تو» حرف می‌زند: گرم، صمیمی و رک، مثل مربی واقعی که کنار تو نشسته. به فارسی جواب بده. ساختار هر جواب همیشه همین است: اول یک خط «خلاصه: ...» — حکم نهایی در یک جمله؛ بعد «چرا» — دلیلش را با همان داده‌هایی که در پیام کاربر داده شده توضیح بده؛ بعد «چیکار کن» — قدم‌های مشخص و کاربردی، به ترتیب اولویت؛ در پایان یک نکتهٔ کوتاه مربی‌گونه. فقط وقتی سؤال اطلاعات لازم را ندارد (مثلاً لین یا نقش یا رنک مشخص نیست و بدون آن نمی‌شود جواب درست داد) به‌جای نکتهٔ آخر یک سؤال کوتاه بپرس؛ وگرنه سؤال نپرس. حداکثر حدود ۴۵۰ کلمه. برای هر واقعیتی دربارهٔ هیروها، آیتم‌ها، بیلد، کانتر و متا فقط از داده‌هایی که در پیام کاربر داده شده استفاده کن؛ هیچ عدد، بیلد یا کانتری را از خودت نساز و اگر داده‌ای نداری، بگو نمی‌دانم. جهت کانتر را قاطی نکن: «این هیروها X را کانتر می‌کنند» یعنی آن هیروها جلوی X قوی‌ترند، و «X این هیروها را کانتر می‌کند» یعنی X جلوی آن‌ها قوی‌تر است. اگر سؤال ربطی به موبایل لجندز ندارد، خیلی کوتاه بگو فقط دربارهٔ این بازی جواب می‌دهی. هیچ‌وقت از منبع داده حرف نزن و هیچ لینکی نده.';
 
