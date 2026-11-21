@@ -131,7 +131,7 @@ async function handleDataRoute(request, env) {
 // type_fa فقط تقویت/تضعیف/تعدیل (buff/nerf/adjust) و با کد ساخته می‌شود، نه مدل.
 // مدل فقط متن را ترجمه می‌کند؛ اگر JSON خروجی خراب یا ناقص بود، ۵۰۲ برمی‌گردد
 // و اسکریپت آیتم را ناتمام می‌گذارد تا اجرای بعد دوباره تلاش کند.
-const TRANSLATE_MODEL = '@cf/qwen/qwen3.8-27b';
+const TRANSLATE_MODEL = '@cf/google/gemma-4-26b-a4b-it';
 const TRANSLATE_SYSTEM = [
   'You translate Mobile Legends: Bang Bang game content from English to Persian (Farsi) for Iranian players.',
   'RULES (always):',
@@ -220,6 +220,15 @@ function repairJsonStringLiterals(text) {
 
 // مدل کوچک گاهی JSON خراب یا ناقص برمی‌گرداند — تا ۲ بار تلاش می‌کند؛
 // validate(parsed) باید true برگرداند وگرنه تلاش بعدی انجام می‌شود.
+// Workers AI now returns an OpenAI-style envelope {choices:[{message:{content, reasoning_content}}]}
+// for reasoning models; older models returned {response}. Read the answer from either shape.
+function readAiText(res) {
+  const msg = res && Array.isArray(res.choices) && res.choices[0] && res.choices[0].message;
+  if (msg && typeof msg.content === 'string' && msg.content.trim()) return msg.content.trim();
+  if (res && typeof res.response === 'string') return res.response.trim();
+  return '';
+}
+
 async function runTranslate(env, instruction, inputObj, maxTokens, validate, label, keepNames) {
   const keep = Array.isArray(keepNames) && keepNames.length
     ? ' Keep these names exactly as written in Latin script, never transliterated: ' + keepNames.join(', ') + '.'
@@ -236,8 +245,12 @@ async function runTranslate(env, instruction, inputObj, maxTokens, validate, lab
         ],
         temperature: 0.2,
         max_tokens: maxTokens,
+        // Reasoning models burn the whole token budget on chain-of-thought
+        // and return empty content unless reasoning is minimized.
+        reasoning_effort: 'minimal',
+        chat_template_kwargs: { enable_thinking: false },
       });
-      const text = res && typeof res.response === 'string' ? res.response.trim() : '';
+      const text = readAiText(res);
       if (!text) throw new Error('empty model response');
       const parsed = parseModelJson(text);
       if (!parsed) throw new Error((label ? label + ': ' : '') + 'model did not return JSON; raw_len=' + text.length + '; raw=' + text.slice(0, 1200));
@@ -287,7 +300,7 @@ async function handleTranslate(request, env) {
       if (!title) return Response.json({ error: 'title required' }, { status: 400 });
       const out = await runTranslate(env,
         'Translate this forum thread title to Persian. Return JSON with exactly this key: title_fa. Example: input {"title": "Hero recommendation for me"} -> output {"title_fa": "معرفی هیرو برای من"}.',
-        { title }, 256,
+        { title }, 1024,
         (o) => typeof o.title_fa === 'string' && !!o.title_fa.trim(), keepNames);
       return Response.json({ title_fa: out.title_fa.trim() });
     }
