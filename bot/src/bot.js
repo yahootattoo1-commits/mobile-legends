@@ -4,7 +4,7 @@ const { Telegraf, Markup } = require('telegraf');
 const { roneGet, ronePost, clearCache, normRankRecord, normCounterRecord, normBuildRecord, normStanding, equipNameMap } = require('./rone');
 const sd = require('./staticData');
 const { faNum, faInt, pct, esc, FOOTER, cleanText, truncate, ROLES, roleFa, laneFa } = require('./fa');
-const { askCoach, getCoachUsage, setCoachLimit, coachUserCapMsg } = require('./coach');
+const { askCoach, getCoachUsage, setCoachLimit, coachUserCapMsg, getAiUsage, AI_DAILY_NEURON_BUDGET, NEURONS_PER_TOKEN, COACH_DAILY_CAP, COACH_MODEL } = require('./coach');
 
 function normName(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
@@ -25,6 +25,16 @@ const LEAGUES = [
 const MONTH_FA = ['ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه', 'ژوئن', 'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر'];
 function dateFa(iso) { const d = new Date(iso); if (isNaN(d.getTime())) return ''; return `${faNum(d.getUTCDate())} ${MONTH_FA[d.getUTCMonth()]} ${faNum(d.getUTCFullYear())}`; }
 function monthFa(m) { const [name, year] = String(m || '').split(' '); const i = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(name); return (i >= 0 ? MONTH_FA[i] : name) + (year ? ' ' + faNum(year) : ''); }
+
+// تاریخ ISO را به «۲۱ نوامبر، ساعت ۲۱:۱۴» به وقت تهران تبدیل می‌کند.
+function tehranDateTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const t = new Date(d.getTime() + (3 * 60 + 30) * 60000);
+  const hh = String(t.getUTCHours()).padStart(2, '0');
+  const mm = String(t.getUTCMinutes()).padStart(2, '0');
+  return `${faNum(t.getUTCDate())} ${MONTH_FA[t.getUTCMonth()]}، ساعت ${faNum(hh)}:${faNum(mm)}`;
+}
 
 
 // ---------- استورها ----------
@@ -162,6 +172,7 @@ function createBot(env, deps) {
   // مربی هوش مصنوعی: بایندینگ Workers AI روی ورکر (env.AI)؛ در Node نیست مگر استاب تست
   const coachAI = (env && env.AI) || deps.coachAI || null;
   const coachKV = (env && env.USERS) || deps.coachKV || null;
+  const dataKV = (env && env.DATA) || null;
   const bootTime = new Date();
   const agent = telegramProxyAgent();
   const bot = new Telegraf(token, agent ? { telegram: { agent, attachmentAgent: agent } } : {});
@@ -1057,6 +1068,7 @@ function createBot(env, deps) {
       [Markup.button.callback('📊 وضعیت ربات', 'admin_status'), Markup.button.callback('👥 کاربران', 'admin_users')],
       [Markup.button.callback('🔄 بروزرسانی داده', 'admin_refresh'), Markup.button.callback('📝 لاگ‌های اخیر', 'admin_logs')],
       [Markup.button.callback('📣 پیام همگانی', 'admin_broadcast')],
+      [Markup.button.callback('⚡ مصرف و اتصال‌ها', 'admin_usage')],
       [Markup.button.callback('🔗 لینک مینی‌اپ', 'admin_miniapp')],
     ]);
   }
@@ -1086,6 +1098,70 @@ function createBot(env, deps) {
     return ctx.replyWithHTML(
       `📊 <b>وضعیت ربات</b>\n\n⏱️ زمان روشن بودن: ${faNum(h)} ساعت و ${faNum(m)} دقیقه\n🧠 حافظه: ${faNum(mem)} مگابایت\n🦸 هیروهای استاتیک: ${faNum(sd.heroes.length)}\n🧰 آیتم‌ها: ${faNum(sd.items.length)}\n🎮 نسخهٔ بازی: ${faNum(v)}\n👥 کاربران: ${faNum((await getUsers()).size)}\n📡 حالت: ${isWorker ? 'webhook (Cloudflare Workers)' : 'polling (تلگرام)'}\n🔗 مینی‌اپ: ${esc(miniappUrl || 'تنظیم نشده')}` + FOOTER,
     );
+  });
+
+  bot.action('admin_usage', async (ctx) => {
+    if (!requireAdmin(ctx)) return ctx.answerCbQuery();
+    await ctx.answerCbQuery();
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const usage = await getAiUsage(coachKV, dateStr);
+    let coachToday = 0;
+    try { coachToday = Number(await coachKV.get(`coach:${dateStr}`)) || 0; } catch { coachToday = 0; }
+    // نورون‌ها را از توکن‌های اندازه‌گیری‌شده تخمین می‌زنیم؛ وقتی مدل usage
+    // گزارش نمی‌دهد، هر فراخوانی را حدود ۱۲ نورون می‌گیریم. عدد دقیق فقط در
+    // داشبورد کلادفلر است.
+    const neurons = usage.tokens > 0 ? Math.round(usage.tokens * NEURONS_PER_TOKEN) : usage.calls * 12;
+    const remaining = Math.max(0, AI_DAILY_NEURON_BUDGET - neurons);
+    const [rone, pages, trigger, lastData] = await Promise.all([
+      (async () => {
+        try {
+          const r = await roneGet('/academy/meta/version');
+          if (!r.ok) return { ok: false, ver: '' };
+          return { ok: true, ver: ((r.records || []).find((rec) => rec?.data?.game_version) || {}).data?.game_version || '' };
+        } catch { return { ok: false, ver: '' }; }
+      })(),
+      (async () => {
+        if (!miniappUrl) return null;
+        try {
+          const r = await fetch(miniappUrl, { method: 'GET', signal: AbortSignal.timeout(5000) });
+          return r.ok;
+        } catch { return false; }
+      })(),
+      (async () => {
+        if (typeof deps.triggerHealth !== 'function') return null;
+        try { return await deps.triggerHealth(); } catch { return false; }
+      })(),
+      (async () => {
+        if (!dataKV) return null;
+        try {
+          const d = await dataKV.get('discussions.json', 'json');
+          return (d && d.fetched_at) || '';
+        } catch { return ''; }
+      })(),
+    ]);
+    const kvUsersOk = !!coachKV;
+    const kvDataOk = dataKV ? !!lastData : null;
+    const modelShort = String(COACH_MODEL || '').replace('@cf/', '');
+    const t =
+      `⚡ <b>مصرف و اتصال‌ها — امروز ${dateFa(dateStr + 'T00:00:00Z')}</b>\n\n` +
+      `🤖 مربی: ${faNum(coachToday)} از ${faNum(COACH_DAILY_CAP)} جواب\n` +
+      `🌐 ترجمه‌ها: ${faNum(usage.translateCalls)} فراخوانی\n` +
+      `📞 کل فراخوانی‌های AI: ${faNum(usage.calls)}\n` +
+      `🧮 توکن‌ها: ${faInt(usage.tokens)}\n` +
+      `⚡ نورون‌ها (تقریبی): ≈ ${faInt(neurons)} از ${faInt(AI_DAILY_NEURON_BUDGET)} — باقی‌مانده ≈ ${faInt(remaining)}\n\n` +
+      `🔌 <b>اتصال‌ها</b>\n` +
+      `• تلگرام: ✅ متصل\n` +
+      `• KV کاربران: ${kvUsersOk ? '✅' : '❌'}\n` +
+      `• KV دیتا: ${kvDataOk === null ? '—' : (kvDataOk ? '✅' : '❌')}\n` +
+      `• Workers AI: ${coachAI ? '✅' : '❌'} (${esc(modelShort)})\n` +
+      `• Rone API: ${rone.ok ? '✅' : '❌'}${rone.ver ? ` (بازی ${faNum(rone.ver)})` : ''}\n` +
+      `• مینی‌اپ: ${pages === null ? 'تنظیم نشده' : (pages ? '✅' : '❌')}\n` +
+      `• ماشهٔ رفرش: ${trigger === null ? '—' : (trigger ? '✅' : '❌')}\n` +
+      `• آخرین بروزرسانی داده: ${lastData ? tehranDateTime(lastData) : 'نامشخص'}` +
+      `\n\n⚠️ نورون‌ها تخمین است (۷٫۴ نورون برای ۳۰۴ توکن اندازه‌گیری شده)؛ عدد دقیق در داشبورد کلادفلر است.` + FOOTER;
+    return ctx.replyWithHTML(t, Markup.inlineKeyboard([
+      [Markup.button.callback('← پنل مدیریت', 'menu_admin')],
+    ]));
   });
 
   bot.action('admin_users', async (ctx) => {
