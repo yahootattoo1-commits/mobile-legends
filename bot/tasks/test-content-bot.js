@@ -228,7 +228,7 @@ async function main() {
     ['/counter نام اشتباه: پیدا نشد', !!counterUnknownMsg],
     ['/counter Miya Zzzzzz: نادیده گرفته شد', !!counterIgnoredMsg],
     ['/ask رسید', !!askMsg],
-    ['/ask: مدل درست', aiCalls[0] && aiCalls[0].model === '@cf/meta/llama-3.1-8b-instruct-fp8'],
+    ['/ask: مدل درست', aiCalls[0] && aiCalls[0].model === '@cf/qwen/qwen3.8-27b'],
     ['/ask: پرامپت بیلد Miya را دارد', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('Windtalker')],
     ['/ask: پرامپت کانتر Miya را دارد', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('Belerick')],
     ['/ask: جهت کانتر در پرامپت صریح است', aiCalls[0] && JSON.stringify(aiCalls[0].opts.messages).includes('این هیروها Miya را کانتر می‌کنند') && JSON.stringify(aiCalls[0].opts.messages).includes('Miya این هیروها را کانتر می‌کند')],
