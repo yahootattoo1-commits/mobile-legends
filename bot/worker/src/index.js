@@ -131,7 +131,7 @@ async function handleDataRoute(request, env) {
 // type_fa فقط تقویت/تضعیف/تعدیل (buff/nerf/adjust) و با کد ساخته می‌شود، نه مدل.
 // مدل فقط متن را ترجمه می‌کند؛ اگر JSON خروجی خراب یا ناقص بود، ۵۰۲ برمی‌گردد
 // و اسکریپت آیتم را ناتمام می‌گذارد تا اجرای بعد دوباره تلاش کند.
-const TRANSLATE_MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
+const TRANSLATE_MODEL = '@cf/qwen/qwen3.8-27b';
 const TRANSLATE_SYSTEM = [
   'You translate Mobile Legends: Bang Bang game content from English to Persian (Farsi) for Iranian players.',
   'RULES (always):',
