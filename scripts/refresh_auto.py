@@ -419,17 +419,52 @@ def describe_change(name, old, new, fa):
     old = old or {}
     new = new or {}
     if name == 'discussions.json':
-        old_t = {t.get('title') for t in old.get('threads') or []}
-        new_t = [t.get('title') for t in new.get('threads') or [] if t.get('title')]
-        added = [t for t in new_t if t not in old_t]
+        old_map = {t.get('title'): t for t in old.get('threads') or [] if t.get('title')}
+        new_t = [t for t in new.get('threads') or [] if t.get('title')]
+        added = [t.get('title') for t in new_t if t.get('title') not in old_map]
         if added:
             text, extra = _quoted_titles(added, fa, 'discussions')
             s = '💬 بحث تازه (%d): %s' % (len(added), text)
             if extra:
                 s += ' و %d مورد دیگر' % extra
             return s
-        if len(new_t) < len(old_t):
-            return '💬 بحث‌ها کم شد (%d حذف)' % (len(old_t) - len(new_t))
+        if len(new_t) < len(old_map):
+            return '💬 بحث‌ها کم شد (%d حذف)' % (len(old_map) - len(new_t))
+        # No new/removed titles: say WHAT changed — views, comments, likes,
+        # excerpts, or a bumped date — instead of the bare count.
+        view_ups = []
+        other = []
+        for t in new_t:
+            o = old_map.get(t.get('title')) or {}
+            dv = (t.get('views') or 0) - (o.get('views') or 0)
+            if dv > 0:
+                view_ups.append((dv, t.get('title'), o.get('views'), t.get('views')))
+            dc = (t.get('comments') or 0) - (o.get('comments') or 0)
+            dl = (t.get('likes') or 0) - (o.get('likes') or 0)
+            bits = []
+            if dc:
+                bits.append('💬 %s%d' % ('+' if dc > 0 else '', dc))
+            if dl:
+                bits.append('👍 %s%d' % ('+' if dl > 0 else '', dl))
+            if (t.get('excerpt') or '') != (o.get('excerpt') or ''):
+                bits.append('متن عوض شد')
+            if (t.get('date_iso') or '') != (o.get('date_iso') or ''):
+                bits.append('فعالیت تازه')
+            if bits:
+                other.append('«%s» %s' % (_fa_title(fa, 'discussions', t.get('title')), ' '.join(bits)))
+        parts = []
+        if view_ups:
+            view_ups.sort(reverse=True)
+            top = ['«%s» %s→%s' % (_fa_title(fa, 'discussions', title), ov, nv)
+                   for _dv, title, ov, nv in view_ups[:3]]
+            s = 'بازدید بالا رفت: %s' % '، '.join(top)
+            if len(view_ups) > 3:
+                s += ' و %d بحث دیگر' % (len(view_ups) - 3)
+            parts.append(s)
+        if other:
+            parts.append('، '.join(other[:2]))
+        if parts:
+            return '💬 ' + ' — '.join(parts)
         return '💬 بحث‌ها تازه شد (%d مورد)' % len(new_t)
     if name == 'news.json':
         old_p = {p.get('title') for p in old.get('patch_notes') or []}
@@ -446,16 +481,36 @@ def describe_change(name, old, new, fa):
             parts.append('📝 %d تغییر تازه در ویکی: %s' % (len(added_w), '، '.join(added_w[:3])))
         return ' — '.join(parts) if parts else '📰 اخبار تازه شد'
     if name == 'events.json':
-        old_t = {e.get('title') for e in old.get('events') or []}
-        added = [e.get('title') for e in new.get('events') or []
-                 if e.get('title') and e.get('title') not in old_t]
+        old_map = {e.get('title'): e for e in old.get('events') or [] if e.get('title')}
+        new_e = [e for e in new.get('events') or [] if e.get('title')]
+        added = [e.get('title') for e in new_e if e.get('title') not in old_map]
         if added:
             text, extra = _quoted_titles(added, fa, 'events')
             s = '🎉 رویداد تازه (%d): %s' % (len(added), text)
             if extra:
                 s += ' و %d مورد دیگر' % extra
             return s
-        return '🎉 رویدادها تازه شد (%d مورد)' % len(new.get('events') or [])
+        # No new events: describe status/date/summary changes per event.
+        _status_fa = {'ended': 'تمام‌شده', 'unknown': 'نامشخص',
+                      'active': 'فعال', 'upcoming': 'به‌زودی'}
+        changed = []
+        for e in new_e:
+            o = old_map.get(e.get('title')) or {}
+            bits = []
+            if (e.get('status') or '') != (o.get('status') or ''):
+                bits.append('وضعیت: %s→%s' % (
+                    _status_fa.get(o.get('status') or '', o.get('status') or '؟'),
+                    _status_fa.get(e.get('status') or '', e.get('status') or '؟')))
+            if (e.get('start_date') or '') != (o.get('start_date') or '') \
+                    or (e.get('end_date') or '') != (o.get('end_date') or ''):
+                bits.append('تاریخ عوض شد')
+            if (e.get('summary') or '') != (o.get('summary') or ''):
+                bits.append('توضیح عوض شد')
+            if bits:
+                changed.append('«%s» %s' % (_fa_title(fa, 'events', e.get('title')), '، '.join(bits)))
+        if changed:
+            return '🎉 رویدادها تازه شد: %s' % '، '.join(changed[:3])
+        return '🎉 رویدادها تازه شد (%d مورد)' % len(new_e)
     if name == 'tierlist.json':
         def tier_map(tl):
             m = {}
