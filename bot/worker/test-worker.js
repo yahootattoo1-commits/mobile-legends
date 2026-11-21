@@ -165,7 +165,7 @@ const ask1 = await postAsk({ question: 'بهترین بیلد Miya چیست؟' }
 const ask1Json = await ask1.json();
 checks.push(['/api/ask: 200 + جواب تستی', ask1.status === 200 && ask1Json.answer === 'پاسخ تستی مربی']);
 checks.push(['/api/ask: هدر CORS', ask1.headers.get('access-control-allow-origin') === '*']);
-checks.push(['/api/ask: مدل درست', aiCalls.length === 1 && aiCalls[0].model === '@cf/meta/llama-3.1-8b-instruct-fp8']);
+checks.push(['/api/ask: مدل درست', aiCalls.length === 1 && aiCalls[0].model === '@cf/qwen/qwen3.8-27b']);
 checks.push(['/api/ask: پرامپت بیلد Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Windtalker')]);
 checks.push(['/api/ask: پرامپت کانتر Miya را دارد', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('Belerick')]);
 checks.push(['/api/ask: جواب فارسی (سیستم فارسی)', aiCalls.length === 1 && JSON.stringify(aiCalls[0].opts.messages).includes('مربی هوش مصنوعی')]);
