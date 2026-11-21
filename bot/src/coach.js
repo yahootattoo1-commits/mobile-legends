@@ -5,7 +5,7 @@
 const sd = require('./staticData');
 const { faNum, pct, roleFa, laneFa } = require('./fa');
 
-const COACH_MODEL = '@cf/qwen/qwen3.8-27b';
+const COACH_MODEL = '@cf/google/gemma-4-26b-a4b-it';
 const COACH_DAILY_CAP = 350; // سقف روزانهٔ کل جواب‌ها — با جواب‌های بلندتر (~۲۵–۳۰ نورون)، ۳۵۰ جواب ≈ ۱۰هزار نورون بودجهٔ رایگان
 const COACH_DEFAULT_LIMIT = 3;
 const COACH_CAP_MSG = 'سهم امروز مربی تمام شد، فردا دوباره بپرس';
@@ -79,6 +79,15 @@ async function getCoachUsage(adminIdValue, kv, userId) {
 // مدیر نامحدود است (سقف کاربری و سقف سراسری ۴۰۰ او را نمی‌گیرد، ولی شمارندهٔ سراسری
 // برای حساب بودجه زیاد می‌شود). ناشناس یک سطل مشترک ۳ جوابه در روز دارد.
 // بدون AI پیام ثابت برمی‌گردد.
+// Workers AI now returns an OpenAI-style envelope {choices:[{message:{content, reasoning_content}}]}
+// for reasoning models; older models returned {response}. Read the answer from either shape.
+function readAiText(res) {
+  const msg = res && Array.isArray(res.choices) && res.choices[0] && res.choices[0].message;
+  if (msg && typeof msg.content === 'string' && msg.content.trim()) return msg.content.trim();
+  if (res && typeof res.response === 'string') return res.response.trim();
+  return '';
+}
+
 async function askCoach(env, deps, question, userId) {
   const ai = env && env.AI;
   if (!ai || typeof ai.run !== 'function') return COACH_NO_AI_MSG;
@@ -125,9 +134,13 @@ async function askCoach(env, deps, question, userId) {
         { role: 'user', content: userText },
       ],
       temperature: 0.3,
-      max_tokens: 700,
+      max_tokens: 2048,
+      // Reasoning models burn the whole token budget on chain-of-thought
+      // and return empty content unless reasoning is minimized.
+      reasoning_effort: 'minimal',
+      chat_template_kwargs: { enable_thinking: false },
     });
-    const answer = res && typeof res.response === 'string' ? res.response.trim() : '';
+    const answer = readAiText(res);
     if (!answer) throw new Error('empty model response');
     if (kv) {
       try {
