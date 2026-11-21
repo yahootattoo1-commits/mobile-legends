@@ -5,7 +5,7 @@
 const sd = require('./staticData');
 const { faNum, pct, roleFa, laneFa } = require('./fa');
 
-const COACH_MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
+const COACH_MODEL = '@cf/qwen/qwen3.8-27b';
 const COACH_DAILY_CAP = 350; // سقف روزانهٔ کل جواب‌ها — با جواب‌های بلندتر (~۲۵–۳۰ نورون)، ۳۵۰ جواب ≈ ۱۰هزار نورون بودجهٔ رایگان
 const COACH_DEFAULT_LIMIT = 3;
 const COACH_CAP_MSG = 'سهم امروز مربی تمام شد، فردا دوباره بپرس';
