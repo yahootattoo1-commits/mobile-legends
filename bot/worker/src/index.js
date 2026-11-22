@@ -32,12 +32,13 @@ async function refreshStatic(env) {
 }
 
 // ---------- اندپوینت دیتا: POST /data/<file> (نوشتن، با HMAC) و GET /data/<file> ----------
-// فقط همین ۱۰ فایل قابل نوشتن/خواندن‌اند؛ بقیه ۴۰۰/۴۰۴ می‌گیرند.
+// فقط همین ۱۱ فایل قابل نوشتن/خواندن‌اند؛ بقیه ۴۰۰/۴۰۴ می‌گیرند.
 // احراز هویت POST: هدر X-Data-Auth باید برابر باشد با
 //   HMAC-SHA256(key = WEBHOOK_SECRET یا DATA_SECRET, message = 'persian-mlbb-bot-data:' + file) به‌صورت hex
 // مقدار سکرت هیچ‌جا لاگ یا ذخیره نمی‌شود — فقط همین مقایسهٔ HMAC انجام می‌شود.
 const DATA_FILES = new Set([
   'tierlist.json', 'news.json', 'discussions.json', 'events.json',
+  'channel-news.json',
   'hero-stats.json', 'matchups.json', 'team-comps.json',
   'fa-content.json', 'patch-notes-full.json', 'builds-full.json',
 ]);
