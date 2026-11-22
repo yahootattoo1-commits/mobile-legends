@@ -10,7 +10,7 @@ const STATIC_BASE = 'data/';
 const WORKER_DATA_BASE = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/data';
 // ۱۰ فایل refreshable اول از ورکر (KV) خوانده می‌شوند؛ اگر ورکر در دسترس نبود،
 // fallback به data/ همین سایت با ?v=DATA_VERSION است — مکانیزم نسخه سر جایش است.
-const WORKER_DATA_FILES = new Set(['tierlist.json', 'news.json', 'discussions.json', 'events.json', 'hero-stats.json', 'matchups.json', 'team-comps.json', 'fa-content.json', 'patch-notes-full.json', 'builds-full.json']);
+const WORKER_DATA_FILES = new Set(['tierlist.json', 'news.json', 'discussions.json', 'events.json', 'channel-news.json', 'hero-stats.json', 'matchups.json', 'team-comps.json', 'fa-content.json', 'patch-notes-full.json', 'builds-full.json']);
 const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
 const DATA_VERSION = '20261117-2234'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
@@ -136,6 +136,7 @@ async function loadStatic() {
       const tierFile = await loadOptional('tierlist.json');
       const discFile = await loadOptional('discussions.json');
       const evFile = await loadOptional('events.json');
+      const channelNewsFile = await loadOptional('channel-news.json');
       const faContentFile = await loadOptional('fa-content.json');
       const heroStatsFile = await loadOptional('hero-stats.json');
       const teamCompsFile = await loadOptional('team-comps.json');
@@ -170,6 +171,7 @@ async function loadStatic() {
         news: { patchNotes: newsFile.patch_notes || [], wikiRecent: newsFile.wiki_recent || [] },
         tierlist: { month: tierFile.month || null, tiers: tierFile.tiers || {}, counts: tierFile.counts || {} },
         discussions: discFile.threads || [],
+        channelNews: channelNewsFile.items || [],
         events: evFile.events || [],
         faContent: faContentFile && faContentFile.version ? faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {}, discussions: {} },
         heroStats: heroStatsFile.heroes || [],
@@ -1062,10 +1064,18 @@ const thumb = (u) => {
   const proxied = u.startsWith('https://static.wikia.nocookie.net/') ? 'https://wsrv.nl/?url=' + u.slice(8) : u;
   return `<img class="news-thumb" src="${esc(proxied)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`;
 };
+    const cn = sd.channelNews || [];
+    const catOrder = [['skin', '🎨 اسکین‌ها'], ['hero', '🦸 هیروها'], ['event', '🎉 رویدادها'], ['collab', '🤝 همکاری‌ها'], ['news', '📰 خبرها']];
+    const cnHtml = cn.length ? '<h2>📰 اخبار</h2>' + catOrder.map(([key, label]) => {
+      const list = cn.filter((i) => (i.category || 'news') === key);
+      if (!list.length) return '';
+      return `<h3 style="margin:12px 0 6px">${label}</h3>` + list.slice(0, 6).map((i) => `<div class="item-card">${thumb(i.photo_url)}<b>${esc(i.title || '')}</b><br><span class="sub">${esc(dateFa(i.date_iso))}</span>${i.text ? `<br><span class="sub">${esc(i.text.slice(0, 200))}${i.text.length > 200 ? '…' : ''}</span>` : ''}</div>`).join('');
+    }).join('') : '';
     box.innerHTML =
       (pn.length ? '<h2>📝 پچ‌نوت‌ها</h2>' + pn.slice(0, 10).map((p, i) => i === 0
         ? `<div class="news-feature" data-patch="${esc(p.title)}">${thumb(p.image_url)}<div class="news-copy"><span class="tag tag-gold">پچ‌نوت</span><h3>${esc(p.title_fa || p.title)}</h3><small>${esc(dateFa(p.updated))} — ${esc(p.title)} • 👆 برای متن کامل بزن</small></div></div>`
         : `<div class="item-card" data-patch="${esc(p.title)}" style="cursor:pointer">${thumb(p.image_url)}<b>${esc(p.title_fa || p.title)}</b><br><span class="sub">${esc(dateFa(p.updated))} — ${esc(p.title)}</span><br><span class="sub">👆 برای متن کامل پچ بزن</span></div>`).join('') : '') +
+      cnHtml +
       (ev.length ? '<h2>🎉 ایونت‌ها</h2>' + ev.slice(0, 10).map((e) => {
         const fev = ((sd.faContent || {}).events || {})[e.title] || {};
         const d1 = e.start_date ? dateFa(e.start_date) : '';
