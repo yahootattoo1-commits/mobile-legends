@@ -65,11 +65,13 @@ HEAVY_STATS_MAX_AGE_H = 20
 # Files compared every run (the cron's 10). builds-full.json joins the compare
 # set only when the weekly gate runs.
 COMPARE_FILES = ['news.json', 'tierlist.json', 'discussions.json', 'events.json',
+                 'channel-news.json',
                  'patch-notes-full.json', 'hero-stats.json', 'matchups.json',
                  'team-comps.json', 'team-comp-guide.json', 'fa-content.json']
 # KV allow-list: the 7 refreshable + fa-content + patch-notes-full + builds-full.
 # team-comp-guide.json is deliberately NOT postable (not in the allow-list).
 POSTABLE = {'news.json', 'tierlist.json', 'discussions.json', 'events.json',
+            'channel-news.json',
             'hero-stats.json', 'matchups.json', 'team-comps.json',
             'fa-content.json', 'patch-notes-full.json', 'builds-full.json'}
 
@@ -511,6 +513,17 @@ def describe_change(name, old, new, fa):
         if changed:
             return '🎉 رویدادها تازه شد: %s' % '، '.join(changed[:3])
         return '🎉 رویدادها تازه شد (%d مورد)' % len(new_e)
+    if name == 'channel-news.json':
+        old_ids = {i.get('id') for i in old.get('items') or []}
+        new_items = [i for i in new.get('items') or []]
+        added = [i for i in new_items if i.get('id') not in old_ids]
+        if added:
+            titles = ['«%s»' % (i.get('title') or '') for i in added[:3]]
+            s = '📰 خبر تازه (%d): %s' % (len(added), '، '.join(titles))
+            if len(added) > 3:
+                s += ' و %d مورد دیگر' % (len(added) - 3)
+            return s
+        return '📰 اخبار تازه شد (%d مورد)' % len(new_items)
     if name == 'tierlist.json':
         def tier_map(tl):
             m = {}
@@ -586,6 +599,14 @@ def sane_to_post(name, new, old):
             return False, 'events ندارد'
         if not ev and (old or {}).get('events'):
             return False, 'رویدادها خالی شد'
+    elif name == 'channel-news.json':
+        it = new.get('items')
+        if not isinstance(it, list):
+            return False, 'items ندارد'
+        if not it and (old or {}).get('items'):
+            return False, 'اخبار خالی شد'
+        if old and len(it) * 2 < len(old.get('items') or []):
+            return False, 'تعداد اخبار نصف شد'
     elif name == 'tierlist.json':
         tiers = new.get('tiers')
         if not isinstance(tiers, dict):
