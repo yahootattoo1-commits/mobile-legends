@@ -9,6 +9,7 @@ Outputs (~/workspace/mlbb-bot/data/):
   - news.json      {fetched_at, patch_notes[], wiki_recent[], discussions[]}
   - tierlist.json  {fetched_at, month, tiers: {S:[heroes], A:[...], ...}}
 """
+import html
 import json
 import os
 import re
@@ -55,6 +56,94 @@ def fandom_api(params, tries=3):
 
 def fetch(url, **kw):
     return Fetcher.get(url, stealthy_headers=True, **kw)
+
+
+# ---------------- کانال تلگرام Mobile_Legend_ir: اخبار ----------------
+# فقط پست‌هایی که با «📢 | News» شروع می‌شوند، بدون دانلود مدیا: فقط یک GET
+# به صفحهٔ عمومی t.me/s و ذخیرهٔ متن + لینک عکس (CDN تلگرام). خبرها از قبل
+# فارسی‌اند، پس ترجمه لازم ندارند و منبع هم ذکر نمی‌شود (قانون ربات).
+CHANNEL_URL = "https://t.me/s/Mobile_Legend_ir"
+CHANNEL_CATEGORIES = [
+    ("collab", "همکاری", ["همکاری", "کالاب", "collab"]),
+    ("event", "رویداد", ["ایونت", "رویداد", "event"]),
+    ("hero", "هیرو", ["هیرو", "hero"]),
+    ("skin", "اسکین", ["اسکین", "skin"]),
+]
+
+
+def _channel_category(text):
+    for key, fa, kws in CHANNEL_CATEGORIES:
+        if any(k in text for k in kws):
+            return key, fa
+    return "news", "خبر"
+
+
+def _clean_channel_text(raw_html):
+    """متن خبر از HTML پیام: برچسب‌ها حذف، فوتر کانال (نظرتون/➖➖➖ و بعدش)
+    و خط‌های تبلیغاتی/منشن بریده می‌شود؛ فقط متن خبر می‌ماند."""
+    s = re.sub(r"<br\s*/?>", "\n", raw_html)
+    s = re.sub(r"<[^>]+>", "", s)
+    s = html.unescape(s)
+    for marker in ("نظرتون", "➖➖➖"):
+        if marker in s:
+            s = s.split(marker, 1)[0]
+    # «📢 | News» اول متن است (نه خط جدا) — فقط همین پیشوند را بردار
+    s = re.sub(r"^\s*📢\s*\|\s*News\s*", "", s, count=1)
+    lines = []
+    for ln in s.split("\n"):
+        ln = ln.strip()
+        if not ln:
+            continue
+        if ln.startswith("@") or "t.me/" in ln or "youtube.com" in ln or ln.startswith("http"):
+            continue
+        lines.append(ln)
+    return "\n".join(lines).strip()
+
+
+def channel_news(limit=20):
+    """پست‌های News کانال Mobile_Legend_ir از صفحهٔ عمومی t.me/s.
+    فقط یک GET (بدون دانلود مدیا)؛ برمی‌گرداند لیست خبرها:
+    {id, title, text, category, category_fa, photo_url, date_iso} — تازه‌ترین اول."""
+    from curl_cffi import requests as crequests
+
+    r = crequests.get(CHANNEL_URL, impersonate="chrome131", timeout=30)
+    r.raise_for_status()
+    blocks = re.split(r'<div class="tgme_widget_message_wrap[^>]*>', r.text)[1:]
+    items = []
+    seen = set()
+    # صفحه قدیمی‌ترین را اول می‌آورد؛ از آخر شروع کن تا تکراری‌ها با نسخهٔ تازه‌تر بمانند
+    for b in reversed(blocks):
+        tm = re.search(
+            r'<div class="tgme_widget_message_text[^>]*>(.*?)</div>\s*(?:<div class="tgme_widget_message_footer|<div class="tgme_widget_message_link_preview|<a class="tgme_widget_message_photo_wrap)',
+            b, re.S)
+        if not tm:
+            continue
+        # فقط پست‌های News: «📢 | News» اول متن است (ایموجی در HTML خام ~۲۰۰ کاراکتر
+        # جا می‌گیرد، پس پنجره را بازتر می‌گیریم)
+        if "| News" not in tm.group(1)[:400]:
+            continue
+        text = _clean_channel_text(tm.group(1))
+        if not text:
+            continue
+        title = text.split("\n")[0].strip()[:120]
+        if not title:
+            continue
+        key = re.sub(r"\s+", " ", title)[:100]
+        if key in seen:
+            continue
+        seen.add(key)
+        m = re.search(r'datetime="([^"]+)"', b)
+        date_iso = m.group(1) if m else ""
+        pm = re.search(r"tgme_widget_message_photo_wrap[^>]*style=\"[^\"]*background-image:url\('([^']+)'\)", b)
+        photo_url = pm.group(1) if pm else None
+        lm = re.search(r'tgme_widget_message_date[^>]*href="(https://t\.me/Mobile_Legend_ir/\d+)"', b)
+        post_id = lm.group(1) if lm else ""
+        cat, cat_fa = _channel_category(text)
+        items.append({"id": post_id, "title": title, "text": text,
+                      "category": cat, "category_fa": cat_fa,
+                      "photo_url": photo_url, "date_iso": date_iso})
+    items.sort(key=lambda x: x.get("date_iso") or "", reverse=True)
+    return items[:limit]
 
 
 # ---------------- Fandom: recent changes ----------------
@@ -348,6 +437,17 @@ if __name__ == "__main__":
         print(f"news.json: {len(patches)} patch notes, {len(recent)} wiki recent")
         for pn in patches[:5]:
             print("  ", pn.get("updated"), "|", pn["title_fa"], "|", pn["title"])
+    if which in ("all", "channel"):
+        try:
+            items = channel_news(limit=20)
+            ch = {"fetched_at": fetched_at, "items": items}
+            with open(f"{OUT_DIR}/channel-news.json", "w", encoding="utf-8") as f:
+                json.dump(ch, f, ensure_ascii=False, indent=1)
+            print(f"channel-news.json: {len(items)} news items")
+            for it in items[:5]:
+                print(f"  [{it.get('category_fa')}] {it['title']}")
+        except Exception as e:  # noqa: BLE001
+            print(f"channel-news failed (keeping old file): {e}")
     if which in ("all", "mlbb"):
         tl = tier_list()
         tl["fetched_at"] = fetched_at
