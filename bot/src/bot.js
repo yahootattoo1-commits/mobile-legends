@@ -665,6 +665,21 @@ function createBot(env, deps) {
         t += `\n• <b>${esc(fd.title_fa || d.title)}</b>` + (d.category_fa ? ` — ${esc(d.category_fa)}` : '') + (dateFa(d.date_iso) ? ` — ${dateFa(d.date_iso)}` : '');
       });
     }
+    const ch = sd.channelNews || [];
+    if (ch.length) {
+      t += '\n\n<b>📰 اخبار:</b>';
+      const byCat = {};
+      for (const item of ch.slice(0, 10)) {
+        const k = item.category_fa || 'خبر';
+        (byCat[k] = byCat[k] || []).push(item);
+      }
+      for (const [cat, list] of Object.entries(byCat)) {
+        t += `\n<b>${esc(cat)}:</b>`;
+        list.slice(0, 3).forEach((item) => {
+          t += `\n• <b>${esc(item.title || '')}</b>` + (dateFa(item.date_iso) ? ` — ${dateFa(item.date_iso)}` : '');
+        });
+      }
+    }
     t += FOOTER;
     return ctx.replyWithHTML(t, homeKeyboard());
   }
