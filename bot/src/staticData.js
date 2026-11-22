@@ -25,6 +25,7 @@ const DATA_FILES = [
   ['tierlistFile', 'tierlist.json'],
   ['discussionsFile', 'discussions.json'],
   ['eventsFile', 'events.json'],
+  ['channelNewsFile', 'channel-news.json'],
   ['faContentFile', 'fa-content.json'],
   ['heroStatsFile', 'hero-stats.json'],
   ['teamCompsFile', 'team-comps.json'],
@@ -64,6 +65,7 @@ function buildState(f) {
   const news = { patchNotes: (f.newsFile && f.newsFile.patch_notes) || [], wikiRecent: (f.newsFile && f.newsFile.wiki_recent) || [] };
   const discussions = (f.discussionsFile && f.discussionsFile.threads) || [];
   const events = (f.eventsFile && f.eventsFile.events) || [];
+  const channelNews = (f.channelNewsFile && f.channelNewsFile.items) || [];
   const faContent = (f.faContentFile && f.faContentFile.version) ? f.faContentFile : { lore: {}, matchups: {}, patches: {}, events: {}, stats: { heroes: {} }, guide: {}, comps: {} };
   const heroStats = (f.heroStatsFile && f.heroStatsFile.heroes) || [];
   const teamComps = (f.teamCompsFile && f.teamCompsFile.comps) || [];
@@ -80,7 +82,7 @@ function buildState(f) {
   const emblems = f.emblemFile.data || [];
   const talents = f.talentFile.data || {}; // { tier1: [...], tier2: [...], tier3: [...] }
   return {
-    heroes, items, emblems, talents, fullBuilds, news, tierlist, discussions, events,
+    heroes, items, emblems, talents, fullBuilds, news, tierlist, discussions, events, channelNews,
     faContent, heroStats, teamComps, teamCompGuide, patchFull, matchups, FA,
     heroRevdate: (f.heroFile && f.heroFile.revdate) || null,
     itemRevdate: (f.itemFile && f.itemFile.revdate) || null,
@@ -96,7 +98,7 @@ function buildState(f) {
 let state = buildState(loadDiskFiles());
 
 function logState(prefix) {
-  console.log(`[static] ${prefix}heroes=${state.heroes.length} items=${state.items.length} emblems=${state.emblems.length} news=${state.news.patchNotes.length + state.news.wikiRecent.length} tierlist=${Object.values(state.tierlist.counts).reduce((a, b) => a + b, 0)} discussions=${state.discussions.length} events=${state.events.length} facontent=${Object.keys(state.faContent.lore || {}).length}/${Object.keys(state.faContent.matchups || {}).length}/${Object.keys(state.faContent.patches || {}).length}/${Object.keys(state.faContent.events || {}).length} stats=${state.heroStats.length} comps=${state.teamComps.length} revdate=${state.heroRevdate || '?'}`);
+  console.log(`[static] ${prefix}heroes=${state.heroes.length} items=${state.items.length} emblems=${state.emblems.length} news=${state.news.patchNotes.length + state.news.wikiRecent.length} tierlist=${Object.values(state.tierlist.counts).reduce((a, b) => a + b, 0)} discussions=${state.discussions.length} events=${state.events.length} channelnews=${state.channelNews.length} facontent=${Object.keys(state.faContent.lore || {}).length}/${Object.keys(state.faContent.matchups || {}).length}/${Object.keys(state.faContent.patches || {}).length}/${Object.keys(state.faContent.events || {}).length} stats=${state.heroStats.length} comps=${state.teamComps.length} revdate=${state.heroRevdate || '?'}`);
 }
 logState('');
 
@@ -107,10 +109,25 @@ const REMOTE_TTL_MS = 10 * 60 * 1000;
 let remoteLoadedAt = 0;
 let remotePromise = null;
 
-async function loadRemoteFiles(baseUrl, fetchImpl) {
+// فایل‌هایی که اسکرپر ۳۰ دقیقه‌ای تازه می‌کند و در KV DATA ورکر هم هست؛
+// بقیهٔ فایل‌ها فقط از Pages خوانده می‌شوند.
+const KV_REFRESHABLE_FILES = new Set([
+  'tierlist.json', 'news.json', 'discussions.json', 'events.json',
+  'hero-stats.json', 'matchups.json', 'team-comps.json',
+  'fa-content.json', 'patch-notes-full.json', 'builds-full.json',
+]);
+
+async function loadRemoteFiles(baseUrl, fetchImpl, kvGet) {
   const fetchFn = fetchImpl || fetch;
   const base = String(baseUrl || '').replace(/\/+$/, '');
   const entries = await Promise.all(DATA_FILES.map(async ([key, file]) => {
+    // اول KV (دیتای تازهٔ POSTشده)؛ اگر خالی/خطا بود، fallback به Pages.
+    if (kvGet && KV_REFRESHABLE_FILES.has(file)) {
+      try {
+        const kvData = await kvGet(file);
+        if (kvData && typeof kvData === 'object') return [key, kvData];
+      } catch { /* fallback به fetch پایین */ }
+    }
     try {
       const res = await fetchFn(`${base}/${file}`);
       if (!res.ok) return [key, { data: [] }];
@@ -122,13 +139,13 @@ async function loadRemoteFiles(baseUrl, fetchImpl) {
   return Object.fromEntries(entries);
 }
 
-async function ensureRemote(baseUrl, fetchImpl) {
+async function ensureRemote(baseUrl, fetchImpl, kvGet) {
   const now = Date.now();
   if (remoteLoadedAt && now - remoteLoadedAt < REMOTE_TTL_MS) return true;
   if (remotePromise) return remotePromise;
   remotePromise = (async () => {
     try {
-      const files = await loadRemoteFiles(baseUrl, fetchImpl);
+      const files = await loadRemoteFiles(baseUrl, fetchImpl, kvGet);
       const next = buildState(files);
       if (!next.heroes.length) {
         console.warn('[static] remote load returned no heroes — keeping previous state');
@@ -317,6 +334,7 @@ module.exports = {
   get news() { return state.news; },
   get tierlist() { return state.tierlist; },
   get discussions() { return state.discussions; },
+  get channelNews() { return state.channelNews; },
   get events() { return state.events; },
   get faContent() { return state.faContent; },
   get heroStats() { return state.heroStats; },
