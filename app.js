@@ -12,7 +12,7 @@ const WORKER_DATA_BASE = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/data
 // fallback به data/ همین سایت با ?v=DATA_VERSION است — مکانیزم نسخه سر جایش است.
 const WORKER_DATA_FILES = new Set(['tierlist.json', 'news.json', 'discussions.json', 'events.json', 'channel-news.json', 'hero-stats.json', 'matchups.json', 'team-comps.json', 'fa-content.json', 'patch-notes-full.json', 'builds-full.json']);
 const COACH_API = 'https://persian-mlbb-bot.yahootattoo1.workers.dev/api/ask';
-const DATA_VERSION = '20261117-2234'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
+const DATA_VERSION = '20261123-0345'; // با هر انتشار، همراه با ?v= اسکریپت بالا می‌رود تا دیتا کهنه نماند
 const TTL_MS = 5 * 60 * 1000; // کش ۵ دقیقه‌ای، مثل سرور پراکسی
 const cache = new Map();
 
@@ -1066,10 +1066,13 @@ const thumb = (u) => {
 };
     const cn = sd.channelNews || [];
     const catOrder = [['skin', '🎨 اسکین‌ها'], ['hero', '🦸 هیروها'], ['event', '🎉 رویدادها'], ['collab', '🤝 همکاری‌ها'], ['news', '📰 خبرها']];
+    let cnOpened = false;
     const cnHtml = cn.length ? '<h2>📰 اخبار</h2>' + catOrder.map(([key, label]) => {
       const list = cn.filter((i) => (i.category || 'news') === key);
       if (!list.length) return '';
-      return `<h3 style="margin:12px 0 6px">${label}</h3>` + list.slice(0, 6).map((i) => `<div class="item-card">${thumb(i.photo_url)}<b>${esc(i.title || '')}</b><br><span class="sub">${esc(dateFa(i.date_iso))}</span>${i.text ? `<br><span class="sub">${esc(i.text.slice(0, 200))}${i.text.length > 200 ? '…' : ''}</span>` : ''}</div>`).join('');
+      const open = cnOpened ? '' : ' open';
+      cnOpened = true;
+      return `<details class="item-card"${open}><summary><b>${label}</b> <span class="sub">(${faNum(list.length)})</span></summary>` + list.slice(0, 6).map((i) => `<div style="margin-top:8px">${thumb(i.photo_url)}<b>${esc(i.title || '')}</b><br><span class="sub">${esc(dateFa(i.date_iso))}</span>${i.text ? `<br><span class="sub">${esc(i.text.slice(0, 200))}${i.text.length > 200 ? '…' : ''}</span>` : ''}</div>`).join('') + '</details>';
     }).join('') : '';
     box.innerHTML =
       (pn.length ? '<h2>📝 پچ‌نوت‌ها</h2>' + pn.slice(0, 10).map((p, i) => i === 0
