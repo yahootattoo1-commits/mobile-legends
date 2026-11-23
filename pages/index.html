@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Persian Mlbb — مینی‌اپ فارسی</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&family=Space+Grotesk:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20261117-2311">
+</head>
+<body>
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<header class="app-header">
+  <div class="brand">
+    <div class="logo-tile"></div>
+    <div class="logo"><span>Persian MLBB</span> <span class="pro-badge">PRO</span><small>مینی‌اپ تخصصی موبایل لجندز</small></div>
+  </div>
+  <div class="head-meta">
+    <div class="patch-chip"><span class="dot"></span><span id="version">…</span></div>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="eyebrow"><span class="live-dot"></span> META RADAR <span class="eyebrow-line"></span><small>آپدیت زنده متا</small></div>
+    <div class="hero-badges">
+      <span class="hero-badge"><span class="dot"></span>آنلاین — دادهٔ زنده</span>
+      <span class="hero-badge gold">۱۳۳ هیرو</span>
+      <span class="hero-badge">کاملاً فارسی</span>
+    </div>
+    <h1>سامانه هوشمند و جامع موبایل لجندز فارسی</h1>
+    <p>تحلیل عمیق متا، آرشیو حرفه‌ای بیلدها و تلنت‌ها، محاسبه‌گر ریاضی وین‌ریت و پوشش لحظه‌ای استراتژی‌های مسابقات بین‌المللی MPL</p>
+    <div class="hero-cta">
+      <button class="primary" onclick="showTab('heroes')">🔍 جستجوی هیرو یا استراتژی</button>
+      <button class="ghost" onclick="showTab('wr')">🧮 محاسبه‌گر وین‌ریت</button>
+      <button class="ghost gold" onclick="showTab('player')">🔑 ورود با Game ID</button>
+    </div>
+    <div class="spotlight-wrap">
+      <div class="spot-badge">🔥 داغ‌ترین‌های متا</div>
+      <div class="spotlight-card">
+        <div id="spotlightBox"><div class="spot-loading">در حال بارگذاری…</div></div>
+        <div class="spot-time">📊 آمار ۷ روز اخیر</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature cards -->
+  <section class="feature-grid">
+    <div class="feature-card" onclick="showTab('meta')">
+      <div class="feature-icon">📊</div>
+      <h3>متای هفتگی و بن‌ریت</h3>
+      <small class="en-sub">Meta &amp; Ban Rate</small>
+      <p>شناسایی مرگبارترین هیروهای رنک با درصد پیروزی تفکیکی</p>
+      <span class="go">مشاهده ←</span>
+    </div>
+    <div class="feature-card gold" onclick="showTab('emblems')">
+      <div class="feature-icon">🛡️</div>
+      <h3>امبلم‌ها و تلنت‌ها</h3>
+      <small class="en-sub">Emblems &amp; Talents</small>
+      <p>چینش بهینه متناسب با سبک بازی و اتک اسپید هر رول در پچ جدید</p>
+      <span class="go">مشاهده ←</span>
+    </div>
+    <div class="feature-card" onclick="showTab('wr')">
+      <div class="feature-icon">🧮</div>
+      <h3>ماشین‌حساب رنک</h3>
+      <small class="en-sub">Rank Calculator</small>
+      <p>محاسبه تعداد بردهای پیاپی مورد نیاز برای ارتقای وین‌ریت تا درصد هدف</p>
+      <span class="go">مشاهده ←</span>
+    </div>
+    <div class="feature-card blue" onclick="showTab('mpl')">
+      <div class="feature-icon">🏆</div>
+      <h3>جداول و نتایج MPL</h3>
+      <small class="en-sub">MPL Tables</small>
+      <p>پوشش لیگ‌های اندونزی، فیلیپین و مالزی با ترکیب هیروهای حرفه‌ای</p>
+      <span class="go">مشاهده ←</span>
+    </div>
+  </section>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="heroes" class="active">🦸 هیروها</button>
+    <button data-tab="meta">📊 متا</button>
+    <button data-tab="tier">🏆 تیرلیست</button>
+    <button data-tab="items">🧰 آیتم‌ها</button>
+    <button data-tab="emblems">🛡️ امبلم</button>
+    <button data-tab="wr">🧮 وین‌ریت</button>
+    <button data-tab="mpl">🏆 MPL</button>
+    <button data-tab="player">👤 پروفایل</button>
+    <button data-tab="news">📰 اخبار</button>
+    <button data-tab="comps">👥 ترکیب تیمی</button>
+    <button data-tab="lore">📖 داستان‌ها</button>
+    <button data-tab="coach">🧠 مربی</button>
+  </nav>
+
+  <!-- هیروها -->
+  <section id="tab-heroes" class="tab active">
+    <div class="search-row">
+      <input id="heroSearch" type="search" placeholder="جست‌وجوی هیرو… مثلاً Miya" autocomplete="off">
+      <button id="heroSearchBtn">🔍</button>
+    </div>
+    <div id="roleChips" class="chips"></div>
+    <div id="heroGrid"></div>
+    <div id="heroStatus" class="status"></div>
+  </section>
+
+  <!-- جزییات هیرو -->
+  <section id="tab-hero" class="tab">
+    <button class="back" id="heroBack">← بازگشت به هیروها</button>
+    <div id="heroDetail"></div>
+    <div class="lane-row" id="laneRow"></div>
+    <div id="buildBox"></div>
+  </section>
+
+  <!-- متا -->
+  <section id="tab-meta" class="tab">
+    <div class="eyebrow"><span class="live-dot"></span> META • 7 DAYS <span class="eyebrow-line"></span><small>آمار ۷ روز اخیر</small></div>
+    <div class="row-between">
+      <h2>📊 متا — ۷ روز اخیر</h2>
+      <select id="metaSort">
+        <option value="win">بر اساس وین‌ریت</option>
+        <option value="ban">بر اساس بن‌ریت</option>
+      </select>
+    </div>
+    <div id="metaTable"></div>
+    <div id="metaStatus" class="status"></div>
+    <h3>🛡️ کانتر تیمی</h3>
+    <p class="hint">هیروهای تیم حریف را با کاما جدا کن؛ مثلاً: Yu Zhong, Pharsa</p>
+    <div class="search-row">
+      <input id="teamCounterQ" type="search" placeholder="مثلاً: Yu Zhong, Pharsa" autocomplete="off">
+      <button id="teamCounterBtn">🛡️</button>
+    </div>
+    <div id="teamCounterBox"></div>
+  </section>
+
+  <!-- تیرلیست -->
+  <section id="tab-tier" class="tab">
+    <div class="eyebrow">POWER RANKING <span class="eyebrow-line"></span><small>رتبه‌بندی قدرت هیروها</small></div>
+    <div class="row-between">
+      <h2 id="tierTitle">🏆 تیرلیست هیروها</h2>
+      <span id="tierMonth" class="tier-month"></span>
+    </div>
+    <p class="hint" id="tierSummary"></p>
+    <div id="tierFilters" class="chips tier-filters"></div>
+    <div id="tierList"></div>
+    <div id="tierStatus" class="status"></div>
+  </section>
+
+  <!-- آیتم‌ها -->
+  <section id="tab-items" class="tab">
+    <div class="eyebrow">ITEMS <span class="eyebrow-line"></span><small>آیتم‌ها و تجهیزات</small></div>
+    <div class="search-row">
+      <input id="itemSearch" type="search" placeholder="جست‌وجوی آیتم… مثلاً Berserker" autocomplete="off">
+      <button id="itemSearchBtn">🔍</button>
+    </div>
+    <div id="itemList"></div>
+    <div id="itemStatus" class="status"></div>
+  </section>
+
+  <!-- امبلم / اسپل -->
+  <section id="tab-emblems" class="tab">
+    <div class="eyebrow">EMBLEMS &amp; TALENTS <span class="eyebrow-line"></span><small>امبلم‌ها و تلنت‌ها</small></div>
+    <h2>🛡️ امبلم‌ها و تلنت‌ها</h2>
+    <div id="emblemList"></div>
+    <h2>🪄 اسپل‌ها</h2>
+    <div id="spellList"></div>
+    <div id="emblemStatus" class="status"></div>
+  </section>
+
+  <!-- ماشین وین‌ریت -->
+  <section id="tab-wr" class="tab">
+    <div class="eyebrow">RANK CLIMBER <span class="eyebrow-line"></span><small>ماشین‌حساب وین‌ریت</small></div>
+    <h2>🧮 ماشین‌حساب وین‌ریت</h2>
+    <div class="calc-panel">
+      <label>تعداد مچ فعلی <strong id="wrMatchVal">۱۰۰</strong></label>
+      <input id="wrMatch" type="range" min="10" max="500" value="100">
+      <div class="range-ends"><span>۱۰ مچ</span><span>۵۰۰ مچ</span></div>
+      <label>وین‌ریت فعلی (٪) <strong id="wrNowVal">۵۰٪</strong></label>
+      <input id="wrNow" type="range" min="0" max="99" value="50">
+      <div class="range-ends"><span>۰٪</span><span>۹۹٪</span></div>
+      <label>وین‌ریت هدف (٪) <strong id="wrFutureVal">۶۰٪</strong></label>
+      <input id="wrFuture" type="range" min="50" max="99" value="60">
+      <div class="range-ends"><span>۵۰٪</span><span>۹۹٪</span></div>
+    </div>
+    <div class="result-panel" id="wrResult"><small>WIN RATE فعلی</small><div class="gauge" id="wrGauge"><div><strong id="wrGaugeVal">۵۰٫۰٪</strong><span>نرخ برد</span></div></div><h3 id="wrNeeded"></h3><p>محاسبه بر اساس آمار واردشدهٔ شما</p></div>
+  </section>
+
+  <!-- MPL -->
+  <section id="tab-mpl" class="tab">
+    <div class="eyebrow">MPL LEAGUES <span class="eyebrow-line"></span><small>لیگ‌های MPL</small></div>
+    <h2>🏆 لیگ‌های MPL</h2>
+    <div class="league-row">
+      <button data-league="id">🇮🇩 اندونزی</button>
+      <button data-league="ph">🇵🇭 فیلیپین</button>
+      <button data-league="my">🇲🇾 مالزی</button>
+      <button data-league="kh">🇰🇭 کامبوج</button>
+    </div>
+    <div id="mplBox"></div>
+  </section>
+
+  <!-- پروفایل -->
+  <section id="tab-player" class="tab">
+    <div class="eyebrow">PLAYER PROFILE <span class="eyebrow-line"></span><small>پروفایل بازیکن</small></div>
+    <h2>👤 پروفایل بازیکن</h2>
+    <p class="hint">برای ورود، Game ID و Zone ID را بده؛ کد تایید به صندوق پیام داخل بازی می‌آید. توکن فقط در همین مرورگر می‌ماند.</p>
+    <label>Game ID<input id="plGame" type="text" inputmode="numeric" placeholder="مثلاً 12345678"></label>
+    <label>Zone ID<input id="plZone" type="text" inputmode="numeric" placeholder="مثلاً 1234"></label>
+    <button class="primary" id="plSendVc">📩 ارسال کد تایید</button>
+    <label>کد تایید داخل بازی<input id="plCode" type="text" inputmode="numeric" placeholder="کد ۴ تا ۸ رقمی"></label>
+    <button class="primary" id="plLogin">🔑 ورود</button>
+    <div id="plResult" class="result"></div>
+  </section>
+
+  <!-- اخبار -->
+  <section id="tab-news" class="tab">
+    <div class="eyebrow">INTEL CENTER <span class="eyebrow-line"></span><small>اخبار و پچ‌نوت‌ها</small></div>
+    <h2>📰 اخبار و پچ‌نوت‌ها</h2>
+    <div id="newsBox"></div>
+    <h2>🏆 تیرلیست هیروها</h2>
+    <div id="tierBox"></div>
+    <div id="newsStatus" class="status"></div>
+  </section>
+
+  <!-- ترکیب تیمی -->
+  <section id="tab-comps" class="tab">
+    <div class="eyebrow">TEAM COMPS <span class="eyebrow-line"></span><small>ترکیب‌های تیمی پیشنهادی</small></div>
+    <h2>👥 ترکیب‌های تیمی پیشنهادی</h2>
+    <div id="compsBox"></div>
+    <div id="compsStatus" class="status"></div>
+  </section>
+
+  <!-- داستان‌ها -->
+  <section id="tab-lore" class="tab">
+    <div class="eyebrow">HERO LORE <span class="eyebrow-line"></span><small>داستان هیروها</small></div>
+    <div class="search-row">
+      <input id="loreSearch" type="search" placeholder="جست‌وجوی هیرو… مثلاً Miya" autocomplete="off">
+      <button id="loreSearchBtn">🔍</button>
+    </div>
+    <h2>📖 داستان هیروها</h2>
+    <div id="loreBox"></div>
+    <div id="loreStatus" class="status"></div>
+  </section>
+
+  <!-- مربی هوش مصنوعی -->
+  <section id="tab-coach" class="tab">
+    <div class="eyebrow">AI COACH <span class="eyebrow-line"></span><small>مربی هوشمند</small></div>
+    <h2>🧠 مربی هوش مصنوعی</h2>
+    <p class="hint">سؤالت را دربارهٔ هیروها، بیلد، کانتر و متا بپرس؛ مثلاً: بهترین بیلد Miya برای لین گلد چیست؟</p>
+    <div class="suggestions"><button type="button">بهترین کانتر برای مارتیس؟</button><button type="button">بیلد مناسب Masha چیه؟</button><button type="button">بهترین هیروی متا الان کیه؟</button><button type="button">چطور وین‌ریتم رو بالا ببرم؟</button></div>
+    <div class="search-row">
+      <input id="coachQ" type="search" placeholder="سؤالت را بنویس…" autocomplete="off">
+      <button id="coachSend">🧠</button>
+    </div>
+    <div id="coachBox"></div>
+    <div id="coachStatus" class="status"></div>
+  </section>
+
+  <footer class="app-footer">
+    <b>Persian MLBB</b> — پلتفرم تخصصی جامعه گیمرهای ایرانی موبایل لجندز؛ تحلیل متا، بیلدها، داستان هیروها و اخبار پچ — همه به فارسی.
+    <br>© ۲۰۲۶ Persian MLBB
+  </footer>
+</main>
+
+<script src="app.js?v=20261123-0345"></script>
+</body>
+</html>
