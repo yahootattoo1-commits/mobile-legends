@@ -659,6 +659,7 @@ def main():
     global HERO_NAMES, HERO_MLID
     started = now_tehran()
     errors = []
+    warnings = []
     changed, posted, skipped, blocked, descriptions = [], [], [], [], []
     translated = {'events': 0, 'discussions': 0, 'patches': 0}
     fa = {}
@@ -687,6 +688,12 @@ def main():
     rc, out, err = run_cmd([str(VENV_PY), 'scripts/scrape_news.py', 'all'])
     if rc != 0:
         errors.append('scrape_news.py all rc=%s: %s' % (rc, (err or out)[-300:]))
+    # A section that failed keeps its old file (scraper prints
+    # "<file>.json failed (keeping old file)") — that is a warning, not a
+    # run failure: the rest of the data still posts and the Mini App updates.
+    for m in re.finditer(r"(\S+\.json) failed \(keeping old file\)", (out or '') + (err or '')):
+        if m.group(1) not in warnings:
+            warnings.append(m.group(1))
     rc, out, err = run_cmd([str(VENV_PY), 'scripts/scrape_events.py'])
     if rc != 0:
         errors.append('scrape_events.py rc=%s: %s' % (rc, (err or out)[-300:]))
@@ -865,6 +872,8 @@ def main():
             lines.extend(descriptions)
         if blocked:
             lines.append('⚠️ پست نشد: %s' % '، '.join('%s (%s)' % b for b in blocked))
+        if warnings:
+            lines.append('⚠️ تازه نشد (نسخهٔ قبلی ماند): %s' % '، '.join(warnings))
         if skipped:
             lines.append('📖 فقط در فایل تازه شد (پست نمی‌شود): %s' % '، '.join(skipped))
         tr = ', '.join('%s:%d' % kv for kv in sorted(translated.items()) if kv[1])
