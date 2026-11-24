@@ -427,16 +427,19 @@ if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
     fetched_at = datetime.now(timezone.utc).isoformat()
     if which in ("all", "fandom"):
-        patches = patch_note_pages(limit=10)
-        for pn in patches:
-            pn["title_fa"] = patch_title_fa(pn["title"])
-        recent = wiki_recent(limit=15)
-        news = {"fetched_at": fetched_at, "patch_notes": patches, "wiki_recent": recent}
-        with open(f"{OUT_DIR}/news.json", "w", encoding="utf-8") as f:
-            json.dump(news, f, ensure_ascii=False, indent=1)
-        print(f"news.json: {len(patches)} patch notes, {len(recent)} wiki recent")
-        for pn in patches[:5]:
-            print("  ", pn.get("updated"), "|", pn["title_fa"], "|", pn["title"])
+        try:
+            patches = patch_note_pages(limit=10)
+            for pn in patches:
+                pn["title_fa"] = patch_title_fa(pn["title"])
+            recent = wiki_recent(limit=15)
+            news = {"fetched_at": fetched_at, "patch_notes": patches, "wiki_recent": recent}
+            with open(f"{OUT_DIR}/news.json", "w", encoding="utf-8") as f:
+                json.dump(news, f, ensure_ascii=False, indent=1)
+            print(f"news.json: {len(patches)} patch notes, {len(recent)} wiki recent")
+            for pn in patches[:5]:
+                print("  ", pn.get("updated"), "|", pn["title_fa"], "|", pn["title"])
+        except Exception as e:  # noqa: BLE001
+            print(f"news.json failed (keeping old file): {e}")
     if which in ("all", "channel"):
         try:
             items = channel_news(limit=20)
@@ -449,19 +452,25 @@ if __name__ == "__main__":
         except Exception as e:  # noqa: BLE001
             print(f"channel-news failed (keeping old file): {e}")
     if which in ("all", "mlbb"):
-        tl = tier_list()
-        tl["fetched_at"] = fetched_at
-        with open(f"{OUT_DIR}/tierlist.json", "w", encoding="utf-8") as f:
-            json.dump(tl, f, ensure_ascii=False, indent=1)
-        print("tierlist.json:", tl["month"], tl["counts"])
-        for tier in ["SS", "S", "A", "B", "C", "D"]:
-            names = [h["name"] for h in tl["tiers"][tier][:6]]
-            print(f"  {tier}: {', '.join(names)}")
+        try:
+            tl = tier_list()
+            tl["fetched_at"] = fetched_at
+            with open(f"{OUT_DIR}/tierlist.json", "w", encoding="utf-8") as f:
+                json.dump(tl, f, ensure_ascii=False, indent=1)
+            print("tierlist.json:", tl["month"], tl["counts"])
+            for tier in ["SS", "S", "A", "B", "C", "D"]:
+                names = [h["name"] for h in tl["tiers"][tier][:6]]
+                print(f"  {tier}: {', '.join(names)}")
+        except Exception as e:  # noqa: BLE001
+            print(f"tierlist.json failed (keeping old file): {e}")
     if which in ("all", "stealth"):
-        ds = discussions_stealth(limit=20)
-        disc = {"fetched_at": fetched_at, "threads": ds}
-        with open(f"{OUT_DIR}/discussions.json", "w", encoding="utf-8") as f:
-            json.dump(disc, f, ensure_ascii=False, indent=1)
-        print(f"discussions.json: {len(ds)} threads (stealth browser)")
-        for d in ds[:8]:
-            print(f"  [{d.get('category_fa')}] {d['title']} — {d.get('author')}, {d.get('date')} • {d.get('views')} views 💬 {d.get('comments')}")
+        try:
+            ds = discussions_stealth(limit=20)
+            disc = {"fetched_at": fetched_at, "threads": ds}
+            with open(f"{OUT_DIR}/discussions.json", "w", encoding="utf-8") as f:
+                json.dump(disc, f, ensure_ascii=False, indent=1)
+            print(f"discussions.json: {len(ds)} threads (stealth browser)")
+            for d in ds[:8]:
+                print(f"  [{d.get('category_fa')}] {d['title']} — {d.get('author')}, {d.get('date')} • {d.get('views')} views 💬 {d.get('comments')}")
+        except Exception as e:  # noqa: BLE001
+            print(f"discussions.json failed (keeping old file): {e}")
