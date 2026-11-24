@@ -348,67 +348,96 @@ def _clean_html_text(raw):
     return re.sub(r"\s+", " ", _html.unescape(txt)).strip()
 
 
-def discussions_stealth(limit=20):
-    """Fetch the mlbb.io forum list with the stealth browser.
+MLBB_DISCUSS_API = "https://mlbb.io/api/discussion/posts"
+# Forum slugs -> the display names the page shows (CAT_FA maps those to Persian).
+DISCUSS_CAT_NAME = {
+    "general": "General chat",
+    "feedback": "Feedback & complaints",
+    "bug-android-report": "Android bug",
+    "bug-website-report": "Website issue",
+    "bug-ios-report": "iPhone/iPad bug",
+    "mabar": "Find teammates",
+}
+# The forum is flooded with Indonesian bank spam: titles in stylised Unicode
+# plus a WhatsApp number in the text. Real MLBB posts never carry those.
+_SPAM_PHONE = re.compile(r"(08[\d\s\-]{8,}|\+?62[\d\s\-]{9,})")
+_SPAM_FANCY = re.compile(r"[\U0001D400-\U0001D7FF]")
 
+
+def _discussions_is_spam(post):
+    title = post.get('title') or ''
+    text = title + ' ' + (post.get('content') or '')
+    return bool(_SPAM_PHONE.search(text) or _SPAM_FANCY.search(title))
+
+
+def discussions_api(limit=20):
+    """Fetch the mlbb.io forum list from its public posts API (no browser).
+
+    The forum page is a JS shell — the stealth browser now renders zero
+    <article> elements (the list loads client-side), so the browser scrape
+    returns 0 threads and the sanity guard blocks the empty file. The page
+    itself calls this API, so call it directly: 3 pages of latest activity,
+    spam filtered, first `limit` kept. Dates are UTC ISO from the API, so
+    there is no viewer-timezone shift (the old +3:30 bug is gone by design).
     Returns [{title, category, category_fa, author, date, date_iso,
-    views, likes, comments, excerpt}] — NO urls (per roozbeh's rule: no
-    source names or links to sources anywhere in the bot/Mini App).
+    views, likes, comments, excerpt}] — the same shape as before.
     """
-    from scrapling import StealthyFetcher
-    fetch_kwargs = dict(headless=True, network_idle=True,
-                        disable_resources=True, wait=5000)
-    # Force UTC for the browser: mlbb.io renders forum dates in the viewer's
-    # local timezone, so an Actions run (TZ=Asia/Tehran) and a VM run (UTC)
-    # stamped the SAME threads 3:30 apart — a spurious 'change' every switch,
-    # and date_iso labelled 'Z' while holding Tehran wall-clock time.
-    os.environ['TZ'] = 'UTC'
-    try:
-        time.tzset()
-    except Exception:  # noqa: BLE001
-        pass
-    if USE_LOCAL_PROXY:
-        if not ensure_local_proxy():
-            raise RuntimeError("local proxy (127.0.0.1:18080) could not be started")
-        fetch_kwargs["proxy"] = LOCAL_PROXY_URL
-        fetch_kwargs["additional_args"] = {"ignore_https_errors": True}
-    page = StealthyFetcher.fetch(
-        "https://mlbb.io/en/discussions", **fetch_kwargs)
+    from curl_cffi import requests as crequests
+    from datetime import datetime, timezone
+    posts = []
+    for page in (1, 2, 3):
+        last = None
+        for i in range(3):
+            try:
+                r = crequests.get(
+                    MLBB_DISCUSS_API,
+                    params={"page": page, "limit": 20,
+                            "sortBy": "last_activity", "order": "DESC"},
+                    impersonate="chrome131", timeout=30)
+                r.raise_for_status()
+                posts += r.json().get('data') or []
+                break
+            except Exception as e:  # noqa: BLE001
+                last = e
+                time.sleep(2 * (i + 1))
+        else:
+            raise RuntimeError(f"discussions API failed (page {page}): {last}")
     out = []
-    for art in page.css("article")[:limit]:
-        h = art.html_content
-        text = _clean_html_text(h)
-        t = re.search(r"<h2[^>]*>([^<]+)", h)
-        title = (t.group(1).strip() if t else "")
-        title = re.sub(r"\s*→\s*$", "", title)
-        import html as _html
-        title = _html.unescape(title)
-        cat = re.search(r'data-testid="category-badge".*?<span aria-hidden="true">(.*?)</span>\s*([^<]*)', h, re.S)
-        category = _html.unescape((cat.group(2) or "").strip() if cat else "")
-        ex = re.search(r'<p class="text-gray-300[^>]*>(.*?)</p>', h, re.S)
-        excerpt = _clean_html_text(ex.group(1))[:200] if ex else ""
-        # No source names/links in the data (roozbeh's rule): strip any URLs
-        # and the site name out of user-written excerpts.
+    for post in posts:
+        if _discussions_is_spam(post):
+            continue
+        title = (post.get('title') or '').strip()
+        if not title:
+            continue
+        category = DISCUSS_CAT_NAME.get(post.get('category') or '', post.get('category') or '')
+        created = (post.get('created_at') or '')[:19]
+        date_iso = ''
+        date = ''
+        if created:
+            try:
+                dt = datetime.strptime(created, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc)
+                date_iso = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                date = dt.strftime('%d %b %Y, %H:%M')
+            except Exception:  # noqa: BLE001
+                pass
+        excerpt = _clean_html_text(post.get('content') or '')[:200]
         excerpt = re.sub(r"https?://\S+", "", excerpt)
         excerpt = re.sub(r"mlbb\.io", "the app", excerpt, flags=re.I)
         excerpt = re.sub(r"\s+", " ", excerpt).strip()
-        m = re.search(
-            r"([A-Za-z0-9_.\-]+) • (\d{1,2}) (\w{3}) (\d{4}), (\d{2}):(\d{2}) • (\d+) views 👍 (\d+) 💬 (\d+)",
-            text)
-        if not title:
-            continue
-        item = {"title": title, "category": category,
-                "category_fa": CAT_FA.get(category, category),
-                "excerpt": excerpt}
-        if m:
-            day, mon, year, hh, mm = int(m.group(2)), MONTHS.get(m.group(3), 1), int(m.group(4)), m.group(5), m.group(6)
-            item.update({
-                "author": m.group(1),
-                "date": f"{m.group(2)} {m.group(3)} {m.group(4)}, {hh}:{mm}",
-                "date_iso": f"{year:04d}-{mon:02d}-{day:02d}T{hh}:{mm}:00Z",
-                "views": int(m.group(7)), "likes": int(m.group(8)), "comments": int(m.group(9)),
-            })
-        out.append(item)
+        out.append({
+            "title": title,
+            "category": category,
+            "category_fa": CAT_FA.get(category, category),
+            "author": post.get('username') or '',
+            "date": date,
+            "date_iso": date_iso,
+            "views": int(post.get('views_count') or 0),
+            "likes": int(post.get('likes') or 0),
+            "comments": int(post.get('comment_count') or 0),
+            "excerpt": excerpt,
+        })
+        if len(out) >= limit:
+            break
     return out
 
 
@@ -465,11 +494,11 @@ if __name__ == "__main__":
             print(f"tierlist.json failed (keeping old file): {e}")
     if which in ("all", "stealth"):
         try:
-            ds = discussions_stealth(limit=20)
+            ds = discussions_api(limit=20)
             disc = {"fetched_at": fetched_at, "threads": ds}
             with open(f"{OUT_DIR}/discussions.json", "w", encoding="utf-8") as f:
                 json.dump(disc, f, ensure_ascii=False, indent=1)
-            print(f"discussions.json: {len(ds)} threads (stealth browser)")
+            print(f"discussions.json: {len(ds)} threads (API)")
             for d in ds[:8]:
                 print(f"  [{d.get('category_fa')}] {d['title']} — {d.get('author')}, {d.get('date')} • {d.get('views')} views 💬 {d.get('comments')}")
         except Exception as e:  # noqa: BLE001
